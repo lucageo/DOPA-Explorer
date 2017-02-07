@@ -886,6 +886,15 @@ $.ajax({
                       // mouseout: resetHighlighteco,
             			     'click': function (e) {
             				         select(e.target);
+                             //console.info(e.target)
+                             var name=e.target.feature.properties.pa_name;
+                             var wdpaid=e.target.feature.properties.wdpaid;
+                            //  jQuery('.leaflet-control-search input').val(name)
+                            //  jQuery('.search-button')[0].click();
+                            var filter="wdpaid='"+wdpaid+"'";
+                          //  console.log(filter)
+                             wdpa_hi.setParams({CQL_FILTER:filter});
+
                              $( "#block-block-127" ).show();
                          //zoomToFeatureeco(e);
                        }
@@ -915,14 +924,43 @@ $.ajax({
 //---------------------------------------------------------------
 // WDPA WMS GEOSERVER LAYER
 //---------------------------------------------------------------
-   var url = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
-   var wdpa=L.tileLayer.wms(url, {
-       layers: 'conservationmapping:pa_50_2017',
+
+var url = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
+var wdpa=L.tileLayer.wms(url, {
+    layers: 'conservationmapping:pa_50_2017',
+    transparent: true,
+    format: 'image/png',
+opacity:'0.4',
+zIndex: 33 // Use zIndex to order the tileLayers within the tilePane. The higher number, the upper vertically.
+ }).addTo(lMap);
+  // var url = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
+  //var wdpa=L.tileLayer.betterWms(url, {
+/*  var wdpa=L.WMS.source(url, {
+      // layers: '',
        transparent: true,
        format: 'image/png',
    opacity:'0.4',
    zIndex: 33 // Use zIndex to order the tileLayers within the tilePane. The higher number, the upper vertically.
-    }).addTo(lMap);
+ });//.addTo(lMap);
+
+ wdpa.getLayer("conservationmapping:pa_50_2017").addTo(lMap);
+
+
+    var MySource = L.WMS.Source.extend({
+    'ajax': function(url, callback) {
+        $.ajax(url, {
+            'context': this,
+            'success': function(result) {
+                callback.call(this, result);
+             }
+        });
+    },
+    'showFeatureInfo': function(latlng, info) {
+      //  $('.output').html(info);
+      console.info(info)
+    }
+});
+*/
 //---------------------------------------------------------------
 // WDPA WMS LEGEND
 //---------------------------------------------------------------
@@ -966,6 +1004,7 @@ legend4.addTo(lMap);
     wdpa_hi.setParams({CQL_FILTER:"name LIKE ''"}); // GEOSERVER WMS FILTER
 
 
+
     //---------------------------------------------------------------
     // SEARCH WDPA
     //--------------------------------------------------------------
@@ -988,12 +1027,12 @@ legend4.addTo(lMap);
  // HIGHLIGHT WDPA WHEN CLICK ON LENTE
  //--------------------------------------------------------------
 
- $('.search-button').click(function updateParams() {
-     var x = document.getElementById("searchtext27").value;
-     console.info(x);
-     var filter = "name LIKE'" + x + "'";
-     return wdpa_hi.setParams({CQL_FILTER:filter});
- });
+ // $('.search-button').click(function updateParams() {
+ //     var x = document.getElementById("searchtext27").value;
+ //     console.info(x);
+ //     var filter = "name LIKE'" + x + "'";
+ //     return wdpa_hi.setParams({CQL_FILTER:filter});
+ // });
 
  //-------------------------------------------------------------------
 
