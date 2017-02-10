@@ -24,16 +24,18 @@
        modal: false,  			// If false (default), it deactivates after each use.
     });
     lMap.addControl(zoomBox);
-//---------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // BASE LAYERS
-//---------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
      var mbAttr = '', mbUrl = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw';
-     var streets  = L.tileLayer(mbUrl, {id: 'mapbox.streets',   attribution: mbAttr}).addTo(lMap);
+     var grayscale  = L.tileLayer(mbUrl, {id: 'mapbox.streets',   attribution: mbAttr});
      var grayscale2   = L.tileLayer(mbUrl, {id: 'mapbox.light', attribution: mbAttr});//.addTo(lMap);
-     var grayscale  = L.tileLayer('https://api.mapbox.com/styles/v1/lucageo/civark4b600502img5xm0ou4p/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibHVjYWdlbyIsImEiOiJjaXIwY2FmNHAwMDZ1aTVubmhuMDYyMmtjIn0.1jWhLwVzKS6k1Ldn-bVQPg');
+     var streets  = L.tileLayer('https://api.mapbox.com/styles/v1/lucageo/ciywysi9f002e2snqsz0ukhz4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibHVjYWdlbyIsImEiOiJjaXIwY2FmNHAwMDZ1aTVubmhuMDYyMmtjIn0.1jWhLwVzKS6k1Ldn-bVQPg').addTo(lMap);
 
- lMap.setView([20, 0], 3);
-//---------------------------------------------------------------
+     lMap.setView([20, 0], 3); //set lat long and zoom level
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// COUNTRY LAYER - CARTODB
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // CARTO COUNTRY Legend
 //---------------------------------------------------------------
      function getColor(d) {
@@ -72,7 +74,7 @@
      }
    }
 //---------------------------------------------------------------
-// CARTO COUNTRY LAYER SETUP
+// CARTO COUNTRY LAYER SETUP - highlight AND zoomToFeature
 //---------------------------------------------------------------
     // function we can use to filter what data is added to the GeoJSON layer
      var filter = function(feature) {
@@ -100,7 +102,7 @@
  //---------------------------------------------------------------
  // CARTO COUNTRY LAYER
  //---------------------------------------------------------------
-      var onEachFeature = function(feature, layer) {
+    var onEachFeature = function(feature, layer) {
            if (feature.properties) {
               layer.bindPopup('<center><i class="fa fa-globe fa-4x" aria-hidden="true"></i><p>COUNTRY </p><hr><a href="/country/'+feature.properties.iso2_mod+'">'+feature.properties.adm0_name+'</a></center><br><i class="fa fa-usd" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp; FUNDING (USD) <b>&nbsp;&nbsp;&nbsp;'+((feature.properties.sum_budget)/1000000)+' M</b><hr><i class="fa fa-cog" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;PROJECTS <b>&nbsp;&nbsp;&nbsp;'+feature.properties.project_numb);
               layer.on({
@@ -121,8 +123,9 @@
    sql.execute(query, null, { format: 'geojson' }).done(function(data) {//console.log(data);
       Country_layer.addData(data);
    });
-
-   //--------------------------------------------------------------------------------------------------------------------
+   //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   // TERRESTRIAL ECOREGION LAYER GEOJSON - CARTODB
+   //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
    //TERRESTRIAL ECOREGION LAYER GEOJSON - POPUP
    //--------------------------------------------------------------------------------------------------------------------
 
@@ -132,18 +135,16 @@
 
    	var t=function()
    	{
-
    	  return [	{
    							name: 'Connectivity',
-
-   						    data: [parseFloat(Math.round(feature.properties.tojson_p_2*100)/100)]
-                           },
-   						{
+                data: [parseFloat(Math.round(feature.properties.tojson_p_2*100)/100)]
+                },
+   						  {
    							name: 'Protection',
-                               data: [parseFloat(Math.round(feature.properties.tojson_p_3*100)/100)]
-                           }
-   					]
-   	}
+                data: [parseFloat(Math.round(feature.properties.tojson_p_3*100)/100)]
+                }
+   					  ]
+   	  }
 
            layer.on('popupopen', function(e) {
 
@@ -199,11 +200,9 @@
    	layer.bindPopup(popupContent1);
 
    	}
-
-
-   //---------------------------------------------------------------
-   // CARTO ECOREGION Legend
-   //---------------------------------------------------------------
+//---------------------------------------------------------------
+// CARTO ECOREGION Legend
+//---------------------------------------------------------------
         function getColoreco(deco) {
           return deco > 50       ? '#10732f' :
                  deco > 17       ? '#1a9641' :
@@ -239,9 +238,9 @@
           zIndex: 1
         }
       }
-   //---------------------------------------------------------------
-   // CARTO ECOREGION LAYER SETUP
-   //---------------------------------------------------------------
+//---------------------------------------------------------------
+// CARTO ECOREGION LAYER HIGHLIGHTS
+//---------------------------------------------------------------
        // function we can use to filter what data is added to the GeoJSON layer
         var filtereco = function(feature) {
           return feature.properties.ecoregion0 > 0;
@@ -265,9 +264,9 @@
         function zoomToFeatureeco(e) {
           lMap.fitBounds(e.target.getBounds());
         }
-    //---------------------------------------------------------------
-    // CARTO ECOREGION LAYER
-    //---------------------------------------------------------------
+//---------------------------------------------------------------
+// CARTO ECOREGION LAYER  -  SETUP
+//---------------------------------------------------------------
          var onEachFeatureeco = function(feature, layer) {
               if (feature.properties) {
 
@@ -296,539 +295,24 @@
       sqleco.execute(queryeco, null, { format: 'geojson' }).done(function(dataeco) {//console.log(data);
          Ecoregion_layer.addData(dataeco);
       });
-//-----------------------------------------------------------------------------------------------------
 
+//--------------------------------------------------------------------------------------------------------------------
+// FUNCTION SELECT (TO SHOW THE GRAPH) OF THE ECOREGION LAYER
+//--------------------------------------------------------------------------------------------------------------------
+		function select (layer) {
+		  if (selected !== null) {
+		      var previous = selected;
+		      }
+      else {}
+			selected = layer;
+		}
 
-  //   	var Ecoregion_search = new L.control.search({
-  //   	position:'topright',
-  //   	layer: Ecoregion_layer,
-  //   	zoom:5,
-  //   	textErr: 'Site not found',
-  //   	propertyName: 'ecoregion_',
-  //   	textPlaceholder: 'Ecoregion name...          ',
-  //   	buildTip: function(text, val) {
-  //   	return '<b>'+text+'</b>';
-  //   }
-  // }).addTo(lMap)
-
-
-      //--------------------------------------------------------------------------------------------------------------------
-      //TERRESTRIAL wdpa LAYER GEOJSON - POPUP
-      //--------------------------------------------------------------------------------------------------------------------
-
-       function pop_wdpa_layer(feature, wdpa_layer) {
-         wdpa_layer.on('popupopen', function(e) {
-           $('#container8').html('<center><a href="/wdpa/'+feature.properties.wdpaid+'">'+feature.properties.pa_name+'</a></center>');
-         });
-
-       var popupContentwdpa = '<center><a href="/wdpa/'+feature.properties.wdpaid+'">'+feature.properties.pa_name+'</a></center><hr>';
-       var url = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_radarplot_pa?wdpaid=' + feature.properties.wdpaid;
-       var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_climate_pa?wdpaid=' + feature.properties.wdpaid;
-
-
-          wdpa_layer.on('popupclose', function(e){
-            $('#container3').html("");
-          });
-              wdpa_layer.on({
-                  // mouseover: highlightFeatureeco,
-                  // mouseout: resetHighlighteco,
-                  'click': function (e, feature, wdpa_layer) {
-                        select(e.target);
-
-                        $.ajax({
-                            url: url,
-                            dataType: 'json',
-                            success: function(d) {
-                                if (d.metadata.recordCount == 0) {
-                                    jQuery('#container3');
-                                    jQuery('#container3').append('There is no summary data for this WDPA');
-                                } else {
-                                    var title = [];
-                                    var country_avg = [];
-                                    var site_norm_value = [];
-
-                                    $(d.records).each(function(i, data) {
-
-                                        switch (data.title) {
-                                            case 'Agriculture':
-                                            for (var prop in data) {
-                                                    if (prop == 'title') {
-                                                        title.push("Agriculture")
-                                                    }
-                                                    else if (prop == 'country_avg') {
-                                                        if(data[prop]>=0)
-                                                        country_avg.push(data[prop]);
-                                                        else
-                                                        country_avg.push(0);
-                                                    }
-                                                    else if (prop == 'site_norm_value') {
-                                                        if(data[prop]>=0)
-                                                        site_norm_value.push(data[prop]);
-                                                        else
-                                                        site_norm_value.push(0);
-                                                    }
-                                                    else {
-                                                    }
-                                                }
-                                                break;
-                                            case 'Population':
-                                            for (var prop in data) {
-                                                    if (prop == 'title') {
-                                                        title.push("Population")
-                                                    }
-                                                    else if (prop == 'country_avg') {
-                                                        if(data[prop]>=0)
-                                                        country_avg.push(data[prop]);
-                                                        else
-                                                        country_avg.push(0);
-                                                    }
-                                                    else if (prop == 'site_norm_value') {
-                                                        if(data[prop]>=0)
-                                                        site_norm_value.push(data[prop]);
-                                                        else
-                                                        site_norm_value.push(0);
-                                                    }
-                                                    else {
-                                                    }
-                                                }
-                                                break;
-                                            case 'Internal Roads':
-                                            for (var prop in data) {
-                                                              if (prop == 'title') {
-                                                                  title.push("Internal Roads")
-                                                              }
-                                                 else if (prop == 'country_avg') {
-                                                     if(data[prop]>=0)
-                                                     country_avg.push(data[prop]);
-                                                     else
-                                                     country_avg.push(0);
-                                                              }
-                                                 else if (prop == 'site_norm_value') {
-                                                     if(data[prop]>=0)
-                                                     site_norm_value.push(data[prop]);
-                                                     else
-                                                     site_norm_value.push(0);
-                                                              }
-                                                 else {
-                                                 }
-                                                          }
-                                                break;
-                                            case 'Surrounding Roads':
-                                                for (var prop in data) {
-                                                    if (prop == 'title') {
-                                                        title.push("Surrounding Roads")
-                                                    }
-                                                    else if (prop == 'country_avg') {
-                                                        if(data[prop]>=0)
-                                                        country_avg.push(data[prop]);
-                                                        else
-                                                        country_avg.push(0);
-                                                    }
-                                                    else if (prop == 'site_norm_value') {
-                                                        if(data[prop]>=0)
-                                                        site_norm_value.push(data[prop]);
-                                                        else
-                                                        site_norm_value.push(0);
-                                                    }
-                                                    else {
-                                                    }
-                                                }
-                                                break;
-                                            case 'AMPHIBIA':
-                                            for (var prop in data) {
-                                                    if (prop == 'title') {
-                                                        title.push("Amphibians")
-                                                    }
-                                                    else if (prop == 'country_avg') {
-                                                        if(data[prop]>=0)
-                                                        country_avg.push(data[prop]);
-                                                        else
-                                                        country_avg.push(0);
-                                                    }
-                                                    else if (prop == 'site_norm_value') {
-                                                        if(data[prop]>=0)
-                                                        site_norm_value.push(data[prop]);
-                                                        else
-                                                        site_norm_value.push(0);
-                                                    }
-                                                    else {
-                                                    }
-                                                }
-                                                break;
-                                            case 'MAMMALIA':
-                                            for (var prop in data) {
-                                                    if (prop == 'title') {
-                                                        title.push("Mammals")
-                                                    }
-                                                    else if (prop == 'country_avg') {
-                                                        if(data[prop]>=0)
-                                                        country_avg.push(data[prop]);
-                                                        else
-                                                        country_avg.push(0);
-                                                    }
-                                                    else if (prop == 'site_norm_value') {
-                                                        if(data[prop]>=0)
-                                                        site_norm_value.push(data[prop]);
-                                                        else
-                                                        site_norm_value.push(0);
-                                                    }
-                                                    else {
-                                                    }
-                                                }
-                                                break;
-                                            case 'AVES':
-                                            for (var prop in data) {
-                                                    if (prop == 'title') {
-                                                        title.push("Birds")
-                                                    }
-                                                    else if (prop == 'country_avg') {
-                                                        if(data[prop]>=0)
-                                                        country_avg.push(data[prop]);
-                                                        else
-                                                        country_avg.push(0);
-                                                    }
-                                                    else if (prop == 'site_norm_value') {
-                                                        if(data[prop]>=0)
-                                                        site_norm_value.push(data[prop]);
-                                                        else
-                                                        site_norm_value.push(0);
-                                                    }
-                                                    else {
-                                                    }
-                                                }
-                                                break;
-                                            case 'Popn. change':
-                                            for (var prop in data) {
-                                                    if (prop == 'title') {
-                                                        title.push("Pop. Change")
-                                                    }
-                                                    else if (prop == 'country_avg') {
-                                                        if(data[prop]>=0)
-                                                        country_avg.push(data[prop]);
-                                                        else
-                                                        country_avg.push(0);
-                                                    }
-                                                    else if (prop == 'site_norm_value') {
-                                                        if(data[prop]>=0)
-                                                        site_norm_value.push(data[prop]);
-                                                        else
-                                                        site_norm_value.push(0);
-                                                    }
-                                                    else {
-                                                    }
-                                                }
-                                                break;
-                                            case 'Terrestrial HDI':
-                                            // if ($pamarine=='100 % marine'){
-                                            //  break;
-                                            // }
-                                            for (var prop in data) {
-                                                    if (prop == 'title') {
-                                                        title.push("Terrestrial HDI")
-                                                    }
-                                                    else if (prop == 'country_avg') {
-                                                        if(data[prop]>=0)
-                                                        country_avg.push(data[prop]);
-                                                        else
-                                                        country_avg.push(0);
-                                                    }
-                                                    else if (prop == 'site_norm_value') {
-                                                        if(data[prop]>=0)
-                                                        site_norm_value.push(data[prop]);
-                                                        else
-                                                        site_norm_value.push(0);
-                                                    }
-                                                    else {
-                                                    }
-                                                }
-                                                break;
-
-                                            default:
-                                                break;
-                                        }
-
-
-                                    });
-
-
-                                    $('#container3').highcharts({
-                                        chart: {
-                                            polar: true,
-                                          //  type: 'bar',
-                                          //  zoomType: 'xy',
-                                             height: 320,
-                                             width: 420,
-                                             //colors: ['#c9db72', '#5b8059']
-                                        },
-
-                                        title: {
-                                            text: null
-                                        },
-                                        subtitle: {
-                                            text: "SUMMARY DATA"
-                                        },
-
-                                        credits: {
-                                            enabled: false,
-                                            text: null,
-                                          //  href: 'http://ehabitat-wps.jrc.ec.europa.eu/dopa_explorer/?pa='+$paid
-                                        },
-                                        xAxis: {
-                                            categories: title,
-                                            tickmarkPlacement: 'on',
-                                            lineWidth: 0
-                                        },
-                                        tooltip: {
-                                            formatter: function() {
-                                                var s = [];
-
-                                                $.each(this.points, function(i, point) {
-                                                    if(point.series.name == "Country Average"){
-                                                        s.push('<span style="color:rgb(124, 181, 236);font-weight:bold;">'+ point.series.name +' : '+
-                                                        point.y +'<span>');
-                                                    }
-                                                    else{
-                                                        s.push('<span style="color:rgb(0, 0, 0);">'+ point.series.name +' : '+
-                                                        point.y +'<span>');
-                                                    }
-                                                });
-
-                                                return s.join('<br>');
-                                            },
-                                            shared: true
-                                        },
-                                        yAxis: {
-                                            lineWidth: 0,
-                                            min: 0,
-                                            tickInterval: 10,
-                                          //  min: 0,
-                                            //max: 100
-                                        },
-
-                                        series: [{
-                                            type: 'area',
-                                            marker: {
-                                                enabled: false
-                                            },
-                                            name: 'Country Average',
-                                            data: country_avg,
-                                            color: '#D5DBDF'
-                                        },
-                                        {
-                                            type: 'line',
-                                            marker: {
-                                                enabled: true
-                                            },
-                                            name: 'Protected Area',
-                                            data: site_norm_value,
-                                            color: '#22a6f5'
-                                        }]
-                                    });
-                                }
-                            },
-                            // error: function() {
-                            //     jQuery('#spider-chart.rest-good').switchClass( "rest-good", "alert alert-warning", 100 );
-                            //     jQuery('#spider-chart').append('The climate services are unavailable at the moment.')
-                            // }
-
-
-
-
-                        });
-                     //zoomToFeatureeco(e);
-
-//---------------------------------------------------------------------barchart----------------------------------------------
-setTimeout(function(){
-$.ajax({
-    url: urlclima,
-    dataType: 'json',
-    success: function(d) {
-        if (d.metadata.recordCount == 0) {
-            //jQuery('#container2');
-            //jQuery('#container2').append('There is no summary data for this WDPA');
-        } else {
-          var precip = [];
-          var tmax = [];
-          var tmin = [];
-          var tmean = [];
-          $(d.records).each(function(i, data) {
-              //	console.warn(i)
-
-              switch (data.type) {
-                  case 'prec':
-                      for (var prop in data) {
-                          if (prop !== 'type' && prop !== 'uom') {
-                              precip.push(data[prop])
-                          }
-                      }
-
-                      break;
-                  case 'tmin':
-                      for (var prop in data) {
-                          if (prop !== 'type' && prop !== 'uom')
-                              tmin.push(data[prop])
-                      }
-
-                      break;
-
-                  case 'tmax':
-                      for (var prop in data) {
-                          if (prop !== 'type' && prop !== 'uom')
-                              tmax.push(data[prop])
-                      }
-                      break;
-
-                  case 'tmean':
-
-                      for (var prop in data) {
-                          if (prop !== 'type' && prop !== 'uom')
-                              tmean.push(data[prop])
-                      }
-                      break;
-                  default:
-                      break;
-              }
-
-
-          });
-
-
-          $('#container2').highcharts({
-              chart: {
-                  zoomType: 'xy',
-      // height: 400,
-//                   width: 500
-              },
-              legend: {
-
-              },
-              title: {
-                  text: null
-              },
-              subtitle: {
-                   text: 'Monthly climate averages'
-              },
-              xAxis: [{
-                  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-                  ]
-              }],
-              yAxis: [{ // Primary yAxis
-                  labels: {
-                      format: '{value}°C',
-                      color: '#3E576F',
-                      style: {
-                          //color: Highcharts.getOptions().colors[2]
-                          color: '#3E576F'
-                      }
-                  },
-                  title: {
-                      text: 'Temperature',
-                      color: '#3E576F',
-                      style: {
-                          color: '#3E576F'
-                      }
-                  },
-                  opposite: false
-
-              }, { // Secondary yAxis
-                  gridLineWidth: 0,
-                  title: {
-                      text: 'Precipitation (mm)',
-                      style: {
-                          color: '#3E576F'
-                      }
-                  },
-                  labels: {
-                      format: '{value} mm',
-                      style: {
-                          color: '#3E576F'
-                      }
-                  },
-                  opposite: true
-
-
-              }],
-              tooltip: {
-                  shared: true
-              },
-              credits: {
-                  enabled: true,
-                  text: 'WorldClim',
-                  href: 'http://www.worldclim.org/'
-              },
-              series: [{
-                showInLegend: false,
-                  name: 'Precipitation',
-                  type: 'column',
-                  color: '#22a6f5',
-                  yAxis: 1,
-                  data: precip,
-                  tooltip: {
-                      valueSuffix: ' mm'
-                  }
-
-              }, {
-                showInLegend: false,
-                  name: 'Max Temperature',
-                  type: 'spline',
-                  color: '#e60000',
-                  data: tmax,
-                  marker: {
-                      enabled: false
-                  },
-                  dashStyle: 'shortdot',
-                  tooltip: {
-                      valueSuffix: ' °C'
-                  }
-              }, {
-                showInLegend: false,
-                  name: 'Mean Temperature',
-                  type: 'spline',
-                  color: '#fcb100',
-                  yAxis: 0,
-                  data: tmean,
-                  marker: {
-                      enabled: false
-                  },
-                  dashStyle: 'shortdot',
-                  tooltip: {
-                      valueSuffix: ' °C'
-                  }
-              }, {
-                showInLegend: false,
-                  name: 'Min Temperature',
-                  type: 'spline',
-                  color: '#81AFD5',
-                  yAxis: 0,
-                  data: tmin,
-                  marker: {
-                      enabled: false
-                  },
-                  dashStyle: 'shortdot',
-                  tooltip: {
-                      valueSuffix: ' °C'
-                  }
-              }]
-          });
-        }
-    },
-
-});
-}, 200);
-               }
-             });
-
-       wdpa_layer.bindPopup(popupContentwdpa);
-
-       }
-
-
-//---------------------------------------------------------------
+    var selected = null;
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// WDPA JSON point LAYER - cartodb
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // WDPA JSON point CARTO LAYER + filter
 //---------------------------------------------------------------
-
-
    var filter_wdpa = function(feature) {
      return feature.properties.id > 1;
    }
@@ -836,47 +320,38 @@ $.ajax({
    var query4 = "SELECT * FROM wdpa_centroid_relevant_1606_export_2";
    var sql4 = new cartodb.SQL({ user: 'climateadapttst' });
    sql4.execute(query4, null, { format: 'geojson' }).done(function(data4) {
-
-          var wdpa_layer = L.geoJson(data4, {
-              filter: filter_wdpa,
+   // console.info(data4)
+   wdpa_layer = L.geoJson(data4, {
+               filter: filter_wdpa,
                 onEachFeature: function (feature, wdpa_layer) {
-                  pop_wdpa_layer(feature,wdpa_layer);
-                  wdpa_layer.on({
-            			     'click': function (e) {
-            				         select(e.target);
-                             //console.info(e);
-                             var name=e.target.feature.properties.pa_name;
-                             var wdpaid=e.target.feature.properties.wdpaid;
-                             var filter="wdpaid='"+wdpaid+"'";
-                             wdpa_hi.setParams({CQL_FILTER:filter});
-                            console.info(wdpa_hi);
-                             $( "#block-block-127" ).show();
-                        }
-            			  });
-                },
-               pointToLayer: function (feature, latlng) {
-                 var geojsonMarkerOptions = {
-                     radius: 10,
-                     fillColor: "#22a6f5",
-                     color: "#22a6f5",
-                     weight: 1,
-                     opacity: 0,
-                     fillOpacity: 0
+                  //NOTHING BEACUSE THE POPUP IS MANAGED BY THE WMS
+                  },
+                pointToLayer: function (feature, latlng) {
+                  var geojsonMarkerOptions = {
+                  radius:0.01,
+                  opacity: 0,
+                  fillOpacity: 0
                   };
                   return L.circleMarker(latlng, geojsonMarkerOptions );
                 }
-          })//.addTo(lMap);
+     })//.addTo(lMap);
 
-         wdpa_group.addLayer(wdpa_layer);
-            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-         wdpa_layer.bringToFront();
-          }
-  })
-  .done(function(data4) {
+   wdpa_group.addLayer(wdpa_layer);
+      if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+        console.info(wdpa_layer)
+   wdpa_layer.bringToFront();
+   }
+
+  }).done(function(data4) {
     lMap.spin(false);
-  });
-//---------------------------------------------------------------
-// WDPA WMS GEOSERVER LAYER
+
+    });
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//  WDPA WMS GEOSERVER LAYER
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// WDPA WMS GEOSERVER LAYER - SETUP
 //---------------------------------------------------------------
 
 var url = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
@@ -884,16 +359,17 @@ var wdpa=L.tileLayer.wms(url, {
     layers: 'conservationmapping:pa_50_2017',
     transparent: true,
     format: 'image/png',
-    opacity:'0.4',
+    opacity:'0.6',
     zIndex: 33
  }).addTo(lMap);
 
-
-
+//---------------------------------------------------------------
+//  WMS LAYER - GET FEATUREINFO FUNCTION
+//---------------------------------------------------------------
  /**
  * Return the WMS GetFeatureInfo URL for the passed map, layer and coordinate.
  * Specific parameters can be passed as params which will override the
- * calculated parameters of the same name.
+ * calculated parameters of the same name. https://github.com/heigeo/leaflet.wms --- https://astuntechnology.github.io/osgis-ol3-leaflet/leaflet/05-WMS-INFO.html
  */
 function getFeatureInfoUrl(map, layer, latlng, params) {
 
@@ -902,23 +378,18 @@ function getFeatureInfoUrl(map, layer, latlng, params) {
         bounds = map.getBounds(),
         sw = bounds.getSouthWest(),
         ne = bounds.getNorthEast();
-      //  sw = layer._crs.projection.project.forward([sw.lng, sw.lat]),
-      //  ne = layer._crs.projection.project.forward([ne.lng, ne.lat]);
 
     var defaultParams = {
         request: 'GetFeatureInfo',
         service: 'WMS',
-      //  srs: layer._crs.code,  //3857 seems not to WORK
         srs: 'EPSG:4326',
         styles: '',
         version: layer._wmsVersion,
         format: layer.options.format,
-      //  bbox: [sw.join(','), ne.join(',')].join(','),
         bbox: bounds.toBBoxString(),
         height: size.y,
         width: size.x,
         layers: layer.options.layers,
-    //    query_layers: layer.options.layers,
         info_format: 'text/javascript'
     };
 
@@ -928,39 +399,31 @@ function getFeatureInfoUrl(map, layer, latlng, params) {
     params[params.version === '1.3.0' ? 'j' : 'y'] = point.y;
 
     return layer._url + L.Util.getParamString(params, layer._url, true);
-
 }
 
 //---------------------------------------------------------------
 // WDPA WMS LEGEND
 //---------------------------------------------------------------
 function getColor4(d4) {
-   return d4 > 25000000  ? '#0D7248' :'#fff';
-}
-  var legend4 = L.control({position: 'bottomleft'});
-
-  legend4.onAdd = function (lMap) {
-
-   var div = L.DomUtil.create('div', 'info legend'),
+   return d4 > 10  ? '#0D7248' :
+          d4 > 20  ? '#0D7248':
+                    '#BCE3FB';
+                  }
+    var legend4 = L.control({position: 'bottomleft'});
+    legend4.onAdd = function (lMap) {
+      var div = L.DomUtil.create('div', 'info legend'),
         labels = ['<div id="wdpalegend"><p> Legend</p></div>'],
-        grades4 = [25000000],
-        key_labels4 = ['Protected Area'];
-
-   // loop through our density intervals and generate a label with a colored square for each interval
-   for (var i4 = 0; i4 < grades4.length; i4++) {
-       div.innerHTML +=
-    labels.push(
-           '<i style="background:' + getColor4(grades4[i4] + 1) + '"></i> ' +
-           key_labels4[i4] + (key_labels4[i4 + 1] ? '' + key_labels4[i4 + 1] + '<br>' : ''));
-   }
-   div.innerHTML = labels.join('');
-   return div;
+        grades4 = [10,20],
+        key_labels4 = ['Marine', 'Terrestrial'];
+        for (var i4 = 0; i4 < grades4.length; i4++) {div.innerHTML += labels.push('<i style="background:' + getColor4(grades4[i4]) + '"></i> ' + ( key_labels4[i4] ? key_labels4[i4] + '<br>' : '+')); }
+        div.innerHTML = labels.join('');
+        return div;
 };
 legend4.addTo(lMap);
 
-//---------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  WDPA HIGHLIGHT WMS SETUP
-//--------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
       var url = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
       var wdpa_hi=L.tileLayer.wms(url, {
@@ -973,11 +436,546 @@ legend4.addTo(lMap);
 
        wdpa_hi.setParams({CQL_FILTER:"name LIKE ''"}); // GEOSERVER WMS FILTER
 
-       //Predefined callback function
+//---------------------------------------------------------------
+// SEARCH WDPA
+//--------------------------------------------------------------
+       var searchwdpa = L.control.search({
+       position:'topright',
+       layer: wdpa_group,
+       zoom:9,
+       circleLocation: false,
+       wdpa_layer: wdpa_hi,
+       textErr: 'Site not found',
+       propertyName: 'pa_name',
+       textPlaceholder: 'Protected Area...          ',
+       buildTip: function(text, val) {
+       var type = val.layer.feature.properties.wdpa_pid;
+       return '<a href="#" class="'+type+'"><b>'+text+'</b></a>';
+      }
+      }).addTo(lMap);
+//---------------------------------------------------------------
+// ONCLICK RESPONSE ON HIGLIGHTED WDPA
+//--------------------------------------------------------------
+       function hi_highcharts(info,latlng){
+         //CREATE VARIABLES OF EACH COLUMN YOU WANT TO SHOW FROM THE ATTRIBUTE TABLE OF THE WDPA WMS - EACH VARIABLE NEED TO BE SET IN UNDER "getFeatureInfoUrl" FUNCTION
+         var name=info['name'];
+         var wdpaid=info['wdpaid'];
+         var desig_eng=info['desig_eng'];
+         var desig_type=info['desig_type'];
+         var iucn_cat=info['iucn_cat'];
+         var gis_area=info['gis_area'];
+         var status=info['status'];
+         var status_yr=info['status_yr'];
+         var mang_auth=info['mang_auth'];
+
+         //WDPA HIGLIGHTED POPUP
+         var popupContentwdpa = '<center><a href="/wdpa/'+wdpaid+'">'+name+'</a></center><hr>';
+
+         var popup = L.popup()
+              .setLatLng([latlng.lat, latlng.lng])
+              .setContent(popupContentwdpa)
+              .openOn(lMap);
+
+        //WDPA HIGLIGHTED HEADER RIGHT BOX
+         $('#container8').html('<center><a href="/wdpa/'+wdpaid+'">'+name+'</a></center>');
+        //WDPA HIGLIGHTED GENERAL INFO RIGHT BOX
+         $('#container2').html('<p><span>Designation &nbsp;</span><b>'+desig_eng+'</b></p>'+
+                                '<p><span>Designation Type &nbsp;</span><b>'+desig_type+'</b></p>'+
+                                '<p><span>IUCN Category &nbsp;</span><b>'+iucn_cat+'</b></p>'+
+                                '<p><span>Reported Area (KM²) &nbsp;</span><b>'+gis_area+'</b></p>'+
+                                '<p><span>Year &nbsp;</span><b>'+status_yr+'</b></p>'+
+                                '<p><span>Management Authority &nbsp;</span><b>'+mang_auth+'</b></p>'+
+                                '<p><span>Status&nbsp;</span><b>'+status+'</b></p>');
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// WDPA GRAPHS
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+         var url = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_radarplot_pa?wdpaid=' + wdpaid;
+         var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_climate_pa?wdpaid=' + wdpaid;
+         var urlecoregion = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabitat/get_ecoregion_in_wdpa?wdpaid=' + wdpaid;
+
+         $.ajax({
+             url: url,
+             dataType: 'json',
+             success: function(d) {
+                 if (d.metadata.recordCount == 0) {
+                     jQuery('#container3');
+                     jQuery('#container3').append('');
+                 } else {
+                     var title = [];
+                     var country_avg = [];
+                     var site_norm_value = [];
+
+                     $(d.records).each(function(i, data) {
+
+                         switch (data.title) {
+                             case 'Agriculture':
+                             for (var prop in data) {
+                                     if (prop == 'title') {
+                                         title.push("Agriculture")
+                                     }
+                                     else if (prop == 'country_avg') {
+                                         if(data[prop]>=0)
+                                         country_avg.push(data[prop]);
+                                         else
+                                         country_avg.push(0);
+                                     }
+                                     else if (prop == 'site_norm_value') {
+                                         if(data[prop]>=0)
+                                         site_norm_value.push(data[prop]);
+                                         else
+                                         site_norm_value.push(0);
+                                     }
+                                     else {
+                                     }
+                                 }
+                                 break;
+                             case 'Population':
+                             for (var prop in data) {
+                                     if (prop == 'title') {
+                                         title.push("Population")
+                                     }
+                                     else if (prop == 'country_avg') {
+                                         if(data[prop]>=0)
+                                         country_avg.push(data[prop]);
+                                         else
+                                         country_avg.push(0);
+                                     }
+                                     else if (prop == 'site_norm_value') {
+                                         if(data[prop]>=0)
+                                         site_norm_value.push(data[prop]);
+                                         else
+                                         site_norm_value.push(0);
+                                     }
+                                     else {
+                                     }
+                                 }
+                                 break;
+                             case 'Internal Roads':
+                             for (var prop in data) {
+                                               if (prop == 'title') {
+                                                   title.push("Internal Roads")
+                                               }
+                                  else if (prop == 'country_avg') {
+                                      if(data[prop]>=0)
+                                      country_avg.push(data[prop]);
+                                      else
+                                      country_avg.push(0);
+                                               }
+                                  else if (prop == 'site_norm_value') {
+                                      if(data[prop]>=0)
+                                      site_norm_value.push(data[prop]);
+                                      else
+                                      site_norm_value.push(0);
+                                               }
+                                  else {
+                                  }
+                                           }
+                                 break;
+                             case 'Surrounding Roads':
+                                 for (var prop in data) {
+                                     if (prop == 'title') {
+                                         title.push("Surrounding Roads")
+                                     }
+                                     else if (prop == 'country_avg') {
+                                         if(data[prop]>=0)
+                                         country_avg.push(data[prop]);
+                                         else
+                                         country_avg.push(0);
+                                     }
+                                     else if (prop == 'site_norm_value') {
+                                         if(data[prop]>=0)
+                                         site_norm_value.push(data[prop]);
+                                         else
+                                         site_norm_value.push(0);
+                                     }
+                                     else {
+                                     }
+                                 }
+                                 break;
+                             case 'AMPHIBIA':
+                             for (var prop in data) {
+                                     if (prop == 'title') {
+                                         title.push("Amphibians")
+                                     }
+                                     else if (prop == 'country_avg') {
+                                         if(data[prop]>=0)
+                                         country_avg.push(data[prop]);
+                                         else
+                                         country_avg.push(0);
+                                     }
+                                     else if (prop == 'site_norm_value') {
+                                         if(data[prop]>=0)
+                                         site_norm_value.push(data[prop]);
+                                         else
+                                         site_norm_value.push(0);
+                                     }
+                                     else {
+                                     }
+                                 }
+                                 break;
+                             case 'MAMMALIA':
+                             for (var prop in data) {
+                                     if (prop == 'title') {
+                                         title.push("Mammals")
+                                     }
+                                     else if (prop == 'country_avg') {
+                                         if(data[prop]>=0)
+                                         country_avg.push(data[prop]);
+                                         else
+                                         country_avg.push(0);
+                                     }
+                                     else if (prop == 'site_norm_value') {
+                                         if(data[prop]>=0)
+                                         site_norm_value.push(data[prop]);
+                                         else
+                                         site_norm_value.push(0);
+                                     }
+                                     else {
+                                     }
+                                 }
+                                 break;
+                             case 'AVES':
+                             for (var prop in data) {
+                                     if (prop == 'title') {
+                                         title.push("Birds")
+                                     }
+                                     else if (prop == 'country_avg') {
+                                         if(data[prop]>=0)
+                                         country_avg.push(data[prop]);
+                                         else
+                                         country_avg.push(0);
+                                     }
+                                     else if (prop == 'site_norm_value') {
+                                         if(data[prop]>=0)
+                                         site_norm_value.push(data[prop]);
+                                         else
+                                         site_norm_value.push(0);
+                                     }
+                                     else {
+                                     }
+                                 }
+                                 break;
+                             case 'Popn. change':
+                             for (var prop in data) {
+                                     if (prop == 'title') {
+                                         title.push("Pop. Change")
+                                     }
+                                     else if (prop == 'country_avg') {
+                                         if(data[prop]>=0)
+                                         country_avg.push(data[prop]);
+                                         else
+                                         country_avg.push(0);
+                                     }
+                                     else if (prop == 'site_norm_value') {
+                                         if(data[prop]>=0)
+                                         site_norm_value.push(data[prop]);
+                                         else
+                                         site_norm_value.push(0);
+                                     }
+                                     else {
+                                     }
+                                 }
+                                 break;
+                             case 'Terrestrial HDI':
+                             // if ($pamarine=='100 % marine'){
+                             //  break;
+                             // }
+                             for (var prop in data) {
+                                     if (prop == 'title') {
+                                         title.push("Terrestrial HDI")
+                                     }
+                                     else if (prop == 'country_avg') {
+                                         if(data[prop]>=0)
+                                         country_avg.push(data[prop]);
+                                         else
+                                         country_avg.push(0);
+                                     }
+                                     else if (prop == 'site_norm_value') {
+                                         if(data[prop]>=0)
+                                         site_norm_value.push(data[prop]);
+                                         else
+                                         site_norm_value.push(0);
+                                     }
+                                     else {
+                                     }
+                                 }
+                                 break;
+
+                             default:
+                                 break;
+                         }
 
 
+                     });
+
+
+                     $('#container3').highcharts({
+                         chart: {
+                             polar: true,
+                           //  type: 'bar',
+                           //  zoomType: 'xy',
+                              height: 320,
+                              width: 420,
+                              //colors: ['#c9db72', '#5b8059']
+                         },
+
+                         title: {
+                             text: null
+                         },
+                         subtitle: {
+                             text: "SUMMARY DATA"
+                         },
+
+                         credits: {
+                             enabled: false,
+                             text: null,
+                           //  href: 'http://ehabitat-wps.jrc.ec.europa.eu/dopa_explorer/?pa='+$paid
+                         },
+                         xAxis: {
+                             categories: title,
+                             tickmarkPlacement: 'on',
+                             lineWidth: 0
+                         },
+                         tooltip: {
+                             formatter: function() {
+                                 var s = [];
+
+                                 $.each(this.points, function(i, point) {
+                                     if(point.series.name == "Country Average"){
+                                         s.push('<span style="color:rgb(124, 181, 236);font-weight:bold;">'+ point.series.name +' : '+
+                                         point.y +'<span>');
+                                     }
+                                     else{
+                                         s.push('<span style="color:rgb(0, 0, 0);">'+ point.series.name +' : '+
+                                         point.y +'<span>');
+                                     }
+                                 });
+
+                                 return s.join('<br>');
+                             },
+                             shared: true
+                         },
+                         yAxis: {
+                             lineWidth: 0,
+                             min: 0,
+                             tickInterval: 10,
+                           //  min: 0,
+                             //max: 100
+                         },
+
+                         series: [{
+                             type: 'area',
+                             marker: {
+                                 enabled: false
+                             },
+                             name: 'Country Average',
+                             data: country_avg,
+                             color: '#D5DBDF'
+                         },
+                         {
+                             type: 'line',
+                             marker: {
+                                 enabled: true
+                             },
+                             name: 'Protected Area',
+                             data: site_norm_value,
+                             color: '#22a6f5'
+                         }]
+                     });
+                   }
+                 }
+               });
+
+               setTimeout(function()
+               {
+
+                 $.ajax({
+                     url: urlclima,
+                     dataType: 'json',
+                     success: function(d) {
+                         if (d.metadata.recordCount == 0) {
+                             //jQuery('#container2');
+                             //jQuery('#container2').append('There is no summary data for this WDPA');
+                         } else {
+                           var precip = [];
+                           var tmax = [];
+                           var tmin = [];
+                           var tmean = [];
+                           $(d.records).each(function(i, data) {
+                               //	console.warn(i)
+
+                               switch (data.type) {
+                                   case 'prec':
+                                       for (var prop in data) {
+                                           if (prop !== 'type' && prop !== 'uom') {
+                                               precip.push(data[prop])
+                                           }
+                                       }
+
+                                       break;
+                                   case 'tmin':
+                                       for (var prop in data) {
+                                           if (prop !== 'type' && prop !== 'uom')
+                                               tmin.push(data[prop])
+                                       }
+
+                                       break;
+
+                                   case 'tmax':
+                                       for (var prop in data) {
+                                           if (prop !== 'type' && prop !== 'uom')
+                                               tmax.push(data[prop])
+                                       }
+                                       break;
+
+                                   case 'tmean':
+
+                                       for (var prop in data) {
+                                           if (prop !== 'type' && prop !== 'uom')
+                                               tmean.push(data[prop])
+                                       }
+                                       break;
+                                   default:
+                                       break;
+                               }
+
+
+                           });
+
+
+                           $('#containerclima').highcharts({
+                               chart: {
+                                   zoomType: 'xy',
+                       // height: 400,
+                 //                   width: 500
+                               },
+                               legend: {
+
+                               },
+                               title: {
+                                   text: null
+                               },
+                               subtitle: {
+                                    text: 'Monthly climate averages'
+                               },
+                               xAxis: [{
+                                   categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+                                   ]
+                               }],
+                               yAxis: [{ // Primary yAxis
+                                   labels: {
+                                       format: '{value}°C',
+                                       color: '#3E576F',
+                                       style: {
+                                           //color: Highcharts.getOptions().colors[2]
+                                           color: '#3E576F'
+                                       }
+                                   },
+                                   title: {
+                                       text: 'Temperature',
+                                       color: '#3E576F',
+                                       style: {
+                                           color: '#3E576F'
+                                       }
+                                   },
+                                   opposite: false
+
+                               }, { // Secondary yAxis
+                                   gridLineWidth: 0,
+                                   title: {
+                                       text: 'Precipitation (mm)',
+                                       style: {
+                                           color: '#3E576F'
+                                       }
+                                   },
+                                   labels: {
+                                       format: '{value} mm',
+                                       style: {
+                                           color: '#3E576F'
+                                       }
+                                   },
+                                   opposite: true
+
+
+                               }],
+                               tooltip: {
+                                   shared: true
+                               },
+                               credits: {
+                                   enabled: true,
+                                   text: 'WorldClim',
+                                   href: 'http://www.worldclim.org/'
+                               },
+                               series: [{
+                                 showInLegend: false,
+                                   name: 'Precipitation',
+                                   type: 'column',
+                                   color: '#22a6f5',
+                                   yAxis: 1,
+                                   data: precip,
+                                   tooltip: {
+                                       valueSuffix: ' mm'
+                                   }
+
+                               }, {
+                                 showInLegend: false,
+                                   name: 'Max Temperature',
+                                   type: 'spline',
+                                   color: '#e60000',
+                                   data: tmax,
+                                   marker: {
+                                       enabled: false
+                                   },
+                                   dashStyle: 'shortdot',
+                                   tooltip: {
+                                       valueSuffix: ' °C'
+                                   }
+                               }, {
+                                 showInLegend: false,
+                                   name: 'Mean Temperature',
+                                   type: 'spline',
+                                   color: '#fcb100',
+                                   yAxis: 0,
+                                   data: tmean,
+                                   marker: {
+                                       enabled: false
+                                   },
+                                   dashStyle: 'shortdot',
+                                   tooltip: {
+                                       valueSuffix: ' °C'
+                                   }
+                               }, {
+                                 showInLegend: false,
+                                   name: 'Min Temperature',
+                                   type: 'spline',
+                                   color: '#81AFD5',
+                                   yAxis: 0,
+                                   data: tmin,
+                                   marker: {
+                                       enabled: false
+                                   },
+                                   dashStyle: 'shortdot',
+                                   tooltip: {
+                                       valueSuffix: ' °C'
+                                   }
+                               }]
+                           });
+                         }
+                     },
+
+                 });
+                 }, 200);
+
+       }
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Info for WMS layer - https://astuntechnology.github.io/osgis-ol3-leaflet/leaflet/05-WMS-INFO.html
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      // Add an event handler for the map "click" even
        lMap.on('click', function(e) {
 
+           var latlng= e.latlng;
            // Build the URL for a GetFeatureInfo
            var url = getFeatureInfoUrl(
                            lMap,
@@ -985,80 +983,67 @@ legend4.addTo(lMap);
                            e.latlng,
                            {
                                'info_format': 'text/javascript',  //it allows us to get a jsonp
-                               'propertyName': 'wdpaid',
+                               'propertyName': 'wdpaid,name,desig_eng,desig_type,iucn_cat,gis_area,status,status_yr,mang_auth',
                                'query_layers': 'conservationmapping:pa_50_2017',
                                'format_options':'callback:getJson'
                               // 'layers': 'conservationmapping:pa_50_2017'
                            }
                        );
-            console.warn(url)
-
+          //  console.warn(url)
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// JSONP with the GetFeatureInfo-Request - http://gis.stackexchange.com/questions/211458/using-jsonp-with-leaflet-and-getfeatureinfo-request
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
             $.ajax({
-
-              jsonp: false,
-                   url: url,
-                   dataType: 'jsonp',
-                   jsonpCallback: 'getJson',
-                   success: handleJson_featureRequest
-               });
+                    jsonp: false,
+                    url: url,
+                    dataType: 'jsonp',
+                    jsonpCallback: 'getJson',
+                    success: handleJson_featureRequest
+                  });
 
                function handleJson_featureRequest(data)
                {
+                  // if LAYER COVER THE MAP
+                  if (typeof data.features[0]!=='undefined')
+                      {
+                         // TAKE THE POERTIES OF THE LAYER
+                         var prop=data.features[0].properties;
+                                                                  // console.info(latlng)
+                        // AND TAKE THE WDPA ID
+                         var filter="wdpaid='"+prop['wdpaid']+"'";
 
-                 var prop=data.features[0].properties;
+                        // AND SET THE FILTER OF WDPA HIGLIGHTED
+                         wdpa_hi.setParams({CQL_FILTER:filter});
+                                                                  //   console.info(filter);
+                         hi_highcharts(prop,latlng);
 
-                 var filter="wdpaid='"+prop['wdpaid']+"'";
-                 wdpa_hi.setParams({CQL_FILTER:filter});
-              //   console.info(filter);
-                 $( "#block-block-127" ).show();
+                         // SHOW THE DIV CONTAINING GRAPHS AND INFO
+                         $( "#block-block-127" ).show(); // RIGHT INFO BOX
+                         $( "#block-block-132" ).show(); // BUTTON FOR CLIMATE GRAPHS
+                   }
+                   else {
+                     console.log(' no info')
+                   }
                }
        });
 
-//---------------------------------------------------------------
-// SEARCH WDPA
-//--------------------------------------------------------------
-     var searchwdpa = L.control.search({
-     position:'topright',
-     layer: wdpa_group,
-     zoom:9,
-     wdpa_layer: wdpa_hi,
-     textErr: 'Site not found',
-     propertyName: 'pa_name',
-     textPlaceholder: 'Protected Area...          ',
-     buildTip: function(text, val) {
-     var type = val.layer.feature.properties.wdpa_pid;
-     return '<a href="#" class="'+type+'"><b>'+text+'</b></a>';
-   }
- })
- .addTo(lMap);
 
- //---------------------------------------------------------------
- // HIGHLIGHT WDPA WHEN CLICK ON LENTE
- //--------------------------------------------------------------
 
- // $('.search-button').click(function updateParams() {
- //     var x = document.getElementById("searchtext27").value;
- //     console.info(x);
- //     var filter = "name LIKE'" + x + "'";
- //     return wdpa_hi.setParams({CQL_FILTER:filter});
- // });
+ //-------------------------------------------------------------------------------------------------------------------
+ // HIDE "RIGHT INFO BOX" "BUTTON FOR CLIMATE GRAPHS" AND "CLIMATE GRAPHS" WHEN YOU CLICK OUTSIDE OF THE LAYER
+ //-------------------------------------------------------------------------------------------------------------------
 
- //-------------------------------------------------------------------
-
- lMap.on('click',function(e)
-{
-  $( "#block-block-128" ).hide();
+lMap.on('click',function(e){
+    $( "#block-block-128" ).hide();
     $( "#block-block-127" ).hide();
+    $( "#containerclima" ).hide();
+    })
 
-})
-
-lMap.on('popupclose',function(e)
-{
- $( "#block-block-128" ).hide();
-   $( "#block-block-127" ).hide();
-
-})
-
+lMap.on('popupclose',function(e){
+    $( "#block-block-128" ).hide();
+    $( "#block-block-127" ).hide();
+    $( "#containerclima" ).hide();
+    })
 
 //---------------------------------------------------------------
 // OPENSTREETMAP SEARCH
@@ -1091,16 +1076,7 @@ lMap.on('popupclose',function(e)
 //------------------------------------------------------------------
 // Simple switcher
 //-------------------------------------------------------------------
-  // var controls = L.control.layers(baseMaps, overlayMaps, {collapsed: false,}).addTo(lMap);
-
-
-
-
-
-
-
-
-
+// var controls = L.control.layers(baseMaps, overlayMaps, {collapsed: false,}).addTo(lMap);
 //---------------------------------------------------------------------
 // Remove LAYER COUNTRY when wdpa search is activated
 //----------------------------------------------------------------------
@@ -1111,32 +1087,16 @@ lMap.on('popupclose',function(e)
 //          lMap.addLayer(wdpa);
 //     } else {}
 // });
-
-
-//--------------------------------------------------------------------------------------------------------------------
-// FUNCTION SELECT (TO SHOW THE GRAPH)
-//--------------------------------------------------------------------------------------------------------------------
-		function select (layer) {
-
-		  if (selected !== null) {
-
-		    var previous = selected;
-		  }else {
-		  //  $( "#block-block-128" ).show();
-		  }
-			//lMap.fitBounds(layer.getBounds());
-			selected = layer;
-		}
-		var selected = null;
 //---------------------------------------------------------------------
 // add remove layers
 //----------------------------------------------------------------------
 $(".middlewdpa").click(function(event) {
  event.preventDefault();
  if (lMap.hasLayer(wdpa)) {
- lMap.removeLayer(wdpa);
- lMap.removeLayer(wdpa_group);
- } else {
+     lMap.removeLayer(wdpa);
+     lMap.removeLayer(wdpa_group);
+ } 
+ else {
    lMap.addLayer(wdpa);
    lMap.addLayer(wdpa_group);
  }
@@ -1145,29 +1105,27 @@ $(".middlewdpa").click(function(event) {
 $(".middlecountry").click(function(event) {
  event.preventDefault();
  if (lMap.hasLayer(Country_layer)) {
- lMap.removeLayer(Country_layer);
- lMap.removeLayer(grayscale);
-lMap.addLayer(streets);
+     lMap.removeLayer(Country_layer);
+     lMap.removeLayer(grayscale);
+     lMap.addLayer(streets);
  } else {
-   lMap.addLayer(Country_layer);
-   lMap.removeLayer(streets);
- lMap.addLayer(grayscale);
+     lMap.addLayer(Country_layer);
+     lMap.removeLayer(streets);
+     lMap.addLayer(grayscale);
  }
 });
 $(".middleeco").click(function(event) {
  event.preventDefault();
  if (lMap.hasLayer(Ecoregion_layer)) {
- lMap.removeLayer(Ecoregion_layer);
-  lMap.removeLayer(grayscale);
- lMap.addLayer(streets);
+     lMap.removeLayer(Ecoregion_layer);
+     lMap.removeLayer(grayscale);
+     lMap.addLayer(streets);
  } else {
-   lMap.addLayer(Ecoregion_layer);
+     lMap.addLayer(Ecoregion_layer);
      lMap.removeLayer(streets);
-   lMap.addLayer(grayscale);
+     lMap.addLayer(grayscale);
  }
 });
 //-------------------------------------------------------------------------
-
 })
-
 })(jQuery);
