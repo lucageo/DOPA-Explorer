@@ -154,6 +154,8 @@
 
     var popupContent1 = '<center><a href="/region/'+feature.properties.continent+'">'+feature.properties.continent+'</a></center><hr>';
 
+
+
     var t1=function()
     {
       return [	{
@@ -1448,14 +1450,14 @@ $.ajax({
 
 lMap.on('click',function(e){
     $( "#block-block-128" ).hide();
-    $( "#block-block-127" ).hide();
+  //  $( "#block-block-127" ).hide();
     $( "#containerclima" ).hide();
         $( "#block-block-135" ).hide();
     })
 
 lMap.on('popupclose',function(e){
     $( "#block-block-128" ).hide();
-    $( "#block-block-127" ).hide();
+    //$( "#block-block-127" ).hide();
     $( "#containerclima" ).hide();
         $( "#block-block-135" ).hide();
     })
@@ -1527,11 +1529,13 @@ $(".middlecountry").click(function(event) {
  event.preventDefault();
  if (lMap.hasLayer(Country_layer)) {
      lMap.removeLayer(Country_layer);
+     lMap.addLayer(wdpa);
           $("#print_btn_country").hide();
  } else {
      lMap.addLayer(Country_layer);
      lMap.removeLayer(Region_layer);
       lMap.removeLayer(Ecoregion_layer);
+      lMap.removeLayer(wdpa);
       $(".active4").hide();
       $(".inactive4").show();
       $(".active3").hide();
@@ -1551,6 +1555,7 @@ $(".middlecountry").click(function(event) {
       $("#disclaimer__arrow_3").hide();
       $("#glc2000-chart").hide();
       $("#someinfo").hide();
+      $( "#block-block-127" ).hide();
 
  }
 });
@@ -1558,11 +1563,13 @@ $(".middleeco").click(function(event) {
  event.preventDefault();
  if (lMap.hasLayer(Ecoregion_layer)) {
      lMap.removeLayer(Ecoregion_layer);
+     lMap.addLayer(wdpa);
           $("#print_btn_ecoregion").hide();
  } else {
      lMap.addLayer(Ecoregion_layer);
      lMap.removeLayer(Region_layer);
       lMap.removeLayer(Country_layer);
+      lMap.removeLayer(wdpa);
       $(".active4").hide();
       $(".inactive4").show();
       $(".active1").hide();
@@ -1582,6 +1589,7 @@ $(".middleeco").click(function(event) {
       $("#disclaimer__arrow_3").hide();
       $("#glc2000-chart").hide();
       $("#someinfo").hide();
+      $( "#block-block-127" ).hide();
  }
 });
 
@@ -1589,11 +1597,13 @@ $(".middlereg").click(function(event) {
  event.preventDefault();
  if (lMap.hasLayer(Region_layer)) {
      lMap.removeLayer(Region_layer);
+     lMap.addLayer(wdpa);
           $("#print_btn_reg").hide();
  } else {
      lMap.addLayer(Region_layer);
      lMap.removeLayer(Ecoregion_layer);
      lMap.removeLayer(Country_layer);
+     lMap.removeLayer(wdpa);
      $(".active1").hide();
      $(".inactive1").show();
      $(".active3").hide();
@@ -1613,6 +1623,7 @@ $(".middlereg").click(function(event) {
      $("#disclaimer__arrow_3").hide();
      $("#glc2000-chart").hide();
      $("#someinfo").hide();
+     $( "#block-block-127" ).hide();
  }
 });
 //-------------------------------------------------------------------------
