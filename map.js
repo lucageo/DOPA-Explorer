@@ -364,41 +364,213 @@
 
            layer.on('popupopen', function(e) {
 
-             $('#container4').highcharts({
-               chart: {type:'bar', height: 300, width: 370},
-               colors: ['#c9db72', '#5b8059'],
-               title: {text: null},
-               subtitle: {
-                   text: 'ECOREGION PROTECTION CONNECTIVITY'
-               },
-               credits: {
-                   enabled: false,
-                   text: null,
-                 //  href: 'http://ehabitat-wps.jrc.ec.europa.eu/dopa_explorer/?pa='+$paid
-               },
-   			xAxis: {
-               categories: ['%'],
-               title: {
-                   text: null
-               }
-           },
-   			yAxis: {
-               min: 0,
-               title: {
-                   text: 'Aichi Target 11 Indexes',
-                   align: 'high'
-               },
-               labels: {
-                   overflow: 'justify'
-               }
-           },
+             // The speed gauge
+            $('#container4').highcharts ({
 
-               series: t(feature)
+
+              chart: {
+                  type: 'solidgauge'
+              },
+
+              title: null,
+
+              pane: {
+                  center: ['50%', '50%'],
+                  size: '60%',
+                  startAngle: -90,
+                  endAngle: 90,
+                  background: {
+                       backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#FAFAFA',
+                      innerRadius: '100%',
+                      outerRadius: '60%',
+                      shape: 'arc'
+                  }
+              },
+
+                 yAxis: {
+                     min: 0,
+                     max: 100,
+                       y: 20,
+                     title: {
+                         text: 'Ecoregion Protection',
+                          y: -100
+                     },
+
+                     stops: [
+                         [0.0, '#f7feae'], // green
+                         [0.02, '#b7e6a5'], // yellow
+                         [0.05, '#7ccba2'], // red
+                         [0.08, '#46aea0'], // red
+                         [0.12, '#089099'], // red
+                         [0.17, '#00718b'], // red
+                         [0.5, '#045275'] // red
+
+                     ],
+
+                     lineWidth: 0,
+                     minorTickInterval: null,
+                     tickAmount:0,
+                     labels: {
+                         y: 20
+                     }
+                 },
+
+                 credits: {
+                     enabled: false
+                 },
+
+                 plotOptions: {
+                     solidgauge: {
+                         dataLabels: {
+                             y: 1,
+                             borderWidth: 0,
+                             useHTML: true
+                         }
+                     }
+                 },
+
+                 series: [{
+                     name: 'Protection',
+                     data: [parseFloat(Math.round(feature.properties.tojson_p_3*100)/100)],
+                     dataLabels: {
+                       format: '<div style="text-align:center"><span style="font-size:20px;color:' +
+    ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y}</span><br/>' +
+       '<span style="font-size:12px;color:silver">%</span></div>',
+                       y: -30
+                     },
+                     tooltip: {
+                         valueSuffix: ' %'
+                     }
+                 }]
 
              });
+
+             // The speed gauge
+            $('#container24').highcharts ({
+
+
+              chart: {
+                  type: 'solidgauge'
+              },
+
+              title: null,
+
+              pane: {
+                  center: ['50%', '50%'],
+                  size: '60%',
+                  startAngle: -90,
+                  endAngle: 90,
+                  background: {
+                       backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#FAFAFA',
+                      innerRadius: '100%',
+                      outerRadius: '60%',
+                      shape: 'arc'
+                  }
+              },
+
+                 yAxis: {
+                     min: 0,
+                     max: 100,
+                       y: 20,
+                     title: {
+                         text: 'Ecoregion Connectivity',
+                          y: -100
+                     },
+
+                     stops: [
+                         [0.0, '#f7feae'], // green
+                         [0.02, '#b7e6a5'], // yellow
+                         [0.05, '#7ccba2'], // red
+                         [0.08, '#46aea0'], // red
+                         [0.12, '#089099'], // red
+                         [0.17, '#00718b'], // red
+                         [0.5, '#045275'] // red
+
+                     ],
+
+                     lineWidth: 0,
+                     minorTickInterval: null,
+                     tickAmount:0,
+                     labels: {
+                         y: 20
+                     }
+                 },
+
+                 credits: {
+                     enabled: false
+                 },
+
+                 plotOptions: {
+                     solidgauge: {
+                         dataLabels: {
+                             y: 1,
+                             borderWidth: 0,
+                             useHTML: true
+                         }
+                     }
+                 },
+
+                 series: [{
+                     name: 'Protection',
+                     data: [parseFloat(Math.round(feature.properties.tojson_p_2*100)/100)],
+                     dataLabels: {
+                       format: '<div style="text-align:center"><span style="font-size:20px;color:' +
+          ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y}</span><br/>' +
+          '<span style="font-size:12px;color:silver">%</span></div>',
+                       y: -30
+                     },
+                     tooltip: {
+                         valueSuffix: ' %'
+                     }
+                 }]
+
+             });
+
+
+
+        //      $('#container4').highcharts({
+        //        chart: {type:'bar', height: 300, width: 370},
+        //        colors: ['#c9db72', '#5b8059'],
+        //        title: {text: null},
+        //        subtitle: {
+        //            text: 'ECOREGION PROTECTION CONNECTIVITY'
+        //        },
+        //        credits: {
+        //            enabled: false,
+        //            text: null,
+        //          //  href: 'http://ehabitat-wps.jrc.ec.europa.eu/dopa_explorer/?pa='+$paid
+        //        },
+   		// 	xAxis: {
+        //        categories: ['%'],
+        //        title: {
+        //            text: null
+        //        }
+        //    },
+   		// 	yAxis: {
+        //        min: 0,
+        //        title: {
+        //            text: 'Aichi Target 11 Indexes',
+        //            align: 'high'
+        //        },
+        //        labels: {
+        //            overflow: 'justify'
+        //        }
+        //    },
+        //
+        //        series: t(feature)
+        //
+        //      });
+
+
+
               $('#container5').html('<center><a href="/ecoregion/'+feature.properties.ecoregion0+'">'+feature.properties.ecoregion_+'</a></center><hr>');
               $('#container6').html('<hr><p>BIOME <b>'+feature.properties.biome+'</b></p><hr>');
               $('#container7').html('<p>REALM <b>'+feature.properties.realm+'</b></p><hr>');
+
+
+
+
+
            });
 
 
@@ -731,90 +903,302 @@ legend4.addTo(lMap);
          var urlclc2000 = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_wdpa_lc_stats_glc2000?wdpaid='+ wdpaid; //get land cover 2000 in pa
          var urlclc2005 = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_wdpa_lc_stats_glob2005?wdpaid=' + wdpaid; //get land cover 2005 in pa
 
-//-----------------------------------------------------------------------------
-// clc 2005 graph
-//-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+// spyder graph
+//-----------------------------------------------------------------------------
 $.ajax({
-    url: urlclc2005,
-    dataType: 'json',
-    success: function(d) {
-        if (d.metadata.recordCount == 0) {
-            jQuery('#glob2005-chart');
-            //jQuery('#glc2000-chart').append('There is no GLC2000 data for '+ $paname)
-        } else {
-            var obj = {};
-            var colors_array = [];
-            var obj_array = [];
-            var _classif=[];
-            $(d.records).each(function(i, data) {
-                var lclass = data.lclass;
-                obj[lclass] = data;
+  url: url,
+  dataType: 'json',
+  success: function(d) {
+      if (d.metadata.recordCount == 0) {
+          jQuery('#container3');
+          jQuery('#container3').append('');
+      } else {
+          var title = [];
+          var country_avg = [];
+          var site_norm_value = [];
 
-                    _classif.push(data.label);
-                    obj_array.push({name: data.label,data:[data.area],percent:data.percent})
+          $(d.records).each(function(i, data) {
 
-            });
+              switch (data.title) {
+                  case 'Agriculture':
+                  for (var prop in data) {
+                          if (prop == 'title') {
+                              title.push("Agriculture")
+                          }
+                          else if (prop == 'country_avg') {
+                              if(data[prop]>=0)
+                              country_avg.push(data[prop]);
+                              else
+                              country_avg.push(0);
+                          }
+                          else if (prop == 'site_norm_value') {
+                              if(data[prop]>=0)
+                              site_norm_value.push(data[prop]);
+                              else
+                              site_norm_value.push(0);
+                          }
+                          else {
+                          }
+                      }
+                      break;
+                  case 'Population':
+                  for (var prop in data) {
+                          if (prop == 'title') {
+                              title.push("Population")
+                          }
+                          else if (prop == 'country_avg') {
+                              if(data[prop]>=0)
+                              country_avg.push(data[prop]);
+                              else
+                              country_avg.push(0);
+                          }
+                          else if (prop == 'site_norm_value') {
+                              if(data[prop]>=0)
+                              site_norm_value.push(data[prop]);
+                              else
+                              site_norm_value.push(0);
+                          }
+                          else {
+                          }
+                      }
+                      break;
+                  case 'Internal Roads':
+                  for (var prop in data) {
+                                    if (prop == 'title') {
+                                        title.push("Internal Roads")
+                                    }
+                       else if (prop == 'country_avg') {
+                           if(data[prop]>=0)
+                           country_avg.push(data[prop]);
+                           else
+                           country_avg.push(0);
+                                    }
+                       else if (prop == 'site_norm_value') {
+                           if(data[prop]>=0)
+                           site_norm_value.push(data[prop]);
+                           else
+                           site_norm_value.push(0);
+                                    }
+                       else {
+                       }
+                                }
+                      break;
+                  case 'Surrounding Roads':
+                      for (var prop in data) {
+                          if (prop == 'title') {
+                              title.push("Surrounding Roads")
+                          }
+                          else if (prop == 'country_avg') {
+                              if(data[prop]>=0)
+                              country_avg.push(data[prop]);
+                              else
+                              country_avg.push(0);
+                          }
+                          else if (prop == 'site_norm_value') {
+                              if(data[prop]>=0)
+                              site_norm_value.push(data[prop]);
+                              else
+                              site_norm_value.push(0);
+                          }
+                          else {
+                          }
+                      }
+                      break;
+                  case 'AMPHIBIA':
+                  for (var prop in data) {
+                          if (prop == 'title') {
+                              title.push("Amphibians")
+                          }
+                          else if (prop == 'country_avg') {
+                              if(data[prop]>=0)
+                              country_avg.push(data[prop]);
+                              else
+                              country_avg.push(0);
+                          }
+                          else if (prop == 'site_norm_value') {
+                              if(data[prop]>=0)
+                              site_norm_value.push(data[prop]);
+                              else
+                              site_norm_value.push(0);
+                          }
+                          else {
+                          }
+                      }
+                      break;
+                  case 'MAMMALIA':
+                  for (var prop in data) {
+                          if (prop == 'title') {
+                              title.push("Mammals")
+                          }
+                          else if (prop == 'country_avg') {
+                              if(data[prop]>=0)
+                              country_avg.push(data[prop]);
+                              else
+                              country_avg.push(0);
+                          }
+                          else if (prop == 'site_norm_value') {
+                              if(data[prop]>=0)
+                              site_norm_value.push(data[prop]);
+                              else
+                              site_norm_value.push(0);
+                          }
+                          else {
+                          }
+                      }
+                      break;
+                  case 'AVES':
+                  for (var prop in data) {
+                          if (prop == 'title') {
+                              title.push("Birds")
+                          }
+                          else if (prop == 'country_avg') {
+                              if(data[prop]>=0)
+                              country_avg.push(data[prop]);
+                              else
+                              country_avg.push(0);
+                          }
+                          else if (prop == 'site_norm_value') {
+                              if(data[prop]>=0)
+                              site_norm_value.push(data[prop]);
+                              else
+                              site_norm_value.push(0);
+                          }
+                          else {
+                          }
+                      }
+                      break;
+                  case 'Popn. change':
+                  for (var prop in data) {
+                          if (prop == 'title') {
+                              title.push("Pop. Change")
+                          }
+                          else if (prop == 'country_avg') {
+                              if(data[prop]>=0)
+                              country_avg.push(data[prop]);
+                              else
+                              country_avg.push(0);
+                          }
+                          else if (prop == 'site_norm_value') {
+                              if(data[prop]>=0)
+                              site_norm_value.push(data[prop]);
+                              else
+                              site_norm_value.push(0);
+                          }
+                          else {
+                          }
+                      }
+                      break;
+                  case 'Terrestrial HDI':
+                  // if ($pamarine=='100 % marine'){
+                  //  break;
+                  // }
+                  for (var prop in data) {
+                          if (prop == 'title') {
+                              title.push("Terrestrial HDI")
+                          }
+                          else if (prop == 'country_avg') {
+                              if(data[prop]>=0)
+                              country_avg.push(data[prop]);
+                              else
+                              country_avg.push(0);
+                          }
+                          else if (prop == 'site_norm_value') {
+                              if(data[prop]>=0)
+                              site_norm_value.push(data[prop]);
+                              else
+                              site_norm_value.push(0);
+                          }
+                          else {
+                          }
+                      }
+                      break;
 
-            $('#glob2005-chart').highcharts({
-
-                chart: {
-                    type: 'column',
-                    zoomType: 'xy'
-                },
-                title: {
-                    text: null
-                },
-                subtitle: {
-                     text: 'Landcover 2005'
-                },
-                credits: {
-                    enabled: true,
-                    text: 'DOPA Services',
-                    href: 'http://dopa.jrc.ec.europa.eu'
-                },
-                xAxis: {
-                    categories: _classif,
-                    crosshair: true
-                },
-                yAxis: {
-                    min: 0,
-                    title: {
-                        text: 'Area'
-                    }
-                },
-                tooltip: {
-
-                   // shared: true,
-                     headerFormat: '<span style="font-size:16px">{series.name}</span><br>',
-        pointFormat: '<span>{point.name}</span> <b>{point.y:.2f}</b> hectareas <br/>'
-                 /*   headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
-                    pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
-                        '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
-                    footerFormat: '</table>',
-                    shared: true,
-                    useHTML: true
-                    */
-                },
-                plotOptions: {
-                    column: {
-                        pointPadding: 0.2,
-                        borderWidth: 0
-                    }
-                },
-
-                            series:
-                               // name: 'Preuba',
-                                obj_array
+                  default:
+                      break;
+              }
 
 
+          });
 
 
-            });
+          $('#container3').highcharts({
+              chart: {
+                  polar: true,
+                //  type: 'bar',
+                //  zoomType: 'xy',
+                   height: 320,
+                   width: 420,
+                   //colors: ['#c9db72', '#5b8059']
+              },
+
+              title: {
+                  text: null
+              },
+              subtitle: {
+                  text: "SUMMARY DATA"
+              },
+
+              credits: {
+                  enabled: true,
+                  text: 'DOPA Services',
+                  href: 'http://dopa.jrc.ec.europa.eu'
+              },
+              xAxis: {
+                  categories: title,
+                  tickmarkPlacement: 'on',
+                  lineWidth: 0
+              },
+              tooltip: {
+                  formatter: function() {
+                      var s = [];
+
+                      $.each(this.points, function(i, point) {
+                          if(point.series.name == "Country Average"){
+                              s.push('<span style="color:rgb(124, 181, 236);font-weight:bold;">'+ point.series.name +' : '+
+                              point.y +'<span>');
+                          }
+                          else{
+                              s.push('<span style="color:rgb(0, 0, 0);">'+ point.series.name +' : '+
+                              point.y +'<span>');
+                          }
+                      });
+
+                      return s.join('<br>');
+                  },
+                  shared: true
+              },
+              yAxis: {
+                  lineWidth: 0,
+                  min: 0,
+                  tickInterval: 10,
+                //  min: 0,
+                  //max: 100
+              },
+
+              series: [{
+                  type: 'area',
+                  marker: {
+                      enabled: false
+                  },
+                  name: 'Country Average',
+                  data: country_avg,
+                  color: '#D5DBDF'
+              },
+              {
+                  type: 'line',
+                  marker: {
+                      enabled: true
+                  },
+                  name: 'Protected Area',
+                  data: site_norm_value,
+                  color: '#22a6f5'
+              }]
+          });
         }
-    },
-
-  }).done(function(){
+      }
+    }).done(function(){
     //-----------------------------------------------------------------------------
     // clc 2000 graph
     //-----------------------------------------------------------------------------
@@ -900,301 +1284,92 @@ $.ajax({
 
     }).done(function(){
       //-----------------------------------------------------------------------------
-      // spyder graph
+      // clc 2005 graph
       //-----------------------------------------------------------------------------
-    $.ajax({
-        url: url,
-        dataType: 'json',
-        success: function(d) {
-            if (d.metadata.recordCount == 0) {
-                jQuery('#container3');
-                jQuery('#container3').append('');
-            } else {
-                var title = [];
-                var country_avg = [];
-                var site_norm_value = [];
 
-                $(d.records).each(function(i, data) {
+      $.ajax({
+          url: urlclc2005,
+          dataType: 'json',
+          success: function(d) {
+              if (d.metadata.recordCount == 0) {
+                  jQuery('#glob2005-chart');
+                  //jQuery('#glc2000-chart').append('There is no GLC2000 data for '+ $paname)
+              } else {
+                  var obj = {};
+                  var colors_array = [];
+                  var obj_array = [];
+                  var _classif=[];
+                  $(d.records).each(function(i, data) {
+                      var lclass = data.lclass;
+                      obj[lclass] = data;
 
-                    switch (data.title) {
-                        case 'Agriculture':
-                        for (var prop in data) {
-                                if (prop == 'title') {
-                                    title.push("Agriculture")
-                                }
-                                else if (prop == 'country_avg') {
-                                    if(data[prop]>=0)
-                                    country_avg.push(data[prop]);
-                                    else
-                                    country_avg.push(0);
-                                }
-                                else if (prop == 'site_norm_value') {
-                                    if(data[prop]>=0)
-                                    site_norm_value.push(data[prop]);
-                                    else
-                                    site_norm_value.push(0);
-                                }
-                                else {
-                                }
-                            }
-                            break;
-                        case 'Population':
-                        for (var prop in data) {
-                                if (prop == 'title') {
-                                    title.push("Population")
-                                }
-                                else if (prop == 'country_avg') {
-                                    if(data[prop]>=0)
-                                    country_avg.push(data[prop]);
-                                    else
-                                    country_avg.push(0);
-                                }
-                                else if (prop == 'site_norm_value') {
-                                    if(data[prop]>=0)
-                                    site_norm_value.push(data[prop]);
-                                    else
-                                    site_norm_value.push(0);
-                                }
-                                else {
-                                }
-                            }
-                            break;
-                        case 'Internal Roads':
-                        for (var prop in data) {
-                                          if (prop == 'title') {
-                                              title.push("Internal Roads")
-                                          }
-                             else if (prop == 'country_avg') {
-                                 if(data[prop]>=0)
-                                 country_avg.push(data[prop]);
-                                 else
-                                 country_avg.push(0);
-                                          }
-                             else if (prop == 'site_norm_value') {
-                                 if(data[prop]>=0)
-                                 site_norm_value.push(data[prop]);
-                                 else
-                                 site_norm_value.push(0);
-                                          }
-                             else {
-                             }
-                                      }
-                            break;
-                        case 'Surrounding Roads':
-                            for (var prop in data) {
-                                if (prop == 'title') {
-                                    title.push("Surrounding Roads")
-                                }
-                                else if (prop == 'country_avg') {
-                                    if(data[prop]>=0)
-                                    country_avg.push(data[prop]);
-                                    else
-                                    country_avg.push(0);
-                                }
-                                else if (prop == 'site_norm_value') {
-                                    if(data[prop]>=0)
-                                    site_norm_value.push(data[prop]);
-                                    else
-                                    site_norm_value.push(0);
-                                }
-                                else {
-                                }
-                            }
-                            break;
-                        case 'AMPHIBIA':
-                        for (var prop in data) {
-                                if (prop == 'title') {
-                                    title.push("Amphibians")
-                                }
-                                else if (prop == 'country_avg') {
-                                    if(data[prop]>=0)
-                                    country_avg.push(data[prop]);
-                                    else
-                                    country_avg.push(0);
-                                }
-                                else if (prop == 'site_norm_value') {
-                                    if(data[prop]>=0)
-                                    site_norm_value.push(data[prop]);
-                                    else
-                                    site_norm_value.push(0);
-                                }
-                                else {
-                                }
-                            }
-                            break;
-                        case 'MAMMALIA':
-                        for (var prop in data) {
-                                if (prop == 'title') {
-                                    title.push("Mammals")
-                                }
-                                else if (prop == 'country_avg') {
-                                    if(data[prop]>=0)
-                                    country_avg.push(data[prop]);
-                                    else
-                                    country_avg.push(0);
-                                }
-                                else if (prop == 'site_norm_value') {
-                                    if(data[prop]>=0)
-                                    site_norm_value.push(data[prop]);
-                                    else
-                                    site_norm_value.push(0);
-                                }
-                                else {
-                                }
-                            }
-                            break;
-                        case 'AVES':
-                        for (var prop in data) {
-                                if (prop == 'title') {
-                                    title.push("Birds")
-                                }
-                                else if (prop == 'country_avg') {
-                                    if(data[prop]>=0)
-                                    country_avg.push(data[prop]);
-                                    else
-                                    country_avg.push(0);
-                                }
-                                else if (prop == 'site_norm_value') {
-                                    if(data[prop]>=0)
-                                    site_norm_value.push(data[prop]);
-                                    else
-                                    site_norm_value.push(0);
-                                }
-                                else {
-                                }
-                            }
-                            break;
-                        case 'Popn. change':
-                        for (var prop in data) {
-                                if (prop == 'title') {
-                                    title.push("Pop. Change")
-                                }
-                                else if (prop == 'country_avg') {
-                                    if(data[prop]>=0)
-                                    country_avg.push(data[prop]);
-                                    else
-                                    country_avg.push(0);
-                                }
-                                else if (prop == 'site_norm_value') {
-                                    if(data[prop]>=0)
-                                    site_norm_value.push(data[prop]);
-                                    else
-                                    site_norm_value.push(0);
-                                }
-                                else {
-                                }
-                            }
-                            break;
-                        case 'Terrestrial HDI':
-                        // if ($pamarine=='100 % marine'){
-                        //  break;
-                        // }
-                        for (var prop in data) {
-                                if (prop == 'title') {
-                                    title.push("Terrestrial HDI")
-                                }
-                                else if (prop == 'country_avg') {
-                                    if(data[prop]>=0)
-                                    country_avg.push(data[prop]);
-                                    else
-                                    country_avg.push(0);
-                                }
-                                else if (prop == 'site_norm_value') {
-                                    if(data[prop]>=0)
-                                    site_norm_value.push(data[prop]);
-                                    else
-                                    site_norm_value.push(0);
-                                }
-                                else {
-                                }
-                            }
-                            break;
+                          _classif.push(data.label);
+                          obj_array.push({name: data.label,data:[data.area],percent:data.percent})
 
-                        default:
-                            break;
-                    }
+                  });
+
+                  $('#glob2005-chart').highcharts({
+
+                      chart: {
+                          type: 'column',
+                          zoomType: 'xy'
+                      },
+                      title: {
+                          text: null
+                      },
+                      subtitle: {
+                           text: 'Landcover 2005'
+                      },
+                      credits: {
+                          enabled: true,
+                          text: 'DOPA Services',
+                          href: 'http://dopa.jrc.ec.europa.eu'
+                      },
+                      xAxis: {
+                          categories: _classif,
+                          crosshair: true
+                      },
+                      yAxis: {
+                          min: 0,
+                          title: {
+                              text: 'Area'
+                          }
+                      },
+                      tooltip: {
+
+                         // shared: true,
+                           headerFormat: '<span style="font-size:16px">{series.name}</span><br>',
+              pointFormat: '<span>{point.name}</span> <b>{point.y:.2f}</b> hectareas <br/>'
+                       /*   headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                          pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                              '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
+                          footerFormat: '</table>',
+                          shared: true,
+                          useHTML: true
+                          */
+                      },
+                      plotOptions: {
+                          column: {
+                              pointPadding: 0.2,
+                              borderWidth: 0
+                          }
+                      },
+
+                                  series:
+                                     // name: 'Preuba',
+                                      obj_array
 
 
-                });
 
 
-                $('#container3').highcharts({
-                    chart: {
-                        polar: true,
-                      //  type: 'bar',
-                      //  zoomType: 'xy',
-                         height: 320,
-                         width: 420,
-                         //colors: ['#c9db72', '#5b8059']
-                    },
-
-                    title: {
-                        text: null
-                    },
-                    subtitle: {
-                        text: "SUMMARY DATA"
-                    },
-
-                    credits: {
-                        enabled: true,
-                        text: 'DOPA Services',
-                        href: 'http://dopa.jrc.ec.europa.eu'
-                    },
-                    xAxis: {
-                        categories: title,
-                        tickmarkPlacement: 'on',
-                        lineWidth: 0
-                    },
-                    tooltip: {
-                        formatter: function() {
-                            var s = [];
-
-                            $.each(this.points, function(i, point) {
-                                if(point.series.name == "Country Average"){
-                                    s.push('<span style="color:rgb(124, 181, 236);font-weight:bold;">'+ point.series.name +' : '+
-                                    point.y +'<span>');
-                                }
-                                else{
-                                    s.push('<span style="color:rgb(0, 0, 0);">'+ point.series.name +' : '+
-                                    point.y +'<span>');
-                                }
-                            });
-
-                            return s.join('<br>');
-                        },
-                        shared: true
-                    },
-                    yAxis: {
-                        lineWidth: 0,
-                        min: 0,
-                        tickInterval: 10,
-                      //  min: 0,
-                        //max: 100
-                    },
-
-                    series: [{
-                        type: 'area',
-                        marker: {
-                            enabled: false
-                        },
-                        name: 'Country Average',
-                        data: country_avg,
-                        color: '#D5DBDF'
-                    },
-                    {
-                        type: 'line',
-                        marker: {
-                            enabled: true
-                        },
-                        name: 'Protected Area',
-                        data: site_norm_value,
-                        color: '#22a6f5'
-                    }]
-                });
+                  });
               }
-            }
-          });
+          },
 
+        });
+//-----------------------------------------------------------------------------
+//CLIMATE GRAPH
+//-----------------------------------------------------------------------------
           $.ajax({
               url: urlclima,
               dataType: 'json',
@@ -1665,13 +1840,15 @@ $(document).ready(function(e) {
 
 $(document).ready(function(e) {
              $('button#print_btn_ecoregion').on('click', function(e)  {
-                  $('#container5, #container4, #container6, #container7').printThis({
+                  $('#container5, #container4,  #container24, #container6, #container7').printThis({
          // footer: $('.hidden-print-header-content'),
           loadCSS: "sites/all/themes/bootstrap_business/css/print.css",
           pageTitle:  "mario",
          //  pageTitle:  "<hr>",
-          header: "<img src='sites/default/files/report_logo.png'><br></br><hr></hr><b> Digital Observatory for Protected Areas (DOPA) </b><p>Ecoregion Report</p>"
-});
+          header: "<img src='sites/default/files/report_logo.png'><br></br><hr></hr><center><b> Digital Observatory for Protected Areas (DOPA) </b><p>Ecoregion Report</p></centre>"
+                });
+
+
              });
           });
 
