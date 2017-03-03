@@ -36,6 +36,82 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // COUNTRY LAYER - CARTODB
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//COUNTRY LAYER GEOJSON - POPUP AND INFO
+//--------------------------------------------------------------------------------------------------------------------
+
+   function pop_country_layer(feature, layer) {
+
+   var Popup_Content_Country = '<center><i class="fa fa-globe fa-4x" aria-hidden="true"></i><hr><a href="/country/'+feature.properties.iso_2digit+'">'+feature.properties.co_name+'</a></center><br>&nbsp;&nbsp;&nbsp; Number of PA <b>&nbsp;&nbsp;&nbsp;'+feature.properties.count_vals+'</b><hr></i>&nbsp;&nbsp;&nbsp;PA Density <b>&nbsp;&nbsp;&nbsp;'+feature.properties.count_vals_density;
+
+   var t_country = function()
+   {
+     return [	{
+               name: 'Number of PAs',
+               data: [parseFloat(Math.round(feature.properties.count_vals*100)/100)]
+               },
+               {
+               name: 'PA Density',
+               data: [parseFloat(feature.properties.count_vals_density*100)/100]
+               }
+             ]
+     }
+
+          layer.on('popupopen', function(e) {
+
+            $('#container_country_data').highcharts({
+              chart: {type:'bar', height: 300, width: 370},
+              colors: ['#c9db72', '#5b8059'],
+              title: {text: null},
+              subtitle: {
+                  text: 'COUNTRY PROTECTION'
+              },
+              credits: {
+                  enabled: false,
+                  text: null,
+              },
+       xAxis: {
+              categories: ['%'],
+              title: {
+                  text: null
+              }
+          },
+       yAxis: {
+              min: 0,
+              title: {
+                  text: 'Aichi Target 11 Indexes',
+                  align: 'high'
+              },
+              labels: {
+                  overflow: 'justify'
+              }
+          },
+
+              series: t_country(feature)
+
+            });
+             $('#container_country_name').html('<center><a href="/ecoregion/'+feature.properties.iso_2digit+'">'+feature.properties.co_name+'</a></center><hr>');
+             $('#container_country_info').html('<hr><p>Country <b>'+feature.properties.co_name+'</b></p><hr>');
+             $('#container_country_info2').html('<p>Country <b>'+feature.properties.co_name+'</b></p><hr>');
+          });
+
+
+      layer.on('popupclose', function(e){
+        $('#container_country_data').html("");
+      });
+          layer.on({
+               mouseover: highlightFeatureecor,
+               mouseout: resetHighlightecor,
+              'click': function (e) {
+                    select(e.target);
+                     }
+                     });
+
+   layer.bindPopup(Popup_Content_Country);
+
+   }
+//---------------------------------------------------------------
 // CARTO COUNTRY Legend
 //---------------------------------------------------------------
      function getColor(d) {
@@ -104,13 +180,15 @@
  //---------------------------------------------------------------
     var onEachFeature = function(feature, layer) {
            if (feature.properties) {
-              layer.bindPopup('<center><i class="fa fa-globe fa-4x" aria-hidden="true"></i><hr><a href="/country/'+feature.properties.iso_2digit+'">'+feature.properties.co_name+'</a></center><br>&nbsp;&nbsp;&nbsp; Number of PA <b>&nbsp;&nbsp;&nbsp;'+feature.properties.count_vals+'</b><hr></i>&nbsp;&nbsp;&nbsp;PA Density <b>&nbsp;&nbsp;&nbsp;'+feature.properties.count_vals_density);
+
+              pop_country_layer(feature, layer);
+
               layer.on({
                  mouseover: highlightFeature,
                  mouseout: resetHighlight,
                  'click': function (e) {
                        select(e.target);
-                       //$( "#block-block-135" ).show();
+                       $( "#block-block-136" ).show();
                        $('#print_btn_country').show();
                        $('#print_btn_ecoregion').hide();
                        $('#print_btn_reg').hide();
@@ -133,7 +211,18 @@
       Country_layer.addData(data);
    });
 
+//--------------------------------------------------------------------------------------------------------------------
+// FUNCTION SELECT (TO SHOW THE GRAPH) OF THE region LAYER
+//--------------------------------------------------------------------------------------------------------------------
+  function select (layer) {
+    if (selected !== null) {
+        var previous = selected;
+        }
+    else {}
+    selected = layer;
+  }
 
+  var selected = null;
 
 
 
@@ -145,9 +234,9 @@
 
 
    //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-   // TERRESTRIAL region LAYER GEOJSON - CARTODB
+   //  region LAYER GEOJSON - CARTODB
    //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-   //TERRESTRIAL region LAYER GEOJSON - POPUP
+   // region LAYER GEOJSON - POPUP
    //--------------------------------------------------------------------------------------------------------------------
 
     function pop_region_layer(feature, layer) {
@@ -843,6 +932,7 @@ legend4.addTo(lMap);
        buildTip: function(text, val) {
        var type = val.layer.feature.properties.wdpa_pid;
        return '<a href="#" class="'+type+'"><b>'+text+'</b></a>';
+
       }
       }).addTo(lMap);
 
@@ -1706,6 +1796,7 @@ $(".middlecountry").click(function(event) {
      lMap.removeLayer(Country_layer);
      lMap.addLayer(wdpa);
           $("#print_btn_country").hide();
+          $( "#block-block-136" ).hide();
  } else {
      lMap.addLayer(Country_layer);
      lMap.removeLayer(Region_layer);
@@ -1765,6 +1856,7 @@ $(".middleeco").click(function(event) {
       $("#glc2000-chart").hide();
       $("#someinfo").hide();
       $( "#block-block-127" ).hide();
+      $( "#block-block-136" ).hide();
  }
 });
 
@@ -1799,8 +1891,13 @@ $(".middlereg").click(function(event) {
      $("#glc2000-chart").hide();
      $("#someinfo").hide();
      $( "#block-block-127" ).hide();
+     $( "#block-block-136" ).hide();
  }
 });
+
+
+
+
 //-------------------------------------------------------------------------
 //print wdpa
 //-------------------------------------------------------------------------
