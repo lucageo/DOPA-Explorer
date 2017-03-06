@@ -17,11 +17,9 @@ L.Control.Search = L.Control.extend({
 	//  searchText()			'Text searched'        search text by external code
 	//
 	options: {
-		// ----------------------added by pere---------------------------------------------------------------------------------------------
+		// ----------------------Added by Pere and luca---------------------------------------------------------------------------------------------
 		wdpa_layer:null,
-		// ----------------------added by pere---------------------------------------------------------------------------------------------
-
-
+		// ----------------------END OF added by Pere and luca----------------------------------------------------------------------------------------------
 		url: '',						//url for search by ajax request, ex: "search.php?q={s}". Can be function that returns string for dynamic parameter setting
 		layer: null,					//layer where search markers(is a L.LayerGroup)
 		sourceData: null,				//function that fill _recordsCache, passed searching text by first param and callback in second
@@ -828,40 +826,31 @@ L.Control.Search = L.Control.extend({
 
 		//finish added by pere
 		self._map.once('moveend zoomend', function(e) {
-
-
-
 			if(self._markerLoc) {
 				self._markerLoc.setLatLng(latlng);  //show circle/marker in location found
 				self._markerLoc.setTitle(title);
 				self._markerLoc.show();
-
-				// added by pere and luca --- open popup and additional info when SEARCH BY PA
+				// added by Pere and luca --- open popup and additional info when SEARCH BY PA
 				var center=e.target._initialCenter;
 				var lat = center.lat
 				var lng = center.lng
 				var _latlng = L.latLng(lat, lng);
 				if ($('.mapwdpa').parent().find('#searchtext27')[0].value.length > 0) {
-				self._map.fireEvent('click',{latlng:_latlng})
-			};
-				// END -----------------------------------------------------added by pere and luca --- open popup and additional info when SEARCH BY PA
-
+					//simulating a click on the map fot the wdpa layer (use for open all the divs containg wdpa information when the user search of it)
+					self._map.fireEvent('click',{latlng:_latlng})
+				};
+				// END - Added by Pere and luca --- open popup and additional info when SEARCH BY PA
 				if(self.options.animateLocation)
 				{
 				//	self._markerLoc.animate(self);
-
-
 				}
-
 			}
-
 		});
 
 		self._moveToLocation(latlng, title, self._map);
 		//FIXME autoCollapse option hide self._markerLoc before that visualized!!
 		if(self.options.autoCollapse)
 			self.collapse();
-
 		return self;
 	}
 });
@@ -972,22 +961,19 @@ L.Control.Search.Marker = L.Marker.extend({
 						//TODO use create event 'animateEnd' in L.Control.Search.Marker
 				}
 			}, tInt);
-
-
 		}
-
+		// ADDED BY PERE AND LUCA
 		var wdpaid=$(selected_tip).attr('class').split(' ')[0];
 		var filter = "wdpaid='" + wdpaid + "'";
-
 		if ($('.mapwdpa').parent().find('#searchtext27')[0].value.length > 0) {
 			//	console.log(map)
 				map.options.wdpa_layer.setParams({CQL_FILTER:filter});
-
 			};
 
+
 		return this;
-	}
-});
+	} //CLOSE ANIMATE FUNCTION
+}); //CLOSE MARKER SEARCH
 
 L.Map.addInitHook(function () {
     if (this.options.searchControl) {
