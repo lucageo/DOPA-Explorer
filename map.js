@@ -36,7 +36,6 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // COUNTRY LAYER - CARTODB
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //COUNTRY LAYER GEOJSON - POPUP AND INFO
 //--------------------------------------------------------------------------------------------------------------------
@@ -224,26 +223,15 @@
 
   var selected = null;
 
-
-
-
-
-
-
-
-
-
-   //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-   //  region LAYER GEOJSON - CARTODB
-   //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-   // region LAYER GEOJSON - POPUP
-   //--------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//  region LAYER GEOJSON - CARTODB
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// region LAYER GEOJSON - POPUP
+//--------------------------------------------------------------------------------------------------------------------
 
     function pop_region_layer(feature, layer) {
 
     var popupContent1 = '<center><a href="/region/'+feature.properties.continent+'">'+feature.properties.continent+'</a></center><hr>';
-
-
 
     var t1=function()
     {
@@ -425,370 +413,392 @@
 
     var selected = null;
 
-
-
-
-   //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-   // TERRESTRIAL ECOREGION LAYER GEOJSON - CARTODB
-   //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-   //TERRESTRIAL ECOREGION LAYER GEOJSON - POPUP
-   //--------------------------------------------------------------------------------------------------------------------
-
-   	function pop_ecoregion_layer(feature, layer) {
-
-   	var popupContent1 = '<center><a href="/ecoregion/'+feature.properties.ecoregion0+'">'+feature.properties.ecoregion_+'</a></center><hr>';
-
-   	var t=function()
-   	{
-   	  return [	{
-   							name: 'Connectivity',
-                data: [parseFloat(Math.round(feature.properties.tojson_p_2*100)/100)]
-                },
-   						  {
-   							name: 'Protection',
-                data: [parseFloat(Math.round(feature.properties.tojson_p_3*100)/100)]
-                }
-   					  ]
-   	  }
-
-           layer.on('popupopen', function(e) {
-
-             // The speed gauge
-            $('#container4').highcharts ({
-
-
-              chart: {
-                  type: 'solidgauge'
-              },
-
-              title: null,
-
-              pane: {
-                  center: ['50%', '50%'],
-                  size: '60%',
-                  startAngle: -90,
-                  endAngle: 90,
-                  background: {
-                       backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#FAFAFA',
-                      innerRadius: '100%',
-                      outerRadius: '60%',
-                      shape: 'arc'
-                  }
-              },
-
-                 yAxis: {
-                     min: 0,
-                     max: 100,
-                       y: 20,
-                     title: {
-                         text: 'Ecoregion Protection',
-                          y: -100
-                     },
-
-                     stops: [
-                         [0.0, '#f7feae'], // green
-                         [0.02, '#b7e6a5'], // yellow
-                         [0.05, '#7ccba2'], // red
-                         [0.08, '#46aea0'], // red
-                         [0.12, '#089099'], // red
-                         [0.17, '#00718b'], // red
-                         [0.5, '#045275'] // red
-
-                     ],
-
-                     lineWidth: 0,
-                     minorTickInterval: null,
-                     tickAmount:0,
-                     labels: {
-                         y: 20
-                     }
-                 },
-
-                 credits: {
-                     enabled: false
-                 },
-
-                 plotOptions: {
-                     solidgauge: {
-                         dataLabels: {
-                             y: 1,
-                             borderWidth: 0,
-                             useHTML: true
-                         }
-                     }
-                 },
-
-                 series: [{
-                     name: 'Protection',
-                     data: [parseFloat(Math.round(feature.properties.tojson_p_3*100)/100)],
-                     dataLabels: {
-                       format: '<div style="text-align:center"><span style="font-size:20px;color:' +
-    ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y}</span><br/>' +
-       '<span style="font-size:12px;color:silver">%</span></div>',
-                       y: -30
-                     },
-                     tooltip: {
-                         valueSuffix: ' %'
-                     }
-                 }]
-
-             });
-
-             // The speed gauge
-            $('#container24').highcharts ({
-
-
-              chart: {
-                  type: 'solidgauge'
-              },
-
-              title: null,
-
-              pane: {
-                  center: ['50%', '50%'],
-                  size: '60%',
-                  startAngle: -90,
-                  endAngle: 90,
-                  background: {
-                       backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#FAFAFA',
-                      innerRadius: '100%',
-                      outerRadius: '60%',
-                      shape: 'arc'
-                  }
-              },
-
-                 yAxis: {
-                     min: 0,
-                     max: 100,
-                       y: 20,
-                     title: {
-                         text: 'Ecoregion Connectivity',
-                          y: -100
-                     },
-
-                     stops: [
-                         [0.0, '#f7feae'], // green
-                         [0.02, '#b7e6a5'], // yellow
-                         [0.05, '#7ccba2'], // red
-                         [0.08, '#46aea0'], // red
-                         [0.12, '#089099'], // red
-                         [0.17, '#00718b'], // red
-                         [0.5, '#045275'] // red
-
-                     ],
-
-                     lineWidth: 0,
-                     minorTickInterval: null,
-                     tickAmount:0,
-                     labels: {
-                         y: 20
-                     }
-                 },
-
-                 credits: {
-                     enabled: false
-                 },
-
-                 plotOptions: {
-                     solidgauge: {
-                         dataLabels: {
-                             y: 1,
-                             borderWidth: 0,
-                             useHTML: true
-                         }
-                     }
-                 },
-
-                 series: [{
-                     name: 'Protection',
-                     data: [parseFloat(Math.round(feature.properties.tojson_p_2*100)/100)],
-                     dataLabels: {
-                       format: '<div style="text-align:center"><span style="font-size:20px;color:' +
-          ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y}</span><br/>' +
-          '<span style="font-size:12px;color:silver">%</span></div>',
-                       y: -30
-                     },
-                     tooltip: {
-                         valueSuffix: ' %'
-                     }
-                 }]
-
-             });
-
-
-
-        //      $('#container4').highcharts({
-        //        chart: {type:'bar', height: 300, width: 370},
-        //        colors: ['#c9db72', '#5b8059'],
-        //        title: {text: null},
-        //        subtitle: {
-        //            text: 'ECOREGION PROTECTION CONNECTIVITY'
-        //        },
-        //        credits: {
-        //            enabled: false,
-        //            text: null,
-        //          //  href: 'http://ehabitat-wps.jrc.ec.europa.eu/dopa_explorer/?pa='+$paid
-        //        },
-   		// 	xAxis: {
-        //        categories: ['%'],
-        //        title: {
-        //            text: null
-        //        }
-        //    },
-   		// 	yAxis: {
-        //        min: 0,
-        //        title: {
-        //            text: 'Aichi Target 11 Indexes',
-        //            align: 'high'
-        //        },
-        //        labels: {
-        //            overflow: 'justify'
-        //        }
-        //    },
-        //
-        //        series: t(feature)
-        //
-        //      });
-
-
-
-              $('#container5').html('<center><a href="/ecoregion/'+feature.properties.ecoregion0+'">'+feature.properties.ecoregion_+'</a></center><hr>');
-              $('#container6').html('<hr><p>BIOME <b>'+feature.properties.biome+'</b></p><hr>');
-              $('#container7').html('<p>REALM <b>'+feature.properties.realm+'</b></p><hr>');
-
-
-
-
-
-           });
-
-
-       layer.on('popupclose', function(e){
-         $('#container4').html("");
-       });
-   				 layer.on({
-                mouseover: highlightFeatureeco,
-                mouseout: resetHighlighteco,
-     			     'click': function (e) {
-     				         select(e.target);
-     				          }
-     			            });
-
-   	layer.bindPopup(popupContent1);
-
-   	}
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// TERRESTRIAL ECOREGION LAYER GEOJSON - GEOSERVER
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//TERRESTRIAL ECOREGION LAYER GEOJSON - POPUP
+//--------------------------------------------------------------------------------------------------------------------
+   var url_ecoregion = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
+   var ecoregion=L.tileLayer.wms(url_ecoregion, {
+       layers: 'conservationmapping:ecoregion_protection_connection_dopa_explorer',
+       transparent: true,
+       format: 'image/png',
+       opacity:'0.7',
+       zIndex: 33
+    });
 //---------------------------------------------------------------
-// CARTO ECOREGION Legend
+//  ecoregion LAYER - GET FEATUREINFO FUNCTION
 //---------------------------------------------------------------
-        function getColoreco(deco) {
-          return deco > 50       ? '#045275' :
-                 deco > 17       ? '#00718b' :
-                 deco > 12       ? '#089099' :
-                 deco > 8        ? '#46aea0' :
-                 deco > 5        ? '#7ccba2' :
-                 deco > 2        ? '#b7e6a5' :
-                 deco > 0        ? '#f7feae' ://else
-                                   '#f7feae';
-        }
-       var legendeco = L.control({position: 'bottomleft'});
-       legendeco.onAdd = function (lMap) {
-           var div = L.DomUtil.create('div', 'info legend'),
-            labels = ['<div id="ecolegend"><p>Ecoregion Protection</p></div>'],
-              gradeseco = [0, 2, 5, 8, 12, 17, 50],
-              key_labelseco = [' 0% ',' 2% ',' 5% ',' 8% ',' 12% ',' 17%',' 50% '];
-                  for (var ieco = 0; ieco < gradeseco.length; ieco++) {
-                   div.innerHTML += labels.push('<i style="background:' + getColoreco(gradeseco[ieco ] + 1) + '"></i> ' + key_labelseco[ieco] + (key_labelseco[ieco + 1] ? '&ndash;' + key_labelseco[ieco + 1] + '<br>' : '+'));
-                  }
-              div.innerHTML = labels.join('');
-            return div;
-         };
-         legendeco.addTo(lMap);
-    // style function for styling the GeoJSON layer, uses getColoreco function above
-      var styleeco = function(feature) {
-        return {
-          fillColor: getColoreco(feature.properties.tojson_p_3),
-          weight: 1,
-          opacity: 0.6,
-          color: getColoreco(feature.properties.tojson_p_3),
-          //dashArray: '3',
-          fillOpacity: 0.8,
-          zIndex: 1
-        }
-      }
-//---------------------------------------------------------------
-// CARTO ECOREGION LAYER HIGHLIGHTS
-//---------------------------------------------------------------
-       // function we can use to filter what data is added to the GeoJSON layer
-        var filtereco = function(feature) {
-          return feature.properties.ecoregion0 > 0;
-        }
-        // function highlight
-        function highlightFeatureeco(e) {
-          var layer = e.target;
-          layer.setStyle({
-            weight: 1,
-            color: '#ffffff',
-            dashArray: '',
-            fillOpacity: 1
-          });
-          //info.update(layer.feature.properties);
-        }
-        // function reset highlight
-        function resetHighlighteco(e) {
-          Ecoregion_layer.resetStyle(e.target);
-        }
-        // function zoom to feature
-        function zoomToFeatureeco(e) {
-          lMap.fitBounds(e.target.getBounds());
-        }
-//---------------------------------------------------------------
-// CARTO ECOREGION LAYER  -  SETUP
-//---------------------------------------------------------------
-         var onEachFeatureeco = function(feature, layer) {
-              if (feature.properties) {
 
-                pop_ecoregion_layer(feature,layer);
+   function getFeatureInfoUrl_e(map, layer, latlng, params) {
+     //console.log(layer.wmsParams.layers)
+  if (layer.wmsParams.layers=="conservationmapping:ecoregion_protection_connection_dopa_explorer")
+  {
+       var point1 = map.latLngToContainerPoint(latlng, map.getZoom()),
+           size1 = map.getSize(),
+           bounds1 = map.getBounds(),
+           sw1 = bounds1.getSouthWest(),
+           ne1 = bounds1.getNorthEast();
 
-                layer.on({
-                     mouseover: highlightFeatureeco,
-                     mouseout: resetHighlighteco,
-          			     'click': function (e) {
-          				         select(e.target);
-                           $( "#block-block-128" ).show();
-                           $('#print_btn_ecoregion').show();
-                           $('#print_btn_reg').hide();
-                           $('#print_btn_country').hide();
-                           $('#print_btn').hide();
+       var defaultParams1 = {
+           request: 'GetFeatureInfo',
+           service: 'WMS',
+           srs: 'EPSG:4326',
+           styles: '',
+           version: layer._wmsVersion,
+           format: layer.options.format,
+           bbox: bounds1.toBBoxString(),
+           height: size1.y,
+           width: size1.x,
+           layers: layer.options.layers,
+           info_format: 'text/javascript'
+       };
+//console.warn(defaultParams1);
+       params = L.Util.extend(defaultParams1, params || {});
 
-                       //zoomToFeatureeco(e);
-                     }
-          			});
+       params[params.version === '1.3.0' ? 'i' : 'x'] = point1.x;
+       params[params.version === '1.3.0' ? 'j' : 'y'] = point1.y;
+
+       return layer._url + L.Util.getParamString(params, layer._url, true);
+   }
+ }
+
+   //---------------------------------------------------------------
+   // ecoregion WMS LEGEND
+   //---------------------------------------------------------------
+   function getColoreco(deco) {
+     return deco > 50       ? '#045275' :
+            deco > 17       ? '#00718b' :
+            deco > 12       ? '#089099' :
+            deco > 8        ? '#46aea0' :
+            deco > 5        ? '#7ccba2' :
+            deco > 2        ? '#b7e6a5' :
+            deco > 0        ? '#f7feae' ://else
+                              '#f7feae';
+   }
+   var legendeco = L.control({position: 'bottomleft'});
+   legendeco.onAdd = function (lMap) {
+      var div = L.DomUtil.create('div', 'info legend'),
+       labels = ['<div id="ecolegend"><p>Ecoregion Protection</p></div>'],
+         gradeseco = [0, 2, 5, 8, 12, 17, 50],
+         key_labelseco = [' 0% ',' 2% ',' 5% ',' 8% ',' 12% ',' 17%',' 50% '];
+             for (var ieco = 0; ieco < gradeseco.length; ieco++) {
+              div.innerHTML += labels.push('<i style="background:' + getColoreco(gradeseco[ieco ] + 1) + '"></i> ' + key_labelseco[ieco] + (key_labelseco[ieco + 1] ? '&ndash;' + key_labelseco[ieco + 1] + '<br>' : '+'));
              }
-         }
+         div.innerHTML = labels.join('');
+       return div;
+    };
+    legendeco.addTo(lMap);
 
-      var Ecoregion_layer = L.geoJson(null, {
-      //  filter: filtereco,
-        onEachFeature: onEachFeatureeco, pop_ecoregion_layer,
-        style: styleeco
-      });
-      var queryeco = "SELECT * FROM eco_prot_final_simp";
-      var sqleco = new cartodb.SQL({ user: 'climateadapttst' });
-      sqleco.execute(queryeco, null, { format: 'geojson' }).done(function(dataeco) {//console.log(data);
-         Ecoregion_layer.addData(dataeco);
-      });
+   //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   //  ecoregion HIGHLIGHT WMS SETUP
+   //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-//--------------------------------------------------------------------------------------------------------------------
-// FUNCTION SELECT (TO SHOW THE GRAPH) OF THE ECOREGION LAYER
-//--------------------------------------------------------------------------------------------------------------------
-		function select (layer) {
-		  if (selected !== null) {
-		      var previous = selected;
-		      }
-      else {}
-			selected = layer;
-		}
+         var url_ecoregion = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
+         var eco_hi=L.tileLayer.wms(url_ecoregion, {
+             layers: 'conservationmapping:ecoregion_protection_connection_hi',
+             transparent: true,
+             format: 'image/png',
+             opacity:'1',
+             zIndex: 34 // Use zIndex to order the tileLayers within the tilePane. The higher number, the upper vertically.
+          }).addTo(lMap);
 
-    var selected = null;
+          eco_hi.setParams({CQL_FILTER:"ecoregion_ LIKE ''"}); // GEOSERVER WMS FILTER
+
+
+   //---------------------------------------------------------------
+   // ONCLICK RESPONSE ON HIGLIGHTED WDPA
+   //--------------------------------------------------------------
+          function hi_highcharts_eco(info,latlng){
+            //CREATE VARIABLES OF EACH COLUMN YOU WANT TO SHOW FROM THE ATTRIBUTE TABLE OF THE WDPA WMS - EACH VARIABLE NEED TO BE SET IN UNDER "getFeatureInfoUrl" FUNCTION
+            var name=info['ecoregion_'];
+            var ecoid=info['ecoregion0'];
+            var biome=info['biome'];
+            var realm=info['realm'];
+            var connectivity=info['tojson_p_2'];
+            var protection=info['tojson_p_3'];
+                                                  //console.warn(name);
+            //WDPA HIGLIGHTED POPUP
+            var popupContenteco = '<center><a href="/ecoregion/'+ecoid+'">'+name+'</a></center><hr>';
+
+            var popup_eco = L.popup()
+                 .setLatLng([latlng.lat, latlng.lng])
+                 .setContent(popupContenteco)
+                 .openOn(lMap);
+
+                 $('#container5').html('<center><a href="/ecoregion/'+ecoid+'">'+name+'</a></center><hr>');
+                 $('#container6').html('<hr><p>BIOME <b>'+biome+'</b></p><hr>');
+                 $('#container7').html('<p>REALM <b>'+realm+'</b></p><hr>');
+                 // The protection gauge
+                 $('#container4').highcharts ({
+
+                         chart: {
+                             type: 'solidgauge'
+                         },
+
+                         title: null,
+
+                         pane: {
+                             center: ['50%', '50%'],
+                             size: '60%',
+                             startAngle: -90,
+                             endAngle: 90,
+                             background: {
+                                  backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#FAFAFA',
+                                 innerRadius: '100%',
+                                 outerRadius: '60%',
+                                 shape: 'arc'
+                             }
+                         },
+
+                            yAxis: {
+                                min: 0,
+                                max: 100,
+                                  y: 20,
+                                title: {
+                                    text: 'Ecoregion Protection',
+                                     y: -100
+                                },
+
+                                stops: [
+                                    [0.0, '#f7feae'], // green
+                                    [0.02, '#b7e6a5'], // yellow
+                                    [0.05, '#7ccba2'], // red
+                                    [0.08, '#46aea0'], // red
+                                    [0.12, '#089099'], // red
+                                    [0.17, '#00718b'], // red
+                                    [0.5, '#045275'] // red
+
+                                ],
+
+                                lineWidth: 0,
+                                minorTickInterval: null,
+                                tickAmount:0,
+                                labels: {
+                                    y: 20
+                                }
+                            },
+
+                            credits: {
+                                enabled: false
+                            },
+
+                            plotOptions: {
+                                solidgauge: {
+                                    dataLabels: {
+                                        y: 1,
+                                        borderWidth: 0,
+                                        useHTML: true
+                                    }
+                                }
+                            },
+
+                            series: [{
+                                name: 'Protection',
+                                data: [parseFloat(Math.round(protection*100)/100)],
+                                dataLabels: {
+                                  format: '<div style="text-align:center"><span style="font-size:20px;color:' +
+                                          ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y}</span><br/>' +
+                                          '<span style="font-size:12px;color:silver">%</span></div>',
+                                  y: -30
+                                },
+                                tooltip: {
+                                    valueSuffix: ' %'
+                                }
+                            }]
+
+                        });
+
+                        // The connectivity gauge
+                       $('#container24').highcharts ({
+
+                         chart: {
+                             type: 'solidgauge'
+                         },
+
+                         title: null,
+
+                         pane: {
+                             center: ['50%', '50%'],
+                             size: '60%',
+                             startAngle: -90,
+                             endAngle: 90,
+                             background: {
+                                  backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#FAFAFA',
+                                 innerRadius: '100%',
+                                 outerRadius: '60%',
+                                 shape: 'arc'
+                             }
+                         },
+
+                            yAxis: {
+                                min: 0,
+                                max: 100,
+                                  y: 20,
+                                title: {
+                                    text: 'Ecoregion Connectivity',
+                                     y: -100
+                                },
+
+                                stops: [
+                                    [0.0, '#f7feae'], // green
+                                    [0.02, '#b7e6a5'], // yellow
+                                    [0.05, '#7ccba2'], // red
+                                    [0.08, '#46aea0'], // red
+                                    [0.12, '#089099'], // red
+                                    [0.17, '#00718b'], // red
+                                    [0.5, '#045275'] // red
+
+                                ],
+
+                                lineWidth: 0,
+                                minorTickInterval: null,
+                                tickAmount:0,
+                                labels: {
+                                    y: 20
+                                }
+                            },
+
+                            credits: {
+                                enabled: false
+                            },
+
+                            plotOptions: {
+                                solidgauge: {
+                                    dataLabels: {
+                                        y: 1,
+                                        borderWidth: 0,
+                                        useHTML: true
+                                    }
+                                }
+                            },
+
+                            series: [{
+                                name: 'Protection',
+                                data: [parseFloat(Math.round(connectivity*100)/100)],
+                                dataLabels: {
+                                  format: '<div style="text-align:center"><span style="font-size:20px;color:' +
+                     ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y}</span><br/>' +
+                     '<span style="font-size:12px;color:silver">%</span></div>',
+                                  y: -30
+                                },
+                                tooltip: {
+                                    valueSuffix: ' %'
+                                }
+                            }]
+
+                        });
+   } // close "hi_highcharts_eco"
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Info for WMS layer -  BOTH WDPA AND  ECOREGION -  https://astuntechnology.github.io/osgis-ol3-leaflet/leaflet/05-WMS-INFO.html
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+          lMap.on('click', function(e) {
+// CHECK IF THE LAYER IS ECOREGION-------------------------------------------------------------------------------------------------------------------------------------
+            if (lMap.hasLayer(ecoregion)) {
+              var eco_latlng= e.latlng;
+              var url_ecoregion = getFeatureInfoUrl_e(
+                              lMap,
+                              ecoregion,
+                              e.latlng,
+                              {
+                                  'info_format': 'text/javascript',  //it allows us to get a jsonp
+                                  'propertyName': 'ecoregion0,ecoregion_,biome,realm,tojson_p_2,tojson_p_3',
+                                  'query_layers': 'conservationmapping:ecoregion_protection_connection_dopa_explorer',
+                                  'format_options':'callback:getJson'
+                              }
+                          );
+
+              // ECOREGION - JSONP with the GetFeatureInfo-Request - http://gis.stackexchange.com/questions/211458/using-jsonp-with-leaflet-and-getfeatureinfo-request
+               $.ajax({
+                       jsonp: false,
+                       url: url_ecoregion,
+                       dataType: 'jsonp',
+                       jsonpCallback: 'getJson',
+                       success: handleJson_featureRequest_eco
+                     });
+
+                  function handleJson_featureRequest_eco(data1)
+                  {
+                     // if LAYER COVER THE MAP
+                     if (typeof data1.features[0]!=='undefined')
+                         {
+                            // TAKE THE POERTIES OF THE LAYER
+                            var prop1=data1.features[0].properties;
+                           // AND TAKE THE ECOREGION ID
+                            var filter1="ecoregion0='"+prop1['ecoregion0']+"'";
+                           // AND SET THE FILTER OF ECOREGION HIGLIGHTED
+                            eco_hi.setParams({CQL_FILTER:filter1});
+                            hi_highcharts_eco(prop1,eco_latlng);
+                            // SHOW THE DIV CONTAINING GRAPHS AND INFO
+                            $( "#block-block-128" ).show(); // RIGHT INFO BOX
+                            $( "#print_btn_ecoregion" ).show(); // BUTTON FOR CLIMATE GRAPHS
+                      }
+                      else {
+                        console.log(' no info')
+                      }
+                  }
+            }
+// CHECK IF THE LAYER IS WDPA-------------------------------------------------------------------------------------------------------------------------------------
+            else {
+                       var latlng= e.latlng;
+                       var url = getFeatureInfoUrl(
+                                       lMap,
+                                       wdpa,
+                                       e.latlng,
+                                       {
+                                           'info_format': 'text/javascript',  //it allows us to get a jsonp
+                                           'propertyName': 'wdpaid,name,desig_eng,desig_type,iucn_cat,gis_area,status,status_yr,mang_auth',
+                                           'query_layers': 'conservationmapping:pa_50_2017',
+                                           'format_options':'callback:getJson'
+                                       }
+                                   );
+
+                        // WDPA - JSONP with the GetFeatureInfo-Request - http://gis.stackexchange.com/questions/211458/using-jsonp-with-leaflet-and-getfeatureinfo-request
+                        $.ajax({
+                                jsonp: false,
+                                url: url,
+                                dataType: 'jsonp',
+                                jsonpCallback: 'getJson',
+                                success: handleJson_featureRequest
+                              });
+
+                           function handleJson_featureRequest(data)
+                           {
+                              // if LAYER COVER THE MAP
+                              if (typeof data.features[0]!=='undefined')
+                                  {
+                                     // TAKE THE POERTIES OF THE LAYER
+                                     var prop=data.features[0].properties;
+                                    // AND TAKE THE WDPA ID
+                                     var filter="wdpaid='"+prop['wdpaid']+"'";
+                                    // AND SET THE FILTER OF WDPA HIGLIGHTED
+                                     wdpa_hi.setParams({CQL_FILTER:filter});
+                                     hi_highcharts_pa(prop,latlng);
+                                     // SHOW THE DIV CONTAINING GRAPHS AND INFO
+                                     $( "#block-block-127" ).show(); // RIGHT INFO BOX
+                                     $( "#block-block-132" ).show(); // BUTTON FOR CLIMATE GRAPHS
+                                     $("#pa_disclaimer_arrow_climate").show();
+                                     $("#pa_climate_plot_title").show();
+                                     $("#CLC2005title").show();
+                                     $("#disclaimer__arrow_2").show();
+                                     $("#glob2005-chart").show();
+                                     $("#containerclima2").show();
+                                     $("#CLC2000title").show();
+                                     $("#disclaimer__arrow_3").show();
+                                     $("#glc2000-chart").show();
+                                     $("#someinfo").show();
+                               }
+                               else {
+                                 console.log(' no info')
+                               }
+
+                           } //close handleJson_featureRequest
+
+                    } //close else
+
+          }); //CLOSE THE onclick function
+
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // WDPA JSON point LAYER - cartodb
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -819,7 +829,7 @@
 
    wdpa_group.addLayer(wdpa_layer);
       if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-        console.info(wdpa_layer)
+        //console.info(wdpa_layer)
    wdpa_layer.bringToFront();
    }
 
@@ -827,7 +837,6 @@
     lMap.spin(false);
 
     });
-
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  WDPA WMS GEOSERVER LAYER
@@ -847,11 +856,7 @@ var wdpa=L.tileLayer.wms(url, {
 //---------------------------------------------------------------
 //  WMS LAYER - GET FEATUREINFO FUNCTION
 //---------------------------------------------------------------
- /**
- * Return the WMS GetFeatureInfo URL for the passed map, layer and coordinate.
- * Specific parameters can be passed as params which will override the
- * calculated parameters of the same name. https://github.com/heigeo/leaflet.wms --- https://astuntechnology.github.io/osgis-ol3-leaflet/leaflet/05-WMS-INFO.html
- */
+
 function getFeatureInfoUrl(map, layer, latlng, params) {
 
     var point = map.latLngToContainerPoint(latlng, map.getZoom()),
@@ -935,8 +940,6 @@ legend4.addTo(lMap);
 
       }
       }).addTo(lMap);
-
-
 
 //---------------------------------------------------------------
 // ONCLICK RESPONSE ON HIGLIGHTED WDPA
@@ -1292,7 +1295,6 @@ $.ajax({
     //-----------------------------------------------------------------------------
     // clc 2000 graph
     //-----------------------------------------------------------------------------
-
     $.ajax({
         url: urlclc2000,
         dataType: 'json',
@@ -1636,78 +1638,8 @@ $.ajax({
 
           });// end of ajax call
         }) // end of .done(function()
-      });// end of .done(function()(583)
+      })// end of .done(function()(583)
 }//end of function hi_highcharts_pa
-
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Info for WMS layer - https://astuntechnology.github.io/osgis-ol3-leaflet/leaflet/05-WMS-INFO.html
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      // Add an event handler for the map "click" even
-       lMap.on('click', function(e) {
-
-           var latlng= e.latlng;
-           // Build the URL for a GetFeatureInfo
-           var url = getFeatureInfoUrl(
-                           lMap,
-                           wdpa,
-                           e.latlng,
-                           {
-                               'info_format': 'text/javascript',  //it allows us to get a jsonp
-                               'propertyName': 'wdpaid,name,desig_eng,desig_type,iucn_cat,gis_area,status,status_yr,mang_auth',
-                               'query_layers': 'conservationmapping:pa_50_2017',
-                               'format_options':'callback:getJson'
-                              // 'layers': 'conservationmapping:pa_50_2017'
-                           }
-                       );
-          //  console.warn(url)
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// JSONP with the GetFeatureInfo-Request - http://gis.stackexchange.com/questions/211458/using-jsonp-with-leaflet-and-getfeatureinfo-request
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-            $.ajax({
-                    jsonp: false,
-                    url: url,
-                    dataType: 'jsonp',
-                    jsonpCallback: 'getJson',
-                    success: handleJson_featureRequest
-                  });
-
-               function handleJson_featureRequest(data)
-               {
-                  // if LAYER COVER THE MAP
-                  if (typeof data.features[0]!=='undefined')
-                      {
-                         // TAKE THE POERTIES OF THE LAYER
-                         var prop=data.features[0].properties;
-                                                                  // console.info(latlng)
-                        // AND TAKE THE WDPA ID
-                         var filter="wdpaid='"+prop['wdpaid']+"'";
-
-                        // AND SET THE FILTER OF WDPA HIGLIGHTED
-                         wdpa_hi.setParams({CQL_FILTER:filter});
-                                                                  //   console.info(filter);
-                         hi_highcharts_pa(prop,latlng);
-
-                         // SHOW THE DIV CONTAINING GRAPHS AND INFO
-                         $( "#block-block-127" ).show(); // RIGHT INFO BOX
-                         $( "#block-block-132" ).show(); // BUTTON FOR CLIMATE GRAPHS
-                         $("#pa_disclaimer_arrow_climate").show();
-                         $("#pa_climate_plot_title").show();
-                         $("#CLC2005title").show();
-                         $("#disclaimer__arrow_2").show();
-                         $("#glob2005-chart").show();
-                         $("#containerclima2").show();
-                         $("#CLC2000title").show();
-                         $("#disclaimer__arrow_3").show();
-                         $("#glc2000-chart").show();
-                         $("#someinfo").show();
-                   }
-                   else {
-                     console.log(' no info')
-                   }
-               }
-       });
-
-
 
  //-------------------------------------------------------------------------------------------------------------------
  // HIDE "RIGHT INFO BOX" "BUTTON FOR CLIMATE GRAPHS" AND "CLIMATE GRAPHS" WHEN YOU CLICK OUTSIDE OF THE LAYER
@@ -1747,29 +1679,15 @@ lMap.on('popupclose',function(e){
 // Layers
 //----------------------------------------------------------------
    var baseMaps = {
-    "Light": streets,
-    "Landscape": grayscale
+        "Light": streets,
+        "Landscape": grayscale
     };
    var overlayMaps = {
-   'PROTECTED AREAS':wdpa,
-   'COUNTRIES':Country_layer,
-    'Ecoregion':Ecoregion_layer,
+        'PROTECTED AREAS':wdpa,
+        'COUNTRIES':Country_layer,
+        'Ecoregion':ecoregion,
         'REGION':Region_layer,
     };
-//------------------------------------------------------------------
-// Simple switcher
-//-------------------------------------------------------------------
-// var controls = L.control.layers(baseMaps, overlayMaps, {collapsed: false,}).addTo(lMap);
-//---------------------------------------------------------------------
-// Remove LAYER COUNTRY when wdpa search is activated
-//----------------------------------------------------------------------
-// $(".search-button").click(function(event) {
-//  event.preventDefault();
-//     if (lMap.hasLayer(Country_layer)) {
-//          lMap.removeLayer(Country_layer);
-//          lMap.addLayer(wdpa);
-//     } else {}
-// });
 //---------------------------------------------------------------------
 // add remove layers
 //----------------------------------------------------------------------
@@ -1800,7 +1718,7 @@ $(".middlecountry").click(function(event) {
  } else {
      lMap.addLayer(Country_layer);
      lMap.removeLayer(Region_layer);
-      lMap.removeLayer(Ecoregion_layer);
+      lMap.removeLayer(ecoregion);
       lMap.removeLayer(wdpa);
       $(".active4").hide();
       $(".inactive4").show();
@@ -1827,12 +1745,12 @@ $(".middlecountry").click(function(event) {
 });
 $(".middleeco").click(function(event) {
  event.preventDefault();
- if (lMap.hasLayer(Ecoregion_layer)) {
-     lMap.removeLayer(Ecoregion_layer);
+ if (lMap.hasLayer(ecoregion)) {
+     lMap.removeLayer(ecoregion);
      lMap.addLayer(wdpa);
           $("#print_btn_ecoregion").hide();
  } else {
-     lMap.addLayer(Ecoregion_layer);
+     lMap.addLayer(ecoregion);
      lMap.removeLayer(Region_layer);
       lMap.removeLayer(Country_layer);
       lMap.removeLayer(wdpa);
@@ -1868,7 +1786,7 @@ $(".middlereg").click(function(event) {
           $("#print_btn_reg").hide();
  } else {
      lMap.addLayer(Region_layer);
-     lMap.removeLayer(Ecoregion_layer);
+     lMap.removeLayer(ecoregion);
      lMap.removeLayer(Country_layer);
      lMap.removeLayer(wdpa);
      $(".active1").hide();
@@ -1895,9 +1813,6 @@ $(".middlereg").click(function(event) {
  }
 });
 
-
-
-
 //-------------------------------------------------------------------------
 //print wdpa
 //-------------------------------------------------------------------------
@@ -1907,14 +1822,12 @@ $(document).ready(function(e) {
                    $('.generalinfo, #container8, #container3, #container2, #containerclima2, #glc2000-chart, #glob2005-chart').printThis({
           // footer: $('.hidden-print-header-content'),
            loadCSS: "sites/all/themes/bootstrap_business/css/print.css",
-           pageTitle:  "mario",
+           pageTitle:  "DOPA Report",
           //  pageTitle:  "<hr>",
-           header: "<img src='sites/default/files/report_logo.png'><br></br><hr></hr><b> Digital Observatory for Protected Areas (DOPA) </b><p>Protected Area Report</p>"
-});
+           header: "<img src='sites/default/files/report_logo.png'><br></br><hr></hr><center><b> Digital Observatory for Protected Areas (DOPA) </b><p>Protected Area Report</p></center>"
+                  });
               });
            });
-
-
  //-------------------------------------------------------------------------
  //print region
  //-------------------------------------------------------------------------
@@ -1924,10 +1837,10 @@ $(document).ready(function(e) {
                    $('#container15, #container14, #container16, #container17').printThis({
           // footer: $('.hidden-print-header-content'),
            loadCSS: "sites/all/themes/bootstrap_business/css/print.css",
-           pageTitle:  "mario",
+           pageTitle: "DOPA Report",
           //  pageTitle:  "<hr>",
            header: "<img src='sites/default/files/report_logo.png'><br></br><hr></hr><b> Digital Observatory for Protected Areas (DOPA) </b><p>Region Report for: </p>"
-});
+                  });
               });
            });
 
@@ -1940,12 +1853,10 @@ $(document).ready(function(e) {
                   $('#container5, #container4,  #container24, #container6, #container7').printThis({
          // footer: $('.hidden-print-header-content'),
           loadCSS: "sites/all/themes/bootstrap_business/css/print.css",
-          pageTitle:  "mario",
+          pageTitle:  "DOPA Report",
          //  pageTitle:  "<hr>",
           header: "<img src='sites/default/files/report_logo.png'><br></br><hr></hr><center><b> Digital Observatory for Protected Areas (DOPA) </b><p>Ecoregion Report</p></centre>"
-                });
-
-
+                  });
              });
           });
 
@@ -1958,15 +1869,14 @@ $(document).ready(function(e) {
                   $('.leaflet-popup-content').printThis({
          // footer: $('.hidden-print-header-content'),
           loadCSS: "sites/all/themes/bootstrap_business/css/print.css",
-          pageTitle:  "mario",
+          pageTitle:  "DOPA Report",
          //  pageTitle:  "<hr>",
           header: "<img src='sites/default/files/report_logo.png'><br></br><hr></hr><b> Digital Observatory for Protected Areas (DOPA) </b><p>Country Report</p>"
-});
+                });
              });
           });
 
 //------------------------------------------------------------------------
-
 })
 
 })(jQuery);
