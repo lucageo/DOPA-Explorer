@@ -412,7 +412,60 @@
     }
 
     var selected = null;
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    // ecoregion JSON point LAYER - cartodb
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    // ecoregion JSON point CARTO LAYER + filter
+    //---------------------------------------------------------------
+       var filter_ecoregion = function(feature) {
+         return feature.properties.ecoregion_id > 1;
+       }
+       var eco_group = new L.LayerGroup();
+       var query5 = "SELECT * FROM terrestrial_ecoregion_centroids";
+       var sql5 = new cartodb.SQL({ user: 'climateadapttst' });
+       sql5.execute(query5, null, { format: 'geojson' }).done(function(data5) {
+       // console.info(data4)
+       eco_layer = L.geoJson(data5, {
+                   filter: filter_ecoregion,
+                    onEachFeature: function (feature, eco_layer) {
+                      //NOTHING BEACUSE THE POPUP IS MANAGED BY THE WMS
+                      },
+                    pointToLayer: function (feature, latlng) {
+                      var geojsonMarkerOptions = {
+                      radius:0.01,
+                      opacity: 0,
+                      fillOpacity: 0
+                      };
+                      return L.circleMarker(latlng, geojsonMarkerOptions );
+                    }
+         })//.addTo(lMap);
 
+       eco_group.addLayer(eco_layer);
+          if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+            //console.info(wdpa_layer)
+       eco_layer.bringToFront();
+       }
+
+     })
+
+        //---------------------------------------------------------------
+        // SEARCH ecoregion
+        //--------------------------------------------------------------
+               var searcheco = L.control.search({
+               position:'topleft',
+               layer: eco_group,
+               zoom:7,
+               circleLocation: false,
+               eco_layer: eco_hi,
+               textErr: 'Site not found',
+               propertyName: 'ecoregion_name',
+               textPlaceholder: 'Ecoregion...               ',
+               buildTip: function(text, val) {
+               var type = val.layer.feature.properties.ecoregion_id;
+               return '<a href="#" class="'+type+'"><b>'+text+'</b></a>';
+
+              }
+              }).addTo(lMap);
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // TERRESTRIAL ECOREGION LAYER GEOJSON - GEOSERVER
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -748,8 +801,8 @@
                                        e.latlng,
                                        {
                                            'info_format': 'text/javascript',  //it allows us to get a jsonp
-                                           'propertyName': 'wdpaid,name,desig_eng,desig_type,iucn_cat,gis_area,status,status_yr,mang_auth',
-                                           'query_layers': 'conservationmapping:pa_50_2017',
+                                           'propertyName': 'wdpaid,wdpa_name,desig_eng,desig_type,iucn_cat,jrc_gis_area_km2,status,status_yr,mang_auth',
+                                           'query_layers': 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons',
                                            'format_options':'callback:getJson'
                                        }
                                    );
@@ -805,10 +858,10 @@
 // WDPA JSON point CARTO LAYER + filter
 //---------------------------------------------------------------
    var filter_wdpa = function(feature) {
-     return feature.properties.id > 1;
+     return feature.properties.wdpaid > 1;
    }
    var wdpa_group = new L.LayerGroup();
-   var query4 = "SELECT * FROM wdpa_centroid_relevant_1606_export_2";
+   var query4 = "SELECT * FROM wdpa_gen_2017_controids";
    var sql4 = new cartodb.SQL({ user: 'climateadapttst' });
    sql4.execute(query4, null, { format: 'geojson' }).done(function(data4) {
    // console.info(data4)
@@ -844,9 +897,9 @@
 // WDPA WMS GEOSERVER LAYER - SETUP
 //---------------------------------------------------------------
 
-var url = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
+var url = 'http://h05-prod-vm11.jrc.it/geoserver/dopa_explorer/wms';
 var wdpa=L.tileLayer.wms(url, {
-    layers: 'conservationmapping:pa_50_2017',
+    layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons',
     transparent: true,
     format: 'image/png',
     opacity:'0.6',
@@ -911,16 +964,16 @@ legend4.addTo(lMap);
 //  WDPA HIGHLIGHT WMS SETUP
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-      var url = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
+      var url = 'http://h05-prod-vm11.jrc.it/geoserver/dopa_explorer/wms';
       var wdpa_hi=L.tileLayer.wms(url, {
-          layers: 'conservationmapping:pa_50_2017_HIGLIGHT',
+          layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_hi',
           transparent: true,
           format: 'image/png',
           opacity:'1',
           zIndex: 34 // Use zIndex to order the tileLayers within the tilePane. The higher number, the upper vertically.
        }).addTo(lMap);
 
-       wdpa_hi.setParams({CQL_FILTER:"name LIKE ''"}); // GEOSERVER WMS FILTER
+       wdpa_hi.setParams({CQL_FILTER:"wdpa_name LIKE ''"}); // GEOSERVER WMS FILTER
 
 //---------------------------------------------------------------
 // SEARCH WDPA
@@ -932,10 +985,10 @@ legend4.addTo(lMap);
        circleLocation: false,
        wdpa_layer: wdpa_hi,
        textErr: 'Site not found',
-       propertyName: 'pa_name',
+       propertyName: 'names',
        textPlaceholder: 'Protected Area...          ',
        buildTip: function(text, val) {
-       var type = val.layer.feature.properties.wdpa_pid;
+       var type = val.layer.feature.properties.wdpaid;
        return '<a href="#" class="'+type+'"><b>'+text+'</b></a>';
 
       }
@@ -946,12 +999,12 @@ legend4.addTo(lMap);
 //--------------------------------------------------------------
        function hi_highcharts_pa(info,latlng){
          //CREATE VARIABLES OF EACH COLUMN YOU WANT TO SHOW FROM THE ATTRIBUTE TABLE OF THE WDPA WMS - EACH VARIABLE NEED TO BE SET IN UNDER "getFeatureInfoUrl" FUNCTION
-         var name=info['name'];
+         var name=info['wdpa_name'];
          var wdpaid=info['wdpaid'];
          var desig_eng=info['desig_eng'];
          var desig_type=info['desig_type'];
          var iucn_cat=info['iucn_cat'];
-         var gis_area=info['gis_area'];
+         var gis_area=info['jrc_gis_area_km2'];
          var status=info['status'];
          var status_yr=info['status_yr'];
          var mang_auth=info['mang_auth'];
@@ -1747,10 +1800,12 @@ $(".middleeco").click(function(event) {
  event.preventDefault();
  if (lMap.hasLayer(ecoregion)) {
      lMap.removeLayer(ecoregion);
+          lMap.removeLayer(eco_group);
      lMap.addLayer(wdpa);
           $("#print_btn_ecoregion").hide();
  } else {
      lMap.addLayer(ecoregion);
+        lMap.addLayer(eco_group);
      lMap.removeLayer(Region_layer);
       lMap.removeLayer(Country_layer);
       lMap.removeLayer(wdpa);
@@ -1877,6 +1932,19 @@ $(document).ready(function(e) {
           });
 
 //------------------------------------------------------------------------
+
+$(document).ready(function(e) {
+
+$('.search-button').click(function() {
+               $parent_box.find('.pabottom').delay(1000).fadeToggle();
+
+              })
+          });
+
+
+//------------------------------------------------------------------------
+
+
 })
 
 })(jQuery);
