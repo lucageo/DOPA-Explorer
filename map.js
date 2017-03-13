@@ -153,7 +153,8 @@
 //---------------------------------------------------------------
     // function we can use to filter what data is added to the GeoJSON layer
      var filter = function(feature) {
-       return feature.properties.count_vals > 0;
+       return feature.properties.cartodb_id > 0;
+
      }
      // function highlight
      function highlightFeature(e) {
@@ -399,7 +400,24 @@
       sqlecor.execute(queryecor, null, { format: 'geojson' }).done(function(dataecor) {//console.log(data);
          Region_layer.addData(dataecor);
       });
-
+      //---------------------------------------------------------------
+      // SEARCH region
+      //--------------------------------------------------------------
+            //  var searchregion = L.control.search({
+            //  position:'topleft',
+            //  layer: Region_layer,
+            //  zoom:7,
+            //  circleLocation: false,
+            //  //eco_layer: eco_hi,
+            //  textErr: 'Site not found',
+            //  propertyName: 'continent',
+            //  textPlaceholder: '   Region...               ',
+            //  buildTip: function(text, val) {
+            //  //var type = val.layer.feature.properties.ecoregion_id;
+            //  return '<a href="#"><b>'+text+'</b></a>';
+            //
+            // }
+            // }).addTo(lMap);
   //--------------------------------------------------------------------------------------------------------------------
   // FUNCTION SELECT (TO SHOW THE GRAPH) OF THE region LAYER
   //--------------------------------------------------------------------------------------------------------------------
@@ -802,7 +820,7 @@
                                        {
                                            'info_format': 'text/javascript',  //it allows us to get a jsonp
                                            'propertyName': 'wdpaid,wdpa_name,desig_eng,desig_type,iucn_cat,jrc_gis_area_km2,status,status_yr,mang_auth',
-                                           'query_layers': 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons',
+                                           'query_layers': 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_agg',
                                            'format_options':'callback:getJson'
                                        }
                                    );
@@ -899,7 +917,7 @@
 
 var url = 'http://h05-prod-vm11.jrc.it/geoserver/dopa_explorer/wms';
 var wdpa=L.tileLayer.wms(url, {
-    layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons',
+    layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_agg',
     transparent: true,
     format: 'image/png',
     opacity:'0.6',
@@ -966,7 +984,7 @@ legend4.addTo(lMap);
 
       var url = 'http://h05-prod-vm11.jrc.it/geoserver/dopa_explorer/wms';
       var wdpa_hi=L.tileLayer.wms(url, {
-          layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_hi',
+          layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_agg_hi',
           transparent: true,
           format: 'image/png',
           opacity:'1',
@@ -1750,6 +1768,8 @@ $(".middlewdpa").click(function(event) {
      lMap.removeLayer(wdpa);
      lMap.removeLayer(wdpa_group);
      $("#print_btn").hide();
+     $(".active1").hide();
+     $(".inactive1").show();
  }
  else {
    lMap.addLayer(wdpa);
@@ -1758,6 +1778,8 @@ $(".middlewdpa").click(function(event) {
    $("#print_btn_reg").hide();
    $("#print_btn_ecoregion").hide();
    $("#print_btn_country").hide();
+   $(".inactive1").hide();
+   $(".active1").show();
  }
 });
 
@@ -1768,11 +1790,19 @@ $(".middlecountry").click(function(event) {
      lMap.addLayer(wdpa);
           $("#print_btn_country").hide();
           $( "#block-block-136" ).hide();
+          $(".inactive1").hide();
+          $(".active1").show();
+          $(".active2").hide();
+          $(".inactive2").show();
  } else {
      lMap.addLayer(Country_layer);
      lMap.removeLayer(Region_layer);
       lMap.removeLayer(ecoregion);
       lMap.removeLayer(wdpa);
+      $(".inactive1").show();
+      $(".active1").hide();
+      $(".active2").show();
+      $(".inactive2").hide();
       $(".active4").hide();
       $(".inactive4").show();
       $(".active3").hide();
@@ -1809,6 +1839,8 @@ $(".middleeco").click(function(event) {
      lMap.removeLayer(Region_layer);
       lMap.removeLayer(Country_layer);
       lMap.removeLayer(wdpa);
+      $(".active2").hide();
+      $(".inactive2").show();
       $(".active4").hide();
       $(".inactive4").show();
       $(".active1").hide();
@@ -1844,6 +1876,8 @@ $(".middlereg").click(function(event) {
      lMap.removeLayer(ecoregion);
      lMap.removeLayer(Country_layer);
      lMap.removeLayer(wdpa);
+     $(".active2").hide();
+     $(".inactive2").show();
      $(".active1").hide();
      $(".inactive1").show();
      $(".active3").hide();
