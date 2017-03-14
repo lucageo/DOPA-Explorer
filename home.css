@@ -56,15 +56,19 @@ margin-right: 38%;
 /* ---------------------------hide console logs (maintenance mode)--------------------------*/
 #messages-console{display: none;}
 /* ---------------------------climate charts and titles---------------------------*/
+
 #\23 pa_climate_plot_title> p{ PADDING: 7PX; COLOR: WHITE;}
 #\23 CLC2005title > p{PADDING: 7PX; COLOR: WHITE;}
 #\23 CLC2000title > p{PADDING: 7PX;COLOR: WHITE;}
+
 #pa_disclaimer_arrow_climate{margin-bottom: 49px; display:none;}
 #disclaimer__arrow_2{margin-bottom: 49px; display:none;}
 #disclaimer__arrow_3{margin-bottom: 49px; display:none;}
+
 .pa_disclaimer_arrow_climate_inner{content: ""; width: 0; height: 0; border-left: 35px solid transparent; border-right: 35px solid transparent; border-top: 25px solid #6fa227; left: 50%; margin-left: -35px; -moz-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.41); Z-INDEX: 99999; MARGIN-TOP: -25PX; position: relative;}
 .pa_disclaimer_arrow_climate_inner:before {content: ""; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid #fff; bottom: 13px; position: absolute; left: -5px;}
 .pa_disclaimer_arrow_climate_inner:after { content: ""; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #6fa227; bottom: 15px; position: absolute; left: -6px;}
+
 .disclaimer__arrow2 {
 content: "";
 width: 0;
@@ -550,7 +554,6 @@ z-index: 999;
 /*COUNTRY CONTAINER CHARTS-----------------------------------------------END*/
 
 /*-------------------------------MAP MENU----------------------------------*/
-
 .pacontainer{
 margin-left: 20%;
 }
@@ -619,6 +622,8 @@ padding: 2rem;}
 .active{color: green;}
 .active1{color: green;}
 .active3{color: green;}
+.active2{color: green;}
+.active4{color: green;}
 #on{cursor: pointer;}
 #off{cursor: pointer; color: #ac3232;}	
 #block-block-126 > div.content > div > div > div.pabox.mapcountry > div.pabottom > p{
@@ -703,7 +708,3 @@ border-color: #ffffff!important;
 padding: 10px 0 10px 0 !IMPORTANT;
 background-color: #ffffff!important;
 }
-
-
-
-
