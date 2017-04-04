@@ -7,7 +7,7 @@
 var streets  = L.tileLayer('https://api.mapbox.com/styles/v1/lucageo/ciywysi9f002e2snqsz0ukhz4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibHVjYWdlbyIsImEiOiJjaXIwY2FmNHAwMDZ1aTVubmhuMDYyMmtjIn0.1jWhLwVzKS6k1Ldn-bVQPg').addTo(lMap);
 
 
-// ONCLICK FUNCTION
+//  wdpa ONCLICK FUNCTION
 lMap.on('click', function(e) {
 var latlng= e.latlng;
 var url = getFeatureInfoUrl(
@@ -77,18 +77,13 @@ var url = getFeatureInfoUrl(
       };
 
       params = L.Util.extend(defaultParams, params || {});
-
       params[params.version === '1.3.0' ? 'i' : 'x'] = point.x;
       params[params.version === '1.3.0' ? 'j' : 'y'] = point.y;
-
       return layer._url + L.Util.getParamString(params, layer._url, true);
   }
-
-
   //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   //  WDPA HIGHLIGHT WMS SETUP
   //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
         var url = 'http://h05-prod-vm11.jrc.it/geoserver/dopa_explorer/wms';
         var wdpa_hi=L.tileLayer.wms(url, {
             layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg_hi',
@@ -98,9 +93,7 @@ var url = getFeatureInfoUrl(
             zIndex: 34 // Use zIndex to order the tileLayers within the tilePane. The higher number, the upper vertically.
          }).addTo(lMap);
 
-
          wdpa_hi.setParams({CQL_FILTER:"wdpa_name LIKE ''"}); // GEOSERVER WMS FILTER
-
  //---------------------------------------------------------------
  // ONCLICK RESPONSE ON HIGLIGHTED WDPA
  //--------------------------------------------------------------
@@ -126,13 +119,9 @@ var url = getFeatureInfoUrl(
                .setLatLng([latlng.lat, latlng.lng])
                .setContent(popupContentwdpa)
                .openOn(lMap);
+        } //end of function hi_highcharts_pa
 
-
-
-}//end of function hi_highcharts_pa
-
-     // WDPA WMS GEOSERVER LAYER - SETUP
-
+//-- WDPA WMS GEOSERVER LAYER - SETUP
      var url = 'http://h05-prod-vm11.jrc.it/geoserver/dopa_explorer/wms';
      var wdpa=L.tileLayer.wms(url, {
          layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg',
@@ -142,31 +131,21 @@ var url = getFeatureInfoUrl(
          zIndex: 33
       }).addTo(lMap);
 
-
-
-
-
-      //----------------------------------------------------------------
-      // Layers
-      //----------------------------------------------------------------
+//----------------------------------------------------------------
+// Layers
+//----------------------------------------------------------------
          var baseMaps = {
               "Light": streets,
-
           };
          var overlayMaps = {
               'PROTECTED AREAS':wdpa,
-              //'ecoregions':eco_ter,
           };
-//------------------------------------------------------------------------
-
-//------------------------------------------------------------------------
-
+//-----------------------------------------------------------------------------
+// spyder graph threats
+//-----------------------------------------------------------------------------
   setTimeout(function(){
     var wdpaid= $('.wdpa-id').text();
   var url = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_radarplot_pa?wdpaid=' + wdpaid; // get radar plot in pa
-  //-----------------------------------------------------------------------------
-  // spyder graph threats
-  //-----------------------------------------------------------------------------
 
   $.ajax({
     url: url,
@@ -293,9 +272,7 @@ var url = getFeatureInfoUrl(
                         break;
                 }
 
-
             });
-
 
             $('#spider_chart_wdpa_threats').highcharts({
                 chart: {
@@ -375,16 +352,12 @@ var url = getFeatureInfoUrl(
       });
 }, 300);
 
-
-
-//------------------------------------------------------------------------
-
+//-----------------------------------------------------------------------------
+// spyder graph species
+//-----------------------------------------------------------------------------
   setTimeout(function(){
     var wdpaid= $('.wdpa-id').text();
   var url = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_radarplot_pa?wdpaid=' + wdpaid; // get radar plot in pa
-  //-----------------------------------------------------------------------------
-  // spyder graph species
-  //-----------------------------------------------------------------------------
 
   $.ajax({
     url: url,
@@ -401,7 +374,6 @@ var url = getFeatureInfoUrl(
             $(d.records).each(function(i, data) {
 
                 switch (data.title) {
-
 
                     case 'AMPHIBIA':
                     for (var prop in data) {
@@ -494,10 +466,7 @@ var url = getFeatureInfoUrl(
                     default:
                         break;
                 }
-
-
             });
-
 
             $('#spider_chart_wdpa_species').highcharts({
                 chart: {
@@ -576,13 +545,13 @@ var url = getFeatureInfoUrl(
         }
       });
 }, 500);
-//---------------------------------------------------------------------------------------------------------------
-setTimeout(function(){
-   var wdpaid_clima= $('.wdpa-id').text();
-var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_climate_pa?wdpaid=' + wdpaid_clima; // get climate data in pa
 //-----------------------------------------------------------------------------
 //CLIMATE GRAPH
 //-----------------------------------------------------------------------------
+setTimeout(function(){
+   var wdpaid_clima= $('.wdpa-id').text();
+var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_climate_pa?wdpaid=' + wdpaid_clima; // get climate data in pa
+
          $.ajax({
              url: urlclima,
              dataType: 'json',
@@ -761,13 +730,13 @@ var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get
          });// end of ajax call
 }, 600);
 
+//-----------------------------------------------------------------------------
+//ELEVATION GRAPH
+//-----------------------------------------------------------------------------
 
 setTimeout(function(){
     var wdpaid_el= $('.wdpa-id').text();
 var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_topo_pa?wdpaid=' + wdpaid_el;
-  //-----------------------------------------------------------------------------
-  // spyder graph
-
 
   $.ajax({
           url: urlelevation,
@@ -895,13 +864,13 @@ var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat
       });
 
 }, 900);
-
-setTimeout(function(){
-    var wdpaid_clc2000= $('.wdpa-id').text();
-var urlclc2000 = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_wdpa_lc_stats_glc2000?wdpaid='+ wdpaid_clc2000;
 //-----------------------------------------------------------------------------
 // clc 2000 graph
 //-----------------------------------------------------------------------------
+setTimeout(function(){
+    var wdpaid_clc2000= $('.wdpa-id').text();
+var urlclc2000 = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_wdpa_lc_stats_glc2000?wdpaid='+ wdpaid_clc2000;
+
 $.ajax({
     url: urlclc2000,
     dataType: 'json',
@@ -957,13 +926,7 @@ $.ajax({
                    // shared: true,
                      headerFormat: '<span style="font-size:16px">{series.name}</span><br>',
         pointFormat: '<span>{point.name}</span> <b>{point.y:.2f}</b> hectareas <br/>'
-                 /*   headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
-                    pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>>' +
-                        '<td style="padding:0"><b>{point.y:.1f} mm</b></td>></tr>',
-                    footerFormat: '</table>',
-                    shared: true,
-                    useHTML: true
-                    */
+
                 },
                 plotOptions: {
                     column: {
@@ -975,10 +938,6 @@ $.ajax({
                             series:
                                // name: 'Preuba',
                                 obj_array
-
-
-
-
             });
         }
     },
@@ -986,13 +945,12 @@ $.ajax({
 });
 }, 1200);
 
-
-setTimeout(function(){
-    var wdpaid_clc2005= $('.wdpa-id').text();
-var urlclc2005 = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_wdpa_lc_stats_glob2005?wdpaid=' + wdpaid_clc2005; //get land cover 2005 in pa
 //-----------------------------------------------------------------------------
 // clc 2005 graph
 //-----------------------------------------------------------------------------
+setTimeout(function(){
+    var wdpaid_clc2005= $('.wdpa-id').text();
+var urlclc2005 = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_wdpa_lc_stats_glob2005?wdpaid=' + wdpaid_clc2005; //get land cover 2005 in pa
 
 $.ajax({
     url: urlclc2005,
@@ -1049,13 +1007,7 @@ $.ajax({
                    // shared: true,
                      headerFormat: '<span style="font-size:16px">{series.name}</span><br>',
         pointFormat: '<span>{point.name}</span> <b>{point.y:.2f}</b> hectareas <br/>'
-                 /*   headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
-                    pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>>' +
-                        '<td style="padding:0"><b>{point.y:.1f} mm</b></td>></tr>',
-                    footerFormat: '</table>',
-                    shared: true,
-                    useHTML: true
-                    */
+
                 },
                 plotOptions: {
                     column: {
@@ -1067,10 +1019,6 @@ $.ajax({
                             series:
                                // name: 'Preuba',
                                 obj_array
-
-
-
-
             });
         }
     },
@@ -1078,7 +1026,9 @@ $.ajax({
   });
 
 }, 1500);
-
+//-----------------------------------------------------------------------------
+// Pressure CHARTS
+//-----------------------------------------------------------------------------
 setTimeout(function(){
 jQuery(document).ready(function($) {
     var $paid = $('.wdpa-id').text();
@@ -1151,12 +1101,14 @@ jQuery(document).ready(function($) {
 					jQuery('#country-pressure-chart-'+param);
 
 				} else {
-					wdpa_id = [];
+					var wdpa_id = [];
+          graph_wdpa_id = [];
 					var indicatorvalue = [];
 					var marker_color = [];
 					var normalised = [];
 					var normalised_avg = [];
 					var country_rank = [];
+
 
 					$(d.records).each(function(i, data) {
 						for (var prop in data){
@@ -1167,7 +1119,9 @@ jQuery(document).ready(function($) {
                       else{
                       marker_color.push(serviceNames[param].color);
                       }
+              graph_wdpa_id.push(data[prop]);
               wdpa_id.push(data[prop]);
+
 							}
 							else if(prop == serviceNames[param].indicatorvalue){
 								indicatorvalue.push(data[prop]);
@@ -1179,8 +1133,16 @@ jQuery(document).ready(function($) {
 								normalised_avg = data[prop];
 							}
 							else if(prop == 'country_rank'){
-								country_rank.push(data[prop]);
-							}
+								//country_rank.push(data[prop]);
+
+                    if (data[prop] == country_rank[country_rank.length-1]){
+
+                    country_rank.push(data[prop]+1);
+                    }
+                    else{
+                    country_rank.push(data[prop]);
+                  }
+                }
 							else {
 							}
 						}
@@ -1195,10 +1157,6 @@ jQuery(document).ready(function($) {
 						},
 						title: {
 							text: null,
-							//floating: true,
-							//align: 'left',
-							//x:90,
-							//y:20
 						},
 						subtitle: {
               text: serviceNames[param].title,
@@ -1227,6 +1185,83 @@ jQuery(document).ready(function($) {
 										series_id = point.key-1;
 										s.push('Country Rank: <b>' + country_rank[series_id]+ '</b><br><span style="font-weight:normal;">WDPA ID: <b>'+ wdpa_id[series_id] + '</b><br>' + point.series.name +': '+
 										point.y +'<span><br><a target="_blank" href="/wdpa/'+wdpa_id[series_id]+'">Click to explore this Protected Area</a></span>');
+
+                    // on click func on the charts bars
+
+                   switch (param)
+                   {
+                     case 'roads_in':
+                     $('#country-pressure-chart-roads_in').click(function (e){
+
+                       if($(e.target).hasClass('highcharts-point'))
+                       {
+                         var wdpa_info=wdpa_id[series_id];
+                         var href=location.href;
+                         var new_href;
+                         new_href='/wdpa/'+wdpa_info;
+                         window.open(new_href,'_blank');
+
+                       }
+                     })
+                     break;
+                     case 'ap':
+                     $('#country-pressure-chart-ap').click(function (e){
+                       if($(e.target).hasClass('highcharts-point'))
+                       {
+                         var wdpa_info=wdpa_id[series_id];
+                         var href=location.href;
+                         var new_href;
+                         new_href='/wdpa/'+wdpa_info;
+                         window.open(new_href,'_blank');
+
+                       }
+                     })
+                     break;
+                     case 'ppi':
+                     $('#country-pressure-chart-ppi').click(function (e){
+                       if($(e.target).hasClass('highcharts-point'))
+                       {
+                         var wdpa_info=wdpa_id[series_id];
+                         var href=location.href;
+                         var new_href;
+                         new_href='/wdpa/'+wdpa_info;
+                         window.open(new_href,'_blank');
+
+                       }
+                     })
+                     break;
+                     case 'ppi_change':
+                     $('#country-pressure-chart-ppi_change').click(function (e){
+                       if($(e.target).hasClass('highcharts-point'))
+                       {
+                         var wdpa_info=wdpa_id[series_id];
+                         var href=location.href;
+                         var new_href;
+                         new_href='/wdpa/'+wdpa_info;
+                         window.open(new_href,'_blank');
+
+                       }
+                     })
+                     break;
+                     case 'roads_pressure':
+                     $('#country-pressure-chart-roads_pressure').click(function (e){
+                       if($(e.target).hasClass('highcharts-point'))
+                       {
+                         var wdpa_info=wdpa_id[series_id];
+                         var href=location.href;
+                         var new_href;
+                         new_href='/wdpa/'+wdpa_info;
+                         window.open(new_href,'_blank');
+
+                       }
+                     })
+                     break;
+                     default:
+                         break;
+                       }
+
+                       // end of on click func on the charts bars
+
 								});
 								return s.join('');
 							},
@@ -1251,7 +1286,6 @@ jQuery(document).ready(function($) {
                 x: -10,
                 style: {
                     color: '#BBBBBB',
-                  //  background:'blue',
                     fontWeight: 'normal'
                 }
 
@@ -1276,7 +1310,6 @@ jQuery(document).ready(function($) {
 							colorByPoint: true,
 							showInLegend: false,
 							colors: marker_color,
-              //color: '#22a6f5',
 							data: normalised
 						}]
 					});
@@ -1288,80 +1321,21 @@ jQuery(document).ready(function($) {
 			}
 		});
 	}
-  $.when(
 	create_chart('ppi'),
 	create_chart('ppi_change'),
 	create_chart('roads_pressure'),
 	create_chart('roads_in'),
-	create_chart('ap')).then(function()
-{
-// clicl on the bart graphs to be redirected to the desi wdpa
-$('#country-pressure-chart-ppi .highcharts-point').click(function (d){
-console.info(d)
-var d2=d.currentTarget.point;
-var position=d2.category;
-var wdpa_info=wdpa_id[position-1];
-var href=location.href;
-var new_href;
-new_href='/wdpa/'+wdpa_info
-window.open(new_href,'_blank');
-})
-// clicl on the bart graphs to be redirected to the desi wdpa
-$('#country-pressure-chart-ppi_change .highcharts-point').click(function (d){
-console.info(d)
-  var d2=d.currentTarget.point;
-  var position=d2.category;
-  var wdpa_info=wdpa_id[position-1];
-  var href=location.href;
-  var new_href;
-  new_href='/wdpa/'+wdpa_info
-  window.open(new_href,'_blank');
-})
-// clicl on the bart graphs to be redirected to the desi wdpa
-$('#country-pressure-chart-roads_pressure .highcharts-point').click(function (d){
-console.info(d)
-    var d2=d.currentTarget.point;
-    var position=d2.category;
-    var wdpa_info=wdpa_id[position-1];
-    var href=location.href;
-    var new_href;
-    new_href='/wdpa/'+wdpa_info
-    window.open(new_href,'_blank');
-})
-$('#country-pressure-chart-roads_in .highcharts-point').click(function (d){
-console.info(d)
-    var d2=d.currentTarget.point;
-    var position=d2.category;
-    var wdpa_info=wdpa_id[position-1];
-    var href=location.href;
-    var new_href;
-    new_href='/wdpa/'+wdpa_info
-    window.open(new_href,'_blank');
-})
-$('#country-pressure-chart-ap .highcharts-point').click(function (d){
-console.info(d)
-    var d2=d.currentTarget.point;
-    var position=d2.category;
-    var wdpa_info=wdpa_id[position-1];
-    var href=location.href;
-    var new_href;
-    new_href='/wdpa/'+wdpa_info
-    window.open(new_href,'_blank');
-})
-
-
-})
-
-
+	create_chart('ap')
 });
 }, 1900);
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+//  Tab Species
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 setTimeout(function(){
     var wdpaid_spec= $('.wdpa-id').text();
 var urlspeciesstatus = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/especies/get_pa_species_status_stats?format=json&wdpa_id=' + wdpaid_spec;
-  //----------------------------------------------------------------------------------------------------------------------------------------------------
-  //  Tab Species
-  //----------------------------------------------------------------------------------------------------------------------------------------------------
 
   $.ajax({
           url: urlspeciesstatus,
@@ -1382,9 +1356,7 @@ var urlspeciesstatus = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/e
                    var  data_deficient = [];
 
                   $(d.records).each(function(i, data) {
-
-                    //switch (data['class']) {
-                    console.log(data);
+                    //console.log(data);
                     if (data.class == 'Amphibia'){
                       $('#species_tab tbody').append('<tr id="'+i.toString()+'" class="Amphibia"></tr>');
                     } else if (data.class == 'Mammalia'){
@@ -1394,7 +1366,7 @@ var urlspeciesstatus = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/e
                     } else {
                       $('#species_tab tbody').append('<tr id="'+i.toString()+'" class="Other"></tr>');
                     }
-                      //case 'Amphibia':
+
                       for (var prop in data){
                           if(prop == 'class'){
                               _class.push(data[prop]);
@@ -1402,42 +1374,34 @@ var urlspeciesstatus = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/e
                           }
                           else if(prop == 'total_species'){
                               total_species.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#species_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'threatened'){
                               threatened.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#species_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'critically_endangered'){
                               critically_endangered.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#species_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'endangered'){
                               endangered.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#species_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'vulnerable'){
                               vulnerable.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#species_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'near_threatened'){
                               near_threatened.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#species_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'least_concern'){
                               least_concern.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#species_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'data_deficient'){
                               data_deficient.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#species_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else {
@@ -1452,13 +1416,12 @@ var urlspeciesstatus = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/e
       }); // ajax call
 
 }, 2200);
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+//  Lc 2000 Species
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 setTimeout(function(){
     var wdpaid_lcc2000= $('.wdpa-id').text();
 var urllcc2000tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabitat/get_wdpa_lc_stats_glc2000?format=json&wdpaid=' + wdpaid_lcc2000;
-  //----------------------------------------------------------------------------------------------------------------------------------------------------
-  //  Lc 2000 Species
-  //----------------------------------------------------------------------------------------------------------------------------------------------------
 
   $.ajax({
           url: urllcc2000tab,
@@ -1466,18 +1429,16 @@ var urllcc2000tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehab
           success: function(d) {
               if (d.metadata.recordCount == 0) {
               } else {
-                   var  label = [];
-                   var  area = [];
-                   var  percent = [];
-                   var  color = [];
-
+                   var label = [];
+                   var area = [];
+                   var percent = [];
+                   var color = [];
                    var fields = {'label':"",'percent':"",'area':"",'color':""};
 
                   $(d.records).each(function(i, data) {
 
                       $('#lc2000_tab tbody').append('<tr id="'+i.toString()+'" class="lc2000tr"></tr>');
 
-                      //for (var prop in data){
                       for (var prop in fields){
                           if(prop == 'label'){
                               label.push(data[prop]);
@@ -1485,17 +1446,14 @@ var urllcc2000tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehab
                           }
                           else if(prop == 'percent'){
                               percent.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#lc2000_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'area'){
                               area.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#lc2000_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'color'){
                               color.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#lc2000_tab tbody tr[id="'+i+'"]').append('<td class="lc2000transpa" style="background-color:'+data[prop]+';"></td>');
                           }
 
@@ -1511,13 +1469,12 @@ var urllcc2000tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehab
       }); // ajax call
 
 }, 2400);
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+//  Lc 2005 tab
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 setTimeout(function(){
-    var wdpaid_lcc2005= $('.wdpa-id').text();
-var urllcc2005tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabitat/get_wdpa_lc_stats_glob2005?format=json&wdpaid=' + wdpaid_lcc2005;
-  //----------------------------------------------------------------------------------------------------------------------------------------------------
-  //  Lc 2005 tab
-  //----------------------------------------------------------------------------------------------------------------------------------------------------
+  var wdpaid_lcc2005= $('.wdpa-id').text();
+  var urllcc2005tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabitat/get_wdpa_lc_stats_glob2005?format=json&wdpaid=' + wdpaid_lcc2005;
 
   $.ajax({
           url: urllcc2005tab,
@@ -1525,18 +1482,16 @@ var urllcc2005tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehab
           success: function(d) {
               if (d.metadata.recordCount == 0) {
               } else {
-                   var  label = [];
-                   var  area = [];
-                   var  percent = [];
-                   var  color = [];
-
+                   var label = [];
+                   var area = [];
+                   var percent = [];
+                   var color = [];
                    var fields = {'label':"",'percent':"",'area':"",'color':""};
 
                   $(d.records).each(function(i, data) {
 
                       $('#lc2005_tab tbody').append('<tr id="'+i.toString()+'" class="lc2005tr"></tr>');
 
-                      //for (var prop in data){
                       for (var prop in fields){
                           if(prop == 'label'){
                               label.push(data[prop]);
@@ -1544,17 +1499,14 @@ var urllcc2005tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehab
                           }
                           else if(prop == 'percent'){
                               percent.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#lc2005_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'area'){
                               area.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#lc2005_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'color'){
                               color.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#lc2005_tab tbody tr[id="'+i+'"]').append('<td class="lc2005transpa" style="background-color:'+data[prop]+';"></td>');
                           }
 
@@ -1573,13 +1525,12 @@ var urllcc2005tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehab
 
 
 
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+//  Species list tab
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 setTimeout(function(){
-    var wdpaid_sp_list= $('.wdpa-id').text();
-var urlsp_list = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/especies/get_pa_species_list?format=json&category=EN,CR,VU,NT,LC,EX,EW,DD&taxongroup=all&language1=english&language2=none&wdpa_id=' + wdpaid_sp_list;
-  //----------------------------------------------------------------------------------------------------------------------------------------------------
-  //  Species list tab
-  //----------------------------------------------------------------------------------------------------------------------------------------------------
+  var wdpaid_sp_list= $('.wdpa-id').text();
+  var urlsp_list = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/especies/get_pa_species_list?format=json&category=EN,CR,VU,NT,LC,EX,EW,DD&taxongroup=all&language1=english&language2=none&wdpa_id=' + wdpaid_sp_list;
 
   $.ajax({
           url: urlsp_list,
@@ -1602,7 +1553,6 @@ var urlsp_list = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/especie
 
                       $('#sp_list_tab tbody').append('<tr id="'+i.toString()+'" class="sp_list_tr"></tr>');
 
-                      //for (var prop in data){
                       for (var prop in fields){
                           if(prop == 'iucn_species_id'){
                               iucn_species_id.push(data[prop]);
@@ -1610,62 +1560,50 @@ var urlsp_list = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/especie
                           }
                           else if(prop == 'commonname'){
                               commonname.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'taxon'){
                               taxon.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'kingdom'){
                               kingdom.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'phylum'){
                               phylum.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'order'){
                               order.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'family'){
                               family.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'status'){
                               status.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else {
-                            }
+                          }
                       } // end of for
-
                   });
-                }
-                 //end of main else
-               $('#sp_list_tab').DataTable( {
-        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
-    } );
+                } //end of main else
+                  $('#sp_list_tab').DataTable( {
+                  "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
+                  });
               } // end of sucsess
-
       }); // ajax call
-
 }, 2600);
 
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+//  Ecoregion list in PA tab
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 setTimeout(function(){
-    var wdpaid_eco_list= $('.wdpa-id').text();
-var urleco_list = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabitat/get_ecoregion_in_wdpa?format=json&wdpaid=' + wdpaid_eco_list;
-  //----------------------------------------------------------------------------------------------------------------------------------------------------
-  //  Ecoregion list in PA tab
-  //----------------------------------------------------------------------------------------------------------------------------------------------------
+  var wdpaid_eco_list= $('.wdpa-id').text();
+  var urleco_list = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabitat/get_ecoregion_in_wdpa?format=json&wdpaid=' + wdpaid_eco_list;
 
   $.ajax({
           url: urleco_list,
@@ -1673,17 +1611,15 @@ var urleco_list = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabit
           success: function(d) {
               if (d.metadata.recordCount == 0) {
               } else {
-                   var  ecoregion_id = [];
-                   var  eco_name = [];
-                   var  is_marine = [];
-
+                   var ecoregion_id = [];
+                   var eco_name = [];
+                   var is_marine = [];
                    var fields = {'ecoregion_id':"",'eco_name':"",'is_marine':""};
 
                   $(d.records).each(function(i, data) {
 
                       $('#eco_list_tab tbody').append('<tr id="'+i.toString()+'" class="eco_list_tr"></tr>');
 
-                      //for (var prop in data){
                       for (var prop in fields){
                           if(prop == 'ecoregion_id'){
                               ecoregion_id.push(data[prop]);
@@ -1694,10 +1630,10 @@ var urleco_list = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabit
                               eco_name.push(data[prop]);
                                $('#eco_list_tab tbody tr[id="'+i+'"]').append('<td>'+'<a href="/ecoregion/'+data['ecoregion_id']+'" target="_blank">'+data[prop]+'</a>'+'</td>');
 
-            //---------------filters for marine and terrestrial ecoregion layer --------------------------------------------------------
+                              // filters for marine and terrestrial ecoregion layer --------------------------------------------------------
                               var eco_filter_ter="ecoregion_ LIKE'"+data[prop]+"'";
                               var eco_filter_mar="ecoregion LIKE'"+data[prop]+"'";
-            //---------------add terrestrial ecoregion layer --------------------------------------------------------
+                              // add terrestrial ecoregion layer --------------------------------------------------------
                               var eco_ter_url = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
                               var eco_ter=L.tileLayer.wms(eco_ter_url, {
                                 layers: 'conservationmapping:eco_p_terr_2014',
@@ -1705,7 +1641,7 @@ var urleco_list = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabit
                                 format: 'image/png'
                               });
                               eco_ter.setParams({CQL_FILTER:eco_filter_ter});
-            //---------------add marine ecoregion layer --------------------------------------------------------
+                              // add marine ecoregion layer --------------------------------------------------------
                                var eco_mar_url = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
                                var eco_mar=L.tileLayer.wms(eco_mar_url, {
                                  layers: 'conservationmapping:eco_p_mar_2014',
@@ -1718,31 +1654,26 @@ var urleco_list = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabit
                                     'ecoregions':eco_ter,
                                     'ecoregions marine':eco_mar,
                                 };
-            //---------------on click func to add marine ecoregion layer and scroll to the top --------------------------------------------------------
+                               // on click func to add marine ecoregion layer and scroll to the top --------------------------------------------------------
                                setTimeout(function(){
                                $("#showecomap").click(function(event) {
                                  event.preventDefault();
                                  if (lMap.hasLayer(eco_ter)) {
-
                                        $('html,body').animate({
                                            scrollTop: $('#breadcrumb').css('top')
                                        }, 800, function() {
-
                                            $('html, body').animate({
                                                scrollTop: 0
                                            }, 800);
                                        });
-
                                    lMap.removeLayer(eco_ter);
                                    lMap.removeLayer(eco_mar);
-
                                  } else {
                                    lMap.addLayer(eco_ter);
                                    lMap.addLayer(eco_mar);
                                    $('html,body').animate({
                                        scrollTop: $('#breadcrumb').css('top')
                                    }, 200, function() {
-
                                        $('html, body').animate({
                                            scrollTop: 0
                                        }, 200);
@@ -1758,14 +1689,10 @@ var urleco_list = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabit
                               var color = data[prop];
                               if (color == true){
                               $('#eco_list_tab tbody tr[id="'+i+'"]').append('<td style="background-color: #c8e5f7;">Marine</td>');
-
                             }else{
                               $('#eco_list_tab tbody tr[id="'+i+'"]').append('<td style="background-color: #b6da83;">Terrestrial</td>');
                             }
                           }
-
-
-
                           else {
                             }
                       } // end of for
@@ -1786,13 +1713,6 @@ var urleco_list = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabit
 
 
 
-
-
-
-
-
-
-
-
+// END OF MAIN FUNCTION
 })
 })(jQuery);
