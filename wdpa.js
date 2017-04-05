@@ -1102,13 +1102,11 @@ jQuery(document).ready(function($) {
 
 				} else {
 					var wdpa_id = [];
-          graph_wdpa_id = [];
 					var indicatorvalue = [];
 					var marker_color = [];
 					var normalised = [];
 					var normalised_avg = [];
 					var country_rank = [];
-
 
 					$(d.records).each(function(i, data) {
 						for (var prop in data){
@@ -1119,7 +1117,6 @@ jQuery(document).ready(function($) {
                       else{
                       marker_color.push(serviceNames[param].color);
                       }
-              graph_wdpa_id.push(data[prop]);
               wdpa_id.push(data[prop]);
 
 							}
@@ -1601,6 +1598,43 @@ setTimeout(function(){
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 //  Ecoregion list in PA tab
 //----------------------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------
+// ecoregion WMS LEGEND
+//---------------------------------------------------------------
+function getColoreco(deco) {
+  return deco > 50       ? '#045275' :
+         deco > 17       ? '#00718b' :
+         deco > 12       ? '#089099' :
+         deco > 8        ? '#46aea0' :
+         deco > 5        ? '#7ccba2' :
+         deco > 2        ? '#b7e6a5' :
+         deco > 0        ? '#f7feae' ://else
+                           '#f7feae';
+}
+var legendeco = L.control({position: 'bottomleft'});
+legendeco.onAdd = function (lMap) {
+   var div = L.DomUtil.create('div', 'info legend'),
+    labels = ['<div id="ecolegend"><p>Ecoregion Protection</p></div>'],
+      gradeseco = [0, 2, 5, 8, 12, 17, 50],
+      key_labelseco = [' 0% ',' 2% ',' 5% ',' 8% ',' 12% ',' 17%',' 50% '];
+          for (var ieco = 0; ieco < gradeseco.length; ieco++) {
+           div.innerHTML += labels.push('<i style="background:' + getColoreco(gradeseco[ieco ] + 1) + '"></i> ' + key_labelseco[ieco] + (key_labelseco[ieco + 1] ? '&ndash;' + key_labelseco[ieco + 1] + '<br>' : '+'));
+          }
+      div.innerHTML = labels.join('');
+    return div;
+ };
+
+$("#showecomap").click(function(event) {
+  event.preventDefault();
+  if ($("#ecolegend").length === 0){
+    legendeco.addTo(lMap);
+  } 
+  else {
+    lMap.removeControl(legendeco);
+  }
+});
+
+
 setTimeout(function(){
   var wdpaid_eco_list= $('.wdpa-id').text();
   var urleco_list = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabitat/get_ecoregion_in_wdpa?format=json&wdpaid=' + wdpaid_eco_list;
@@ -1636,7 +1670,7 @@ setTimeout(function(){
                               // add terrestrial ecoregion layer --------------------------------------------------------
                               var eco_ter_url = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
                               var eco_ter=L.tileLayer.wms(eco_ter_url, {
-                                layers: 'conservationmapping:eco_p_terr_2014',
+                                layers: 'conservationmapping:ecoregion_protection_connection_dopa_explorer',
                                 transparent: true,
                                 format: 'image/png'
                               });
@@ -1655,32 +1689,32 @@ setTimeout(function(){
                                     'ecoregions marine':eco_mar,
                                 };
                                // on click func to add marine ecoregion layer and scroll to the top --------------------------------------------------------
-                               setTimeout(function(){
                                $("#showecomap").click(function(event) {
                                  event.preventDefault();
                                  if (lMap.hasLayer(eco_ter)) {
                                        $('html,body').animate({
                                            scrollTop: $('#breadcrumb').css('top')
-                                       }, 800, function() {
+                                       }, 100, function() {
                                            $('html, body').animate({
                                                scrollTop: 0
-                                           }, 800);
+                                           }, 100);
                                        });
                                    lMap.removeLayer(eco_ter);
-                                   lMap.removeLayer(eco_mar);
+                                   lMap.removeLayer(eco_mar);           
                                  } else {
                                    lMap.addLayer(eco_ter);
                                    lMap.addLayer(eco_mar);
+
                                    $('html,body').animate({
                                        scrollTop: $('#breadcrumb').css('top')
-                                   }, 200, function() {
+                                   }, 100, function() {
                                        $('html, body').animate({
                                            scrollTop: 0
-                                       }, 200);
+                                       }, 100);
                                    });
                                  }
                                });
-                               }, 2800);
+
 
                           } // end of else if
 
@@ -1694,6 +1728,7 @@ setTimeout(function(){
                             }
                           }
                           else {
+
                             }
                       } // end of for
 
@@ -1710,6 +1745,21 @@ setTimeout(function(){
       }); // ajax call
 
 }, 2800);
+
+// color marine terretrial first table
+var table = document.getElementById('wdpa_general_info');
+var tbody = table.getElementsByTagName('tbody')[0];
+var cells = tbody.getElementsByClassName('views-field-field-wdpa-marine');
+
+if (parseFloat ($('td.views-field-field-wdpa-marine').html()) == 0) {
+  $(cells).html('<td style="background-color: #b2cc75;">Terrestrial</td>');
+}
+else if (parseFloat ($('td.views-field-field-wdpa-marine').html()) == 2) {
+  $(cells).html('<td style="background-color: #c8e5f7;">Marine</td>');
+}
+else{
+  $(cells).html('<td style="background-color: #69ce9a;">Terrestrial/Marine</td>');
+}
 
 
 
