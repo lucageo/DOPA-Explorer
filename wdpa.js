@@ -9,6 +9,7 @@ var streets  = L.tileLayer('https://api.mapbox.com/styles/v1/lucageo/ciywysi9f00
 
 //  wdpa ONCLICK FUNCTION
 lMap.on('click', function(e) {
+   if (lMap.hasLayer(wdpa)) {
 var latlng= e.latlng;
 var url = getFeatureInfoUrl(
                 lMap,
@@ -47,6 +48,7 @@ var url = getFeatureInfoUrl(
           console.log(' no info')
         }
     }
+  }
   });
 
 
@@ -1628,11 +1630,98 @@ $("#showecomap").click(function(event) {
   event.preventDefault();
   if ($("#ecolegend").length === 0){
     legendeco.addTo(lMap);
-  } 
+  }
   else {
     lMap.removeControl(legendeco);
   }
 });
+
+
+//---------------------------------------------------------------
+//  ecoregion LAYER - GET FEATUREINFO FUNCTION
+//---------------------------------------------------------------
+
+   function getFeatureInfoUrl_e(map, layer, latlng, params) {
+     //console.log(layer.wmsParams.layers)
+  if (layer.wmsParams.layers=="conservationmapping:ecoregion_protection_connection_dopa_explorer")
+  {
+       var point1 = map.latLngToContainerPoint(latlng, map.getZoom()),
+           size1 = map.getSize(),
+           bounds1 = map.getBounds(),
+           sw1 = bounds1.getSouthWest(),
+           ne1 = bounds1.getNorthEast();
+
+       var defaultParams1 = {
+           request: 'GetFeatureInfo',
+           service: 'WMS',
+           srs: 'EPSG:4326',
+           styles: '',
+           version: layer._wmsVersion,
+           format: layer.options.format,
+           bbox: bounds1.toBBoxString(),
+           height: size1.y,
+           width: size1.x,
+           layers: layer.options.layers,
+           info_format: 'text/javascript'
+       };
+//console.warn(defaultParams1);
+       params = L.Util.extend(defaultParams1, params || {});
+
+       params[params.version === '1.3.0' ? 'i' : 'x'] = point1.x;
+       params[params.version === '1.3.0' ? 'j' : 'y'] = point1.y;
+
+       return layer._url + L.Util.getParamString(params, layer._url, true);
+   }
+ }
+
+
+ //---------------------------------------------------------------
+ // ONCLICK RESPONSE ON HIGLIGHTED WDPA
+ //--------------------------------------------------------------
+        function hi_highcharts_eco(info,latlng){
+          //CREATE VARIABLES OF EACH COLUMN YOU WANT TO SHOW FROM THE ATTRIBUTE TABLE OF THE WDPA WMS - EACH VARIABLE NEED TO BE SET IN UNDER "getFeatureInfoUrl" FUNCTION
+          var name=info['ecoregion_'];
+          var ecoid=info['ecoregion0'];
+          var biome=info['biome'];
+          var realm=info['realm'];
+          var connectivity=info['tojson_p_2'];
+          var protection=info['tojson_p_3'];
+                                                //console.warn(name);
+          //WDPA HIGLIGHTED POPUP
+          var popupContenteco = '<center><a href="/ecoregion/'+ecoid+'">'+name+'</a></center><hr>';
+
+          var popup_eco = L.popup()
+               .setLatLng([latlng.lat, latlng.lng])
+               .setContent(popupContenteco)
+               .openOn(lMap);
+
+ } // close "hi_highcharts_eco"
+
+ //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ //  ecoregion HIGHLIGHT WMS SETUP
+ //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+       var eco_ter_url = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
+       var eco_hi=L.tileLayer.wms(eco_ter_url, {
+           layers: 'conservationmapping:ecoregion_protection_connection_hi',
+           transparent: true,
+           format: 'image/png',
+           opacity:'1',
+           zIndex: 34 // Use zIndex to order the tileLayers within the tilePane. The higher number, the upper vertically.
+        }).addTo(lMap);
+
+        eco_hi.setParams({CQL_FILTER:"ecoregion_ LIKE ''"}); // GEOSERVER WMS FILTER
+
+
+
+
+
+
+
+
+
+
+
 
 
 setTimeout(function(){
@@ -1688,7 +1777,56 @@ setTimeout(function(){
                                     'ecoregions':eco_ter,
                                     'ecoregions marine':eco_mar,
                                 };
-                               // on click func to add marine ecoregion layer and scroll to the top --------------------------------------------------------
+
+                                //---------------------------------------------------------------
+                                //  ecoregion ONCLICK FUNCTION
+                                //---------------------------------------------------------------
+                                lMap.on('click', function(e) {
+                                 if (lMap.hasLayer(eco_ter)) {
+                                var eco_latlng= e.latlng;
+                                var eco_ter_url = getFeatureInfoUrl_e(
+                                                lMap,
+                                                eco_ter,
+                                                e.latlng,
+                                                {
+                                                  'info_format': 'text/javascript',  //it allows us to get a jsonp
+                                                  'propertyName': 'ecoregion0,ecoregion_,biome,realm,tojson_p_2,tojson_p_3',
+                                                  'query_layers': 'conservationmapping:ecoregion_protection_connection_dopa_explorer',
+                                                  'format_options':'callback:getJson'
+                                                }
+                                            );
+
+                                            
+                                             $.ajax({
+                                                     jsonp: false,
+                                                     url: eco_ter_url,
+                                                     dataType: 'jsonp',
+                                                     jsonpCallback: 'getJson',
+                                                     success: handleJson_featureRequest_eco
+                                                   });
+
+                                                function handleJson_featureRequest_eco(data1)
+                                                {
+                                                   // if LAYER COVER THE MAP
+                                                   if (typeof data1.features[0]!=='undefined')
+                                                       {
+                                                          // TAKE THE POERTIES OF THE LAYER
+                                                          var prop1=data1.features[0].properties;
+                                                         // AND TAKE THE ECOREGION ID
+                                                          var filter1="ecoregion0='"+prop1['ecoregion0']+"'";
+                                                         // AND SET THE FILTER OF ECOREGION HIGLIGHTED
+                                                          eco_hi.setParams({CQL_FILTER:filter1});
+                                                          hi_highcharts_eco(prop1,eco_latlng);
+                                                          // SHOW THE DIV CONTAINING GRAPHS AND INFO
+                                                    }
+                                                    else {
+                                                      console.log(' no info')
+                                                    }
+                                                }
+                                            }
+                                  });
+
+// on click func to add marine ecoregion layer and scroll to the top --------------------------------------------------------
                                $("#showecomap").click(function(event) {
                                  event.preventDefault();
                                  if (lMap.hasLayer(eco_ter)) {
@@ -1700,10 +1838,13 @@ setTimeout(function(){
                                            }, 100);
                                        });
                                    lMap.removeLayer(eco_ter);
-                                   lMap.removeLayer(eco_mar);           
+                                   lMap.removeLayer(eco_hi);
+                                   lMap.removeLayer(eco_mar);
+
                                  } else {
                                    lMap.addLayer(eco_ter);
                                    lMap.addLayer(eco_mar);
+                                   lMap.addLayer(eco_hi);
 
                                    $('html,body').animate({
                                        scrollTop: $('#breadcrumb').css('top')
@@ -1752,13 +1893,13 @@ var tbody = table.getElementsByTagName('tbody')[0];
 var cells = tbody.getElementsByClassName('views-field-field-wdpa-marine');
 
 if (parseFloat ($('td.views-field-field-wdpa-marine').html()) == 0) {
-  $(cells).html('<td style="background-color: #b2cc75;">Terrestrial</td>');
+  $(cells).html('<td style="background-color: #7ebe25; color: white; border-radius: 2px;">Terrestrial</td>');
 }
 else if (parseFloat ($('td.views-field-field-wdpa-marine').html()) == 2) {
-  $(cells).html('<td style="background-color: #c8e5f7;">Marine</td>');
+  $(cells).html('<td style="background-color: #22a6f5; color: white; border-radius: 2px;">Marine</td>');
 }
 else{
-  $(cells).html('<td style="background-color: #69ce9a;">Terrestrial/Marine</td>');
+  $(cells).html('<td style="background-color: #69ce9a; color: white; border-radius: 2px;">Terrestrial/Marine</td>');
 }
 
 
