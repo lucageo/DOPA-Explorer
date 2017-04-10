@@ -578,7 +578,7 @@
 
 
    //---------------------------------------------------------------
-   // ONCLICK RESPONSE ON HIGLIGHTED WDPA
+   // ONCLICK RESPONSE ON HIGLIGHTED ECOREGION
    //--------------------------------------------------------------
           function hi_highcharts_eco(info,latlng){
             //CREATE VARIABLES OF EACH COLUMN YOU WANT TO SHOW FROM THE ATTRIBUTE TABLE OF THE WDPA WMS - EACH VARIABLE NEED TO BE SET IN UNDER "getFeatureInfoUrl" FUNCTION
@@ -819,8 +819,8 @@
                                        e.latlng,
                                        {
                                            'info_format': 'text/javascript',  //it allows us to get a jsonp
-                                           'propertyName': 'wdpaid,wdpa_name,desig_eng,desig_type,iucn_cat,jrc_gis_area_km2,status,status_yr,mang_auth',
-                                           'query_layers': 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_agg',
+                                           'propertyName': 'wdpaid,wdpa_name,desig_eng,desig_type,iucn_cat,jrc_gis_area_km2,status,status_yr,mang_auth,country,iso3',
+                                           'query_layers': 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg',
                                            'format_options':'callback:getJson'
                                        }
                                    );
@@ -850,11 +850,14 @@
                                      $( "#block-block-127" ).show(); // RIGHT INFO BOX
                                      $( "#block-block-132" ).show(); // BUTTON FOR CLIMATE GRAPHS
                                      $("#pa_disclaimer_arrow_climate").show();
+                                     $("#pa_disclaimer_arrow_elevation").show();
                                      $("#pa_climate_plot_title").show();
+                                     $("#pa_elevation_plot_title").show();
                                      $("#CLC2005title").show();
                                      $("#disclaimer__arrow_2").show();
                                      $("#glob2005-chart").show();
                                      $("#containerclima2").show();
+                                     $("#container_elevation").show();
                                      $("#CLC2000title").show();
                                      $("#disclaimer__arrow_3").show();
                                      $("#glc2000-chart").show();
@@ -917,7 +920,7 @@
 
 var url = 'http://h05-prod-vm11.jrc.it/geoserver/dopa_explorer/wms';
 var wdpa=L.tileLayer.wms(url, {
-    layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_agg',
+    layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg',
     transparent: true,
     format: 'image/png',
     opacity:'0.6',
@@ -984,7 +987,7 @@ legend4.addTo(lMap);
 
       var url = 'http://h05-prod-vm11.jrc.it/geoserver/dopa_explorer/wms';
       var wdpa_hi=L.tileLayer.wms(url, {
-          layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_agg_hi',
+          layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg_hi',
           transparent: true,
           format: 'image/png',
           opacity:'1',
@@ -1026,9 +1029,12 @@ legend4.addTo(lMap);
          var status=info['status'];
          var status_yr=info['status_yr'];
          var mang_auth=info['mang_auth'];
+         var country=info['country'];
+         var iso3=info['iso3'];
+         var iso3_first=iso3.slice(0,3);
 
          //WDPA HIGLIGHTED POPUP
-         var popupContentwdpa = '<center><a href="/wdpa/'+wdpaid+'">'+name+'</a></center><hr>';
+         var popupContentwdpa = '<center><i class="fa fa-envira fa-2x" aria-hidden="true"></i><br></br><a href="/wdpa/'+wdpaid+'">'+name+'</a></center><hr><center><i class="fa fa-globe fa-2x" aria-hidden="true"></i><br></br><a href="/country/'+iso3_first+'">'+country+'</a></center><hr><center><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i><br></br><a target="_blank" href="https://www.protectedplanet.net/'+wdpaid+'">Explore in Protected Planet</a></center><hr>';
 
          var popup = L.popup()
               .setLatLng([latlng.lat, latlng.lng])
@@ -1036,7 +1042,9 @@ legend4.addTo(lMap);
               .openOn(lMap);
 
          $('#pa_disclaimer_arrow_climate').show();
+         $('#pa_disclaimer_arrow_elevation').show();
          $('#pa_climate_plot_title').show();
+         $('#pa_elevation_plot_title').show();
          $('#disclaimer__arrow_2').show();
          $('#CLC2005title').show();
          $('#disclaimer__arrow_3').show();
@@ -1052,12 +1060,23 @@ legend4.addTo(lMap);
          $('#container2').html('<p><span>Designation &nbsp;</span><b>'+desig_eng+'</b></p>'+
                                 '<p><span>Designation Type &nbsp;</span><b>'+desig_type+'</b></p>'+
                                 '<p><span>IUCN Category &nbsp;</span><b>'+iucn_cat+'</b></p>'+
-                                '<p><span>Reported Area (KM²) &nbsp;</span><b>'+gis_area+'</b></p>'+
+                                '<p><span>Area (KM²) &nbsp;</span><b>'+parseFloat(Math.round(gis_area*100)/100)+'</b></p>'+
                                 '<p><span>Year &nbsp;</span><b>'+status_yr+'</b></p>'+
                                 '<p><span>Management Authority &nbsp;</span><b>'+mang_auth+'</b></p>'+
                                 '<p><span>Status&nbsp;</span><b>'+status+'</b></p>');
 
-          $('#someinfo').html('<p><span><b>'+name+'</b></span> (ID: '+wdpaid+') has been designated as '+desig_eng+' at '+desig_type+' level in '+status_yr+', it covers '+gis_area+' KM² and is managed by '+mang_auth+'.<br><hr></hr><p> ');
+          $('#someinfo').html('<em><span><b>'+name+'</b></span> (ID: '+wdpaid+') is in <span><a href="/country/'+iso3_first+'" class="countrylink" >'+country+'</a></span>, has been designated as '+desig_eng+' at '+desig_type+' level<em class="year_des"> in <span><b class ="years">'+status_yr+'</b></em></span>, it covers <span><b>'+parseFloat(Math.round(gis_area*100)/100)+' KM² </b></span><em class="mang_auth">and is managed by '+mang_auth+'</em></span>.<br><hr></hr><em> ');
+          // hide when not reported or year 0
+          var auth = $('.mang_auth').html();
+          if (auth.match(/Not Reported*/)){
+          	$('.mang_auth').hide();
+          }
+
+          var year_des = $('.years').html();
+          if (year_des == "0"){
+          	$('.year_des').hide();
+          }
+
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // WDPA GRAPHS
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1066,11 +1085,13 @@ legend4.addTo(lMap);
          var urlecoregion = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabitat/get_ecoregion_in_wdpa?wdpaid=' + wdpaid; // get ecoregion in wdpa -  not used atm
          var urlclc2000 = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_wdpa_lc_stats_glc2000?wdpaid='+ wdpaid; //get land cover 2000 in pa
          var urlclc2005 = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_wdpa_lc_stats_glob2005?wdpaid=' + wdpaid; //get land cover 2005 in pa
+         var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_topo_pa?wdpaid=' + wdpaid; //get elevation
 
 
 //-----------------------------------------------------------------------------
 // spyder graph
 //-----------------------------------------------------------------------------
+
 $.ajax({
   url: url,
   dataType: 'json',
@@ -1363,6 +1384,9 @@ $.ajax({
         }
       }
     }).done(function(){
+
+
+
     //-----------------------------------------------------------------------------
     // clc 2000 graph
     //-----------------------------------------------------------------------------
@@ -1709,7 +1733,127 @@ $.ajax({
 
           });// end of ajax call
         }) // end of .done(function()
-      })// end of .done(function()(583)
+      }); // end of .done(function()(583)
+  setTimeout(function(){
+               //-----------------------------------------------------------------------------
+               // spyder graph
+               //-----------------------------------------------------------------------------
+               $.ajax({
+                       url: urlelevation,
+                       dataType: 'json',
+                       success: function(d) {
+                           if (d.metadata.recordCount == 0) {
+                             jQuery('#container_elevation');
+                             jQuery('#container_elevation').append('');
+                           } else {
+                               var altitude = [];
+                               //var altitude_titles = [];
+                               var average = [];
+
+                               $(d.records).each(function(i, data) {
+                                   for (var prop in data){
+                                       if(prop == 'min'){
+                                           altitude.push(data[prop]);
+                                           //altitude_titles.push("Minimum");
+                                       }
+                                       else if(prop == 'q25'){
+                                           altitude.push(data[prop]);
+                                           //altitude_titles.push("1st Qtl.");
+                                       }
+                                       else if(prop == 'median'){
+                                           altitude.push(data[prop]);
+                                           //altitude_titles.push("Median");
+                                       }
+                                       else if(prop == 'mean'){
+                                           average.push(data[prop]);
+                                       }
+                                       else if(prop == 'q75'){
+                                           altitude.push(data[prop]);
+                                           //altitude_titles.push("3rd Qtl.");
+                                       }
+                                       else if(prop == 'max'){
+                                           altitude.push(data[prop]);
+                                           //altitude_titles.push("Maximum");
+                                       }
+                                   }
+                               });
+
+                               $('#container_elevation').highcharts({
+                                   chart: {
+                                       type: 'areaspline',
+                                       // height: 400,
+                                       // width: 400
+                                   },
+
+                                   title: {
+                                       text: null
+                                   },
+                                   subtitle: {
+                                       text: 'Virtual elevation profile'
+                                   },
+                                   pane: {
+                                       size: '100%'
+                                   },
+                                   credits: {
+                                       enabled: true,
+                                       text: 'Source: DOPA',
+                                       href: 'http://dopa.jrc.ec.europa.eu'
+                                   },
+                                   xAxis: {
+                                       categories: [
+                                       'Min.',
+                                       '1st Quartile',
+                                       'Median',
+                                       '3rd Quartile',
+                                       'Max.'
+                                       ]
+                                   },
+                                   tooltip: {
+                                       shared: true,
+                                       valueSuffix: ' units'
+                                   },
+                                   yAxis: {
+                                       title: {
+                                           text: 'Elevation (m) above sealevel',
+                                           color: '#3E576F',
+                                           style: {
+                                               color: '#3E576F'
+                                           }
+                                       },
+                                       plotLines: [{
+                                       color: '#0D6DDF',
+                                       width: 2,
+                                       value: average,
+                                       zIndex:5,
+                                       label: {
+                                           text: 'Average',
+                                           align: 'right',
+                                           x: -10
+                                       }
+                                       }]
+                                   },
+                                   plotOptions: {
+                                       areaspline: {
+                                           color: 'rgb(200,200,200)',
+                                           //fillOpacity: 1,
+                                           fillColor: {
+                                               linearGradient: [0, 0, 0, 500],
+                                               stops: [
+                                                   [0, '#DED6A3'],
+                                                   [1, '#fff']
+                                               ]
+                                           }
+                                       }
+                                   },
+                                   series: [{
+                                       name: 'Altitude (m)',
+                                       data: altitude
+                                   }]
+                               });
+                           }
+                       },
+                   });
+                 }, 300);
 }//end of function hi_highcharts_pa
 
  //-------------------------------------------------------------------------------------------------------------------
@@ -1813,11 +1957,14 @@ $(".middlecountry").click(function(event) {
       $("#print_btn_country").hide();
 
       $("#pa_disclaimer_arrow_climate").hide();
+      $("#pa_disclaimer_arrow_elevation").hide();
       $("#pa_climate_plot_title").hide();
+      $("#pa_elevation_plot_title").hide();
       $("#CLC2005title").hide();
       $("#disclaimer__arrow_2").hide();
       $("#glob2005-chart").hide();
       $("#containerclima2").hide();
+           $("#container_elevation").hide();
       $("#CLC2000title").hide();
       $("#disclaimer__arrow_3").hide();
       $("#glc2000-chart").hide();
@@ -1851,11 +1998,14 @@ $(".middleeco").click(function(event) {
       $("#print_btn_country").hide();
 
       $("#pa_disclaimer_arrow_climate").hide();
+      $("#pa_disclaimer_arrow_elevation").hide();
       $("#pa_climate_plot_title").hide();
+      $("#pa_elevation_plot_title").hide();
       $("#CLC2005title").hide();
       $("#disclaimer__arrow_2").hide();
       $("#glob2005-chart").hide();
       $("#containerclima2").hide();
+           $("#container_elevation").hide();
       $("#CLC2000title").hide();
       $("#disclaimer__arrow_3").hide();
       $("#glc2000-chart").hide();
@@ -1888,11 +2038,14 @@ $(".middlereg").click(function(event) {
      $("#print_btn_country").hide();
 
      $("#pa_disclaimer_arrow_climate").hide();
+     $("#pa_disclaimer_arrow_elevation").hide();
      $("#pa_climate_plot_title").hide();
+      $("#pa_elevation_plot_title").hide();
      $("#CLC2005title").hide();
      $("#disclaimer__arrow_2").hide();
      $("#glob2005-chart").hide();
      $("#containerclima2").hide();
+     $("#container_elevation").hide();
      $("#CLC2000title").hide();
      $("#disclaimer__arrow_3").hide();
      $("#glc2000-chart").hide();
@@ -1908,13 +2061,14 @@ $(".middlereg").click(function(event) {
 
 $(document).ready(function(e) {
               $('button#print_btn').on('click', function(e)  {
-                   $('.generalinfo, #container8, #container3, #container2, #containerclima2, #glc2000-chart, #glob2005-chart').printThis({
+                   $('#generalinfo, #container8, #container3, #container2, #container_elevation, #containerclima2, #glc2000-chart, #glob2005-chart').printThis({
           // footer: $('.hidden-print-header-content'),
            loadCSS: "sites/all/themes/bootstrap_business/css/print.css",
            pageTitle:  "DOPA Report",
           //  pageTitle:  "<hr>",
            header: "<img src='sites/default/files/report_logo.png'><br></br><hr></hr><center><b> Digital Observatory for Protected Areas (DOPA) </b><p>Protected Area Report</p></center>"
                   });
+
               });
            });
  //-------------------------------------------------------------------------
@@ -1977,6 +2131,8 @@ $('.search-button').click(function() {
 
 
 //------------------------------------------------------------------------
+
+
 
 
 })
