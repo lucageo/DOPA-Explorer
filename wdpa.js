@@ -2,9 +2,22 @@
 
  $(document).bind('leaflet.map', function(e, map, lMap)
    {
-
+L.control.scale({position: 'topright'}).addTo(lMap);
 //BASEMAPS
 var streets  = L.tileLayer('https://api.mapbox.com/styles/v1/lucageo/ciywysi9f002e2snqsz0ukhz4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibHVjYWdlbyIsImEiOiJjaXIwY2FmNHAwMDZ1aTVubmhuMDYyMmtjIn0.1jWhLwVzKS6k1Ldn-bVQPg').addTo(lMap);
+var satellite =  L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{
+maxZoom: 20,
+subdomains:['mt0','mt1','mt2','mt3']
+});
+
+
+
+
+
+
+
+
+
 
 
 //  wdpa ONCLICK FUNCTION
@@ -86,7 +99,7 @@ var url = getFeatureInfoUrl(
   //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   //  WDPA HIGHLIGHT WMS SETUP
   //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        var url = 'http://h05-prod-vm11.jrc.it/geoserver/dopa_explorer/wms';
+        var url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/dopa_explorer/wms';
         var wdpa_hi=L.tileLayer.wms(url, {
             layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg_hi',
             transparent: true,
@@ -95,7 +108,7 @@ var url = getFeatureInfoUrl(
             zIndex: 34 // Use zIndex to order the tileLayers within the tilePane. The higher number, the upper vertically.
          }).addTo(lMap);
 
-         wdpa_hi.setParams({CQL_FILTER:"wdpa_name LIKE ''"}); // GEOSERVER WMS FILTER
+         wdpa_hi.setParams({CQL_FILTER:"wdpa_name LIKE '00000000000000000000000000000000000'"}); // GEOSERVER WMS FILTER
  //---------------------------------------------------------------
  // ONCLICK RESPONSE ON HIGLIGHTED WDPA
  //--------------------------------------------------------------
@@ -115,8 +128,8 @@ var url = getFeatureInfoUrl(
           var iso3_first=iso3.slice(0,3);
 
           //WDPA HIGLIGHTED POPUP
-          var popupContentwdpa = '<center><i class="fa fa-envira fa-2x" aria-hidden="true"></i><br></br><a href="/wdpa/'+wdpaid+'">'+name+'</a></center><hr><center><i class="fa fa-globe fa-2x" aria-hidden="true"></i><br></br><a href="/country/'+iso3_first+'">'+country+'</a></center><hr><center><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i><br></br><a target="_blank" href="https://www.protectedplanet.net/'+wdpaid+'">Explore in Protected Planet</a></center><hr>';
-
+          var popupContentwdpa = '<center><i class="fa fa-envira fa-2x" aria-hidden="true"></i><br></br><a href="/wdpa/'+wdpaid+'">'+name+'</a></center><hr><center><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i><br></br><a target="_blank" href="https://www.protectedplanet.net/'+wdpaid+'">Explore in Protected Planet</a></center><hr>';
+// when available add: <center><i class="fa fa-globe fa-2x" aria-hidden="true"></i><br></br><a href="/country/'+iso3_first+'">'+country+'</a></center><hr>
           var popup = L.popup()
                .setLatLng([latlng.lat, latlng.lng])
                .setContent(popupContentwdpa)
@@ -124,7 +137,7 @@ var url = getFeatureInfoUrl(
         } //end of function hi_highcharts_pa
 
 //-- WDPA WMS GEOSERVER LAYER - SETUP
-     var url = 'http://h05-prod-vm11.jrc.it/geoserver/dopa_explorer/wms';
+     var url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/dopa_explorer/wms';
      var wdpa=L.tileLayer.wms(url, {
          layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg',
          transparent: true,
@@ -133,15 +146,41 @@ var url = getFeatureInfoUrl(
          zIndex: 33
       }).addTo(lMap);
 
+
+
+      wdpa.setParams({CQL_FILTER:"highest_iucn_cat <> ''"});
+
+
+
+
+      $('#dropwdpa').on('change', function() {
+           var highest_iucn_cat = ($('#dropwdpa').val());
+
+            wdpa.setParams({CQL_FILTER:"highest_iucn_cat LIKE '"+highest_iucn_cat+"'"});
+
+            console.info(highest_iucn_cat);
+          //  wdpa_hi.setParams({CQL_FILTER:"highest_iucn_cat LIKE '"+highest_iucn_cat+"'"});
+
+         });
+
+
 //----------------------------------------------------------------
 // Layers
 //----------------------------------------------------------------
          var baseMaps = {
-              "Light": streets,
+           'Landscape': streets,
+           'Satellite': satellite
           };
          var overlayMaps = {
-              'PROTECTED AREAS':wdpa,
+              'PROTECTED AREAS':wdpa
+
           };
+          //----------------------------------------------------------------
+          // Layers
+          //----------------------------------------------------------------
+
+                    layerControl = L.control.layers(baseMaps, null,  {position: 'bottomright'});
+     layerControl.addTo(lMap);
 //-----------------------------------------------------------------------------
 // spyder graph threats
 //-----------------------------------------------------------------------------
@@ -155,7 +194,7 @@ var url = getFeatureInfoUrl(
     success: function(d) {
         if (d.metadata.recordCount == 0) {
             jQuery('#spider_chart_wdpa_threats');
-            jQuery('#spider_chart_wdpa_threats').append('');
+            jQuery('#spider_chart_wdpa_threats').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
         } else {
             var title = [];
             var country_avg = [];
@@ -367,7 +406,7 @@ var url = getFeatureInfoUrl(
     success: function(d) {
         if (d.metadata.recordCount == 0) {
             jQuery('#spider_chart_wdpa_species');
-            jQuery('#spider_chart_wdpa_species').append('');
+             jQuery('#spider_chart_wdpa_species').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
         } else {
             var title = [];
             var country_avg = [];
@@ -560,11 +599,12 @@ var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get
              success: function(d) {
                  if (d.metadata.recordCount == 0) {
                      //jQuery('#container2');
-                     //jQuery('#container2').append('There is no summary data for this WDPA');
+                     jQuery('#clima_chart_wdpa').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
                  } else {
                    var precip = [];
                    var tmax = [];
                    var tmin = [];
+
                    var tmean = [];
                    $(d.records).each(function(i, data) {
                        //	console.warn(i)
@@ -581,7 +621,7 @@ var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get
                            case 'tmin':
                                for (var prop in data) {
                                    if (prop !== 'type' && prop !== 'uom')
-                                       tmin.push(data[prop])
+                                       tmin.push(Math.round((data[prop])* 10) / 10)
                                }
 
                                break;
@@ -589,7 +629,7 @@ var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get
                            case 'tmax':
                                for (var prop in data) {
                                    if (prop !== 'type' && prop !== 'uom')
-                                       tmax.push(data[prop])
+                                       tmax.push(Math.round((data[prop])* 10) / 10)
                                }
                                break;
 
@@ -597,7 +637,7 @@ var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get
 
                                for (var prop in data) {
                                    if (prop !== 'type' && prop !== 'uom')
-                                       tmean.push(data[prop])
+                                       tmean.push(Math.round((data[prop])* 10) / 10)
                                }
                                break;
                            default:
@@ -621,7 +661,7 @@ var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get
                            text: null
                        },
                        subtitle: {
-                            text: 'Monthly climate averages'
+                            text: 'Monthly climate average'
                        },
                        xAxis: [{
                            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -638,7 +678,7 @@ var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get
                                }
                            },
                            title: {
-                               text: 'Temperature',
+                               text: 'Temperature (C°)',
                                color: '#3E576F',
                                style: {
                                    color: '#3E576F'
@@ -745,8 +785,8 @@ var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat
           dataType: 'json',
           success: function(d) {
               if (d.metadata.recordCount == 0) {
-                jQuery('#elevation_chart_wdpa');
-                jQuery('#elevation_chart_wdpa').append('');
+              //  jQuery('#elevation_chart_wdpa');
+                jQuery('#elevation_chart_wdpa').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
               } else {
                   var altitude = [];
                   //var altitude_titles = [];
@@ -789,6 +829,63 @@ var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat
                   });
 
 
+                  $(document).ready(function () {
+                       function exportTableToCSV($table, filename) {
+                           var $headers = $table.find('tr:has(th)')
+                               ,$rows = $table.find('tr:has(td)')
+                               ,tmpColDelim = String.fromCharCode(11) // vertical tab character
+                               ,tmpRowDelim = String.fromCharCode(0) // null character
+                               ,colDelim = '","'
+                               ,rowDelim = '"\r\n"';
+                               var csv = '"';
+                               csv += formatRows($headers.map(grabRow));
+                               csv += rowDelim;
+                               csv += formatRows($rows.map(grabRow)) + '"';
+                               var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+                           $(this)
+                               .attr({
+                               'download': filename
+                                   ,'href': csvData
+                                   ,'target' : '_blank' //if you want it to open in a new window
+                           });
+                           function formatRows(rows){
+                               return rows.get().join(tmpRowDelim)
+                                   .split(tmpRowDelim).join(rowDelim)
+                                   .split(tmpColDelim).join(colDelim);
+                           }
+                           function grabRow(i,row){
+
+                               var $row = $(row);
+                               var $cols = $row.find('td');
+                               if(!$cols.length) $cols = $row.find('th');
+                               return $cols.map(grabCol)
+                                           .get().join(tmpColDelim);
+                           }
+                           function grabCol(j,col){
+                               var $col = $(col),
+                                   $text = $col.text();
+                               return $text.replace('"', '""'); // escape double quotes
+                           }
+                       }
+                       $(".export_elevation").click(function (event) {
+                           var outputFile = window.prompt("Save file in .csv format with the following name:") || 'export';
+                           outputFile = outputFile.replace('.csv','') + '.csv'
+                           exportTableToCSV.apply(this, [$('#elevation_tab'), outputFile]);
+                       });
+
+                      // or substitute with this one if you want to assign the name!
+                      //  $(".export_elevation").on('click', function (event) {
+                      //      // CSV
+                      //      var args = [$('#dvData>table'), 'export.csv'];
+                      //
+                      //      exportTableToCSV.apply(this, args);
+                      //  });
+                   });
+
+
+
+
+
                   $('#elevation_chart_wdpa').highcharts({
                       chart: {
                           type: 'areaspline',
@@ -825,7 +922,7 @@ var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat
                       },
                       yAxis: {
                           title: {
-                              text: 'Elevation (m) above sealevel',
+                              text: 'Elevation (m) above sea level',
                               color: '#3E576F',
                               style: {
                                   color: '#3E576F'
@@ -857,7 +954,7 @@ var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat
                           }
                       },
                       series: [{
-                          name: 'Altitude (m)',
+                          name: 'Altitude',
                           data: altitude
                       }]
                   });
@@ -878,8 +975,8 @@ $.ajax({
     dataType: 'json',
     success: function(d) {
         if (d.metadata.recordCount == 0) {
-            jQuery('#clc2000_chart_wdpa');
-            //jQuery('#glc2000-chart').append('There is no GLC2000 data for '+ $paname)
+            //jQuery('#clc2000_chart_wdpa');
+            jQuery('#clc2000_chart_wdpa').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
         } else {
             var obj = {};
             var colors_array = [];
@@ -960,7 +1057,7 @@ $.ajax({
     success: function(d) {
         if (d.metadata.recordCount == 0) {
             jQuery('#clc2005_chart_wdpa');
-            //jQuery('#glc2000-chart').append('There is no GLC2000 data for '+ $paname)
+            jQuery('#clc2005_chart_wdpa').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
         } else {
             var obj = {};
             var colors_array = [];
@@ -1100,7 +1197,8 @@ jQuery(document).ready(function($) {
 			dataType: 'json',
 			success: function(d) {
 				if (d.metadata.recordCount == 0) {
-					jQuery('#country-pressure-chart-'+param);
+					//jQuery('#country-pressure-chart-'+param);
+          jQuery('#country-pressure-chart-'+param).html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
 
 				} else {
 					var wdpa_id = [];
@@ -1342,7 +1440,7 @@ var urlspeciesstatus = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/e
           success: function(d) {
               if (d.metadata.recordCount == 0) {
                 // jQuery('#species_status_wdpa');
-                // jQuery('#species_status_wdpa').append('');
+                jQuery('#species_tab').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
               } else {
                    var  _class = [];
                    var  total_species = [];
@@ -1408,6 +1506,55 @@ var urlspeciesstatus = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/e
                       } // end of for
 
                   });
+
+
+                  $(document).ready(function () {
+                       function exportTableToCSV($table, filename) {
+                           var $headers = $table.find('tr:has(th)')
+                               ,$rows = $table.find('tr:has(td)')
+                               ,tmpColDelim = String.fromCharCode(11) // vertical tab character
+                               ,tmpRowDelim = String.fromCharCode(0) // null character
+                               ,colDelim = '","'
+                               ,rowDelim = '"\r\n"';
+                               var csv = '"';
+                               csv += formatRows($headers.map(grabRow));
+                               csv += rowDelim;
+                               csv += formatRows($rows.map(grabRow)) + '"';
+                               var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+                           $(this)
+                               .attr({
+                               'download': filename
+                                   ,'href': csvData
+                                   ,'target' : '_blank' //if you want it to open in a new window
+                           });
+                           function formatRows(rows){
+                               return rows.get().join(tmpRowDelim)
+                                   .split(tmpRowDelim).join(rowDelim)
+                                   .split(tmpColDelim).join(colDelim);
+                           }
+                           function grabRow(i,row){
+
+                               var $row = $(row);
+                               var $cols = $row.find('td');
+                               if(!$cols.length) $cols = $row.find('th');
+                               return $cols.map(grabCol)
+                                           .get().join(tmpColDelim);
+                           }
+                           function grabCol(j,col){
+                               var $col = $(col),
+                                   $text = $col.text();
+                               return $text.replace('"', '""'); // escape double quotes
+                           }
+                       }
+                       $(".export_species_tab").click(function (event) {
+                           var outputFile = window.prompt("Save file in .csv format with the following name:") || 'export';
+                           outputFile = outputFile.replace('.csv','') + '.csv'
+                           exportTableToCSV.apply(this, [$('#species_tab'), outputFile]);
+                       });
+
+                   });
+                   // end of export
+
                 } //end of main else
 
               } // end of sucsess
@@ -1416,7 +1563,7 @@ var urlspeciesstatus = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/e
 
 }, 2200);
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-//  Lc 2000 Species
+//  Lc 2000 tab
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 setTimeout(function(){
     var wdpaid_lcc2000= $('.wdpa-id').text();
@@ -1427,6 +1574,7 @@ var urllcc2000tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehab
           dataType: 'json',
           success: function(d) {
               if (d.metadata.recordCount == 0) {
+                jQuery('#lc2000_tab').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
               } else {
                    var label = [];
                    var area = [];
@@ -1453,7 +1601,7 @@ var urllcc2000tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehab
                           }
                           else if(prop == 'color'){
                               color.push(data[prop]);
-                              $('#lc2000_tab tbody tr[id="'+i+'"]').append('<td class="lc2000transpa" style="background-color:'+data[prop]+';"></td>');
+                              $('#lc2000_tab tbody tr[id="'+i+'"]').append('<td class="lc2000transpa" style="background-color:'+data[prop]+'!important;"></td>');
                           }
 
                           else {
@@ -1461,6 +1609,51 @@ var urllcc2000tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehab
                       } // end of for
 
                   });
+                  $(document).ready(function () {
+                       function exportTableToCSV($table, filename) {
+                           var $headers = $table.find('tr:has(th)')
+                               ,$rows = $table.find('tr:has(td)')
+                               ,tmpColDelim = String.fromCharCode(11) // vertical tab character
+                               ,tmpRowDelim = String.fromCharCode(0) // null character
+                               ,colDelim = '","'
+                               ,rowDelim = '"\r\n"';
+                               var csv = '"';
+                               csv += formatRows($headers.map(grabRow));
+                               csv += rowDelim;
+                               csv += formatRows($rows.map(grabRow)) + '"';
+                               var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+                           $(this)
+                               .attr({
+                               'download': filename
+                                   ,'href': csvData
+                                   ,'target' : '_blank' //if you want it to open in a new window
+                           });
+                           function formatRows(rows){
+                               return rows.get().join(tmpRowDelim)
+                                   .split(tmpRowDelim).join(rowDelim)
+                                   .split(tmpColDelim).join(colDelim);
+                           }
+                           function grabRow(i,row){
+
+                               var $row = $(row);
+                               var $cols = $row.find('td');
+                               if(!$cols.length) $cols = $row.find('th');
+                               return $cols.map(grabCol)
+                                           .get().join(tmpColDelim);
+                           }
+                           function grabCol(j,col){
+                               var $col = $(col),
+                                   $text = $col.text();
+                               return $text.replace('"', '""'); // escape double quotes
+                           }
+                       }
+                       $(".export_lc2000_tab").click(function (event) {
+                           var outputFile = window.prompt("Save file in .csv format with the following name") || 'export';
+                           outputFile = outputFile.replace('.csv','') + '.csv'
+                           exportTableToCSV.apply(this, [$('#lc2000_tab'), outputFile]);
+                       });
+
+                   });
                 } //end of main else
 
               } // end of sucsess
@@ -1480,6 +1673,7 @@ setTimeout(function(){
           dataType: 'json',
           success: function(d) {
               if (d.metadata.recordCount == 0) {
+                jQuery('#lc2005_tab').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
               } else {
                    var label = [];
                    var area = [];
@@ -1506,7 +1700,7 @@ setTimeout(function(){
                           }
                           else if(prop == 'color'){
                               color.push(data[prop]);
-                              $('#lc2005_tab tbody tr[id="'+i+'"]').append('<td class="lc2005transpa" style="background-color:'+data[prop]+';"></td>');
+                              $('#lc2005_tab tbody tr[id="'+i+'"]').append('<td class="lc2005transpa" style="background-color:'+data[prop]+'!important;"></td>');
                           }
 
                           else {
@@ -1514,6 +1708,51 @@ setTimeout(function(){
                       } // end of for
 
                   });
+                  $(document).ready(function () {
+                       function exportTableToCSV($table, filename) {
+                           var $headers = $table.find('tr:has(th)')
+                               ,$rows = $table.find('tr:has(td)')
+                               ,tmpColDelim = String.fromCharCode(11) // vertical tab character
+                               ,tmpRowDelim = String.fromCharCode(0) // null character
+                               ,colDelim = '","'
+                               ,rowDelim = '"\r\n"';
+                               var csv = '"';
+                               csv += formatRows($headers.map(grabRow));
+                               csv += rowDelim;
+                               csv += formatRows($rows.map(grabRow)) + '"';
+                               var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+                           $(this)
+                               .attr({
+                               'download': filename
+                                   ,'href': csvData
+                                   ,'target' : '_blank' //if you want it to open in a new window
+                           });
+                           function formatRows(rows){
+                               return rows.get().join(tmpRowDelim)
+                                   .split(tmpRowDelim).join(rowDelim)
+                                   .split(tmpColDelim).join(colDelim);
+                           }
+                           function grabRow(i,row){
+
+                               var $row = $(row);
+                               var $cols = $row.find('td');
+                               if(!$cols.length) $cols = $row.find('th');
+                               return $cols.map(grabCol)
+                                           .get().join(tmpColDelim);
+                           }
+                           function grabCol(j,col){
+                               var $col = $(col),
+                                   $text = $col.text();
+                               return $text.replace('"', '""'); // escape double quotes
+                           }
+                       }
+                       $(".export_lc2005_tab").click(function (event) {
+                           var outputFile = window.prompt("Save file in .csv format with the following name:") || 'export';
+                           outputFile = outputFile.replace('.csv','') + '.csv'
+                           exportTableToCSV.apply(this, [$('#lc2005_tab'), outputFile]);
+                       });
+
+                   });
                 } //end of main else
 
               } // end of sucsess
@@ -1536,6 +1775,7 @@ setTimeout(function(){
           dataType: 'json',
           success: function(d) {
               if (d.metadata.recordCount == 0) {
+                jQuery('#sp_list_tab').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
               } else {
                    var  iucn_species_id = [];
                    var  taxon = [];
@@ -1589,6 +1829,53 @@ setTimeout(function(){
                           }
                       } // end of for
                   });
+
+                  $(document).ready(function () {
+                       function exportTableToCSV($table, filename) {
+                           var $headers = $table.find('tr:has(th)')
+                               ,$rows = $table.find('tr:has(td)')
+                               ,tmpColDelim = String.fromCharCode(11) // vertical tab character
+                               ,tmpRowDelim = String.fromCharCode(0) // null character
+                               ,colDelim = '","'
+                               ,rowDelim = '"\r\n"';
+                               var csv = '"';
+                               csv += formatRows($headers.map(grabRow));
+                               csv += rowDelim;
+                               csv += formatRows($rows.map(grabRow)) + '"';
+                               var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+                           $(this)
+                               .attr({
+                               'download': filename
+                                   ,'href': csvData
+                                   ,'target' : '_blank' //if you want it to open in a new window
+                           });
+                           function formatRows(rows){
+                               return rows.get().join(tmpRowDelim)
+                                   .split(tmpRowDelim).join(rowDelim)
+                                   .split(tmpColDelim).join(colDelim);
+                           }
+                           function grabRow(i,row){
+
+                               var $row = $(row);
+                               var $cols = $row.find('td');
+                               if(!$cols.length) $cols = $row.find('th');
+                               return $cols.map(grabCol)
+                                           .get().join(tmpColDelim);
+                           }
+                           function grabCol(j,col){
+                               var $col = $(col),
+                                   $text = $col.text();
+                               return $text.replace('"', '""'); // escape double quotes
+                           }
+                       }
+                       $(".export_species_list_tab").click(function (event) {
+                           var outputFile = window.prompt("Save file in .csv format with the following name:") || 'export';
+                           outputFile = outputFile.replace('.csv','') + '.csv'
+                           exportTableToCSV.apply(this, [$('#sp_list_tab'), outputFile]);
+                       });
+
+                   });
+
                 } //end of main else
                   $('#sp_list_tab').DataTable( {
                   "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
@@ -1597,11 +1884,8 @@ setTimeout(function(){
       }); // ajax call
 }, 2600);
 
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-//  Ecoregion list in PA tab
-//----------------------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------
-// ecoregion WMS LEGEND
+// Ecoregion LEGEND
 //---------------------------------------------------------------
 function getColoreco(deco) {
   return deco > 50       ? '#045275' :
@@ -1624,9 +1908,22 @@ legendeco.onAdd = function (lMap) {
           }
       div.innerHTML = labels.join('');
     return div;
+
  };
 
-$("#showecomap").click(function(event) {
+$("#showecomap1").click(function(event) {
+  event.preventDefault();
+  if ($("#ecolegend").length === 0){
+    legendeco.addTo(lMap);
+    $("#tecoon").show()
+  }
+  else {
+    lMap.removeControl(legendeco);
+    $("#tecoon").hide()
+  }
+});
+
+$("#tecoon").click(function(event) {
   event.preventDefault();
   if ($("#ecolegend").length === 0){
     legendeco.addTo(lMap);
@@ -1636,14 +1933,13 @@ $("#showecomap").click(function(event) {
   }
 });
 
-
 //---------------------------------------------------------------
-//  ecoregion LAYER - GET FEATUREINFO FUNCTION
+//  Ecoregion LAYER - GET FEATUREINFO FUNCTION
 //---------------------------------------------------------------
 
    function getFeatureInfoUrl_e(map, layer, latlng, params) {
-     //console.log(layer.wmsParams.layers)
-  if (layer.wmsParams.layers=="conservationmapping:ecoregion_protection_connection_dopa_explorer")
+
+  if (layer.wmsParams.layers=="lrm:eco_mar_ter_prot_con_2016")
   {
        var point1 = map.latLngToContainerPoint(latlng, map.getZoom()),
            size1 = map.getSize(),
@@ -1664,9 +1960,8 @@ $("#showecomap").click(function(event) {
            layers: layer.options.layers,
            info_format: 'text/javascript'
        };
-//console.warn(defaultParams1);
-       params = L.Util.extend(defaultParams1, params || {});
 
+       params = L.Util.extend(defaultParams1, params || {});
        params[params.version === '1.3.0' ? 'i' : 'x'] = point1.x;
        params[params.version === '1.3.0' ? 'j' : 'y'] = point1.y;
 
@@ -1676,54 +1971,40 @@ $("#showecomap").click(function(event) {
 
 
  //---------------------------------------------------------------
- // ONCLICK RESPONSE ON HIGLIGHTED WDPA
+ // ONCLICK RESPONSE ON HIGLIGHTED ECOREGIONS
  //--------------------------------------------------------------
         function hi_highcharts_eco(info,latlng){
-          //CREATE VARIABLES OF EACH COLUMN YOU WANT TO SHOW FROM THE ATTRIBUTE TABLE OF THE WDPA WMS - EACH VARIABLE NEED TO BE SET IN UNDER "getFeatureInfoUrl" FUNCTION
-          var name=info['ecoregion_'];
-          var ecoid=info['ecoregion0'];
+          var eco_name=info['eco_name'];
+          var id=info['id'];
           var biome=info['biome'];
           var realm=info['realm'];
-          var connectivity=info['tojson_p_2'];
-          var protection=info['tojson_p_3'];
-                                                //console.warn(name);
-          //WDPA HIGLIGHTED POPUP
-          var popupContenteco = '<center><a href="/ecoregion/'+ecoid+'">'+name+'</a></center><hr>';
-
+          var connect=info['connect'];
+          var protection=info['protection'];
+          var popupContenteco = '<center><a href="/ecoregion/'+id+'">'+eco_name+'</a></center><hr>';
           var popup_eco = L.popup()
                .setLatLng([latlng.lat, latlng.lng])
                .setContent(popupContenteco)
                .openOn(lMap);
-
- } // close "hi_highcharts_eco"
+ }
 
  //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
- //  ecoregion HIGHLIGHT WMS SETUP
+ //  Ecoregion HIGHLIGHT WMS SETUP
  //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-       var eco_ter_url = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
+       var eco_ter_url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/lrm/wms';
        var eco_hi=L.tileLayer.wms(eco_ter_url, {
-           layers: 'conservationmapping:ecoregion_protection_connection_hi',
+           layers: 'lrm:eco_mar_ter_prot_con_2016_hi',
            transparent: true,
            format: 'image/png',
            opacity:'1',
-           zIndex: 34 // Use zIndex to order the tileLayers within the tilePane. The higher number, the upper vertically.
+           zIndex: 34
         }).addTo(lMap);
 
-        eco_hi.setParams({CQL_FILTER:"ecoregion_ LIKE ''"}); // GEOSERVER WMS FILTER
+        eco_hi.setParams({CQL_FILTER:"eco_name LIKE ''"});
 
-
-
-
-
-
-
-
-
-
-
-
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+//  Ecoregion list in PA tab
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 setTimeout(function(){
   var wdpaid_eco_list= $('.wdpa-id').text();
   var urleco_list = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabitat/get_ecoregion_in_wdpa?format=json&wdpaid=' + wdpaid_eco_list;
@@ -1733,6 +2014,7 @@ setTimeout(function(){
           dataType: 'json',
           success: function(d) {
               if (d.metadata.recordCount == 0) {
+                jQuery('#eco_list_tab').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
               } else {
                    var ecoregion_id = [];
                    var eco_name = [];
@@ -1753,29 +2035,34 @@ setTimeout(function(){
                               eco_name.push(data[prop]);
                                $('#eco_list_tab tbody tr[id="'+i+'"]').append('<td>'+'<a href="/ecoregion/'+data['ecoregion_id']+'" target="_blank">'+data[prop]+'</a>'+'</td>');
 
-                              // filters for marine and terrestrial ecoregion layer --------------------------------------------------------
-                              var eco_filter_ter="ecoregion_ LIKE'"+data[prop]+"'";
-                              var eco_filter_mar="ecoregion LIKE'"+data[prop]+"'";
-                              // add terrestrial ecoregion layer --------------------------------------------------------
-                              var eco_ter_url = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
+// filters for marine and terrestrial ecoregion layer ------------------------------------------------------------
+                              var eco_filter_ter="eco_name LIKE'"+data[prop]+"'";
+                            //  var eco_filter_mar="ecoregion LIKE'"+data[prop]+"'";
+// add terrestrial ecoregion layer --------------------------------------------------------------------------------
+                              var eco_ter_url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/lrm/wms';
                               var eco_ter=L.tileLayer.wms(eco_ter_url, {
-                                layers: 'conservationmapping:ecoregion_protection_connection_dopa_explorer',
+                                layers: 'lrm:eco_mar_ter_prot_con_2016',
                                 transparent: true,
-                                format: 'image/png'
+                                format: 'image/png',
+                                zIndex: 32
                               });
                               eco_ter.setParams({CQL_FILTER:eco_filter_ter});
-                              // add marine ecoregion layer --------------------------------------------------------
-                               var eco_mar_url = 'http://h05-prod-vm11.jrc.it/geoserver/conservationmapping/wms';
-                               var eco_mar=L.tileLayer.wms(eco_mar_url, {
-                                 layers: 'conservationmapping:eco_p_mar_2014',
-                                 transparent: true,
-                                 format: 'image/png'
-                               });
-                               eco_mar.setParams({CQL_FILTER:eco_filter_mar});
-                               // add layers to the map
+// add marine ecoregion layer --------------------------------------------------------------------------------------
+                              //  var eco_mar_url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/conservationmapping/wms';
+                              //  var eco_mar=L.tileLayer.wms(eco_mar_url, {
+                              //    layers: 'conservationmapping:eco_p_mar_2014',
+                              //    transparent: true,
+                              //    format: 'image/png'
+                              //  });
+                              //  eco_mar.setParams({CQL_FILTER:eco_filter_mar});
+// add layers to the map -------------------------------------------------------------------------------------------
+                                var baseMaps = {
+                                  'Landscape': streets,
+                                  'Google satellite': satellite
+                                 };
                                var overlayMaps = {
                                     'ecoregions':eco_ter,
-                                    'ecoregions marine':eco_mar,
+                                  //  'ecoregions marine':eco_mar,
                                 };
 
                                 //---------------------------------------------------------------
@@ -1790,13 +2077,12 @@ setTimeout(function(){
                                                 e.latlng,
                                                 {
                                                   'info_format': 'text/javascript',  //it allows us to get a jsonp
-                                                  'propertyName': 'ecoregion0,ecoregion_,biome,realm,tojson_p_2,tojson_p_3',
-                                                  'query_layers': 'conservationmapping:ecoregion_protection_connection_dopa_explorer',
+                                                  'propertyName': 'id,eco_name,biome,realm,connect,protection',
+                                                  'query_layers': 'lrm:eco_mar_ter_prot_con_2016',
                                                   'format_options':'callback:getJson'
                                                 }
                                             );
 
-                                            
                                              $.ajax({
                                                      jsonp: false,
                                                      url: eco_ter_url,
@@ -1804,20 +2090,14 @@ setTimeout(function(){
                                                      jsonpCallback: 'getJson',
                                                      success: handleJson_featureRequest_eco
                                                    });
-
                                                 function handleJson_featureRequest_eco(data1)
                                                 {
-                                                   // if LAYER COVER THE MAP
                                                    if (typeof data1.features[0]!=='undefined')
                                                        {
-                                                          // TAKE THE POERTIES OF THE LAYER
                                                           var prop1=data1.features[0].properties;
-                                                         // AND TAKE THE ECOREGION ID
-                                                          var filter1="ecoregion0='"+prop1['ecoregion0']+"'";
-                                                         // AND SET THE FILTER OF ECOREGION HIGLIGHTED
+                                                          var filter1="id='"+prop1['id']+"'";
                                                           eco_hi.setParams({CQL_FILTER:filter1});
                                                           hi_highcharts_eco(prop1,eco_latlng);
-                                                          // SHOW THE DIV CONTAINING GRAPHS AND INFO
                                                     }
                                                     else {
                                                       console.log(' no info')
@@ -1826,10 +2106,10 @@ setTimeout(function(){
                                             }
                                   });
 
-// on click func to add marine ecoregion layer and scroll to the top --------------------------------------------------------
-                               $("#showecomap").click(function(event) {
+// Button - add ecoregion layer and scroll to the top --------------------------------------------------------
+                               $("#showecomap1").click(function(event) {
                                  event.preventDefault();
-                                 if (lMap.hasLayer(eco_ter)) {
+                                 if (lMap.hasLayer(eco_ter)) { //only for terrestrial ecoregions
                                        $('html,body').animate({
                                            scrollTop: $('#breadcrumb').css('top')
                                        }, 100, function() {
@@ -1839,11 +2119,11 @@ setTimeout(function(){
                                        });
                                    lMap.removeLayer(eco_ter);
                                    lMap.removeLayer(eco_hi);
-                                   lMap.removeLayer(eco_mar);
+                                  // lMap.removeLayer(eco_mar);
 
                                  } else {
                                    lMap.addLayer(eco_ter);
-                                   lMap.addLayer(eco_mar);
+                                //   lMap.addLayer(eco_mar);
                                    lMap.addLayer(eco_hi);
 
                                    $('html,body').animate({
@@ -1855,7 +2135,34 @@ setTimeout(function(){
                                    });
                                  }
                                });
+                               $("#tecoon").click(function(event) {
+                                 event.preventDefault();
+                                 if (lMap.hasLayer(eco_ter)) { //only for terrestrial ecoregions
+                                       $('html,body').animate({
+                                           scrollTop: $('#breadcrumb').css('top')
+                                       }, 100, function() {
+                                           $('html, body').animate({
+                                               scrollTop: 0
+                                           }, 100);
+                                       });
+                                   lMap.removeLayer(eco_ter);
+                                   lMap.removeLayer(eco_hi);
+                                //   lMap.removeLayer(eco_mar);
 
+                                 } else {
+                                   lMap.addLayer(eco_ter);
+                                //   lMap.addLayer(eco_mar);
+                                   lMap.addLayer(eco_hi);
+
+                                   $('html,body').animate({
+                                       scrollTop: $('#breadcrumb').css('top')
+                                   }, 100, function() {
+                                       $('html, body').animate({
+                                           scrollTop: 0
+                                       }, 100);
+                                   });
+                                 }
+                               });
 
                           } // end of else if
 
@@ -1885,7 +2192,7 @@ setTimeout(function(){
 
       }); // ajax call
 
-}, 2800);
+}, 100);
 
 // color marine terretrial first table
 var table = document.getElementById('wdpa_general_info');
@@ -1901,6 +2208,30 @@ else if (parseFloat ($('td.views-field-field-wdpa-marine').html()) == 2) {
 else{
   $(cells).html('<td style="background-color: #69ce9a; color: white; border-radius: 2px;">Terrestrial/Marine</td>');
 }
+
+// hide from print
+//$( ".pane-25" ).addClass( "hidden-print1" );
+
+$( "#header" ).addClass( "hidden-print1" );
+$( "#breadcrumb" ).addClass( "hidden-print1" );
+$( ".export_elevation" ).addClass( "hidden-print1" );
+$( ".leaflet-bottom" ).addClass( "hidden-print1" );
+$( ".ecobutt" ).addClass( "hidden-print1" );
+$( "#cssmenu" ).addClass( "hidden-print1" );
+$( ".export_lc2000_tab" ).addClass( "hidden-print1" );
+$( ".export_lc2005_tab" ).addClass( "hidden-print1" );
+$( ".showlc2000graph" ).addClass( "hidden-print1" );
+$( ".showlc2005graph" ).addClass( "hidden-print1" );
+$( ".btn-danger" ).addClass( "hidden-print1" );
+$( ".export_species_tab" ).addClass( "hidden-print1" );
+$( ".export_species_list_tab" ).addClass( "hidden-print1" );
+$( ".tabs-style-iconbox" ).addClass( "hidden-print1" );
+$( "#subfooter" ).addClass( "hidden-print1" );
+$( "#toTop" ).addClass( "hidden-print1" );
+$( ".leaflet-control-zoom" ).addClass( "hidden-print1" );
+$( "#block-block-137" ).addClass( "hidden-print1" );
+
+
 
 
 
