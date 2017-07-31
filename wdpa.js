@@ -1,7 +1,217 @@
+
+(function($) {
+    $(document).bind('leaflet.map', function(e, map, lMap) {
+geoJsonLayer = L.geoJson().addTo(lMap);
+		lMap.on('click', getFeatureInfo, lMap);
+
+		function getFeatureInfo(evt){
+			ajax_array = [];
+			//Lets start by making a list of all the layers that are using WMS on the map
+			lMap.eachLayer(function(layer){
+			//	if (!layer.options.minZoom){layer.options.minZoom = 0;}
+
+				if (!layer.wmsParams || !layer.wmsParams.makeLayerQueryable || layer.options.minZoom > lMap.getZoom()){
+					return
+				}
+				else{
+					var url = getFeatureInfoUrl(evt.latlng, layer);
+					//If the layer supports jsonp do it, otherwise use standard json or something else (to support old geoserver)
+					if (layer.wmsParams.featureInfoFormat === 'text/javascript'){
+						var info;
+						var ajax=jQuery.ajax({
+							url: url,
+							jsonp: false,
+							dataType: 'jsonp',
+							jsonpCallback: 'parseResponse',
+							success:function(data)
+							{
+								info=data;
+							}
+
+						}).done(function(d)
+						{
+							ajax.info=d;
+
+						});
+						ajax_array.push(ajax);
+
+					} else {
+						var info;
+						var ajax=jQuery.ajax({
+							url: url,
+							success: function (data, status, xhr) {
+								info=data;
+								//console.log(data);
+								//var err = typeof data === 'string' ? null : data;
+
+							},
+							error: function (xhr, status, error) {
+								//showGetFeatureInfo(error);
+							}
+						}).done(function(d)
+						{
+							//console.log(d)
+							ajax.info=d;
+
+						});
+						ajax_array.push(ajax);
+					}
+				}
+			});
+			$.when.apply($,ajax_array).done(function(){
+				var t='';
+				for(var i = 0; i < ajax_array.length; i++) {
+					var layerResponse = ajax_array[i].info;
+					if (layerResponse){t+=showGetFeatureInfo(evt.latlng, layerResponse);}
+				}
+				makeThePopUp(evt.latlng, t)
+			});
+		}
+
+		function getFeatureInfoUrl(latlng, CurMapLayer){
+			// Construct a GetFeatureInfo request URL given a point
+			var point = CurMapLayer._map.latLngToContainerPoint(latlng, CurMapLayer._map.getZoom()),
+				size = CurMapLayer._map.getSize(),
+				params = {
+				  layers: CurMapLayer.wmsParams.layers,
+				  query_layers: CurMapLayer.wmsParams.layers,
+				  styles: CurMapLayer.wmsParams.styles,
+				  service: 'WMS',
+				  feature_count: 10,
+				  version: CurMapLayer.wmsParams.version,
+				  request: 'GetFeatureInfo',
+				  bbox: CurMapLayer._map.getBounds().toBBoxString(),
+				  height: size.y,
+				  width: size.x,
+				  format: CurMapLayer.wmsParams.format,
+				  info_format: CurMapLayer.wmsParams.featureInfoFormat,
+				  srs: 'EPSG:4326',
+				};
+				if (CurMapLayer.wmsParams.propName){params.PROPERTYNAME = CurMapLayer.wmsParams.propName}
+				if (CurMapLayer.wmsParams.formatOptions){params.FORMAT_OPTIONS = CurMapLayer.wmsParams.formatOptions}
+
+			params[params.version === '1.3.0' ? 'i' : 'x'] = point.x;
+			params[params.version === '1.3.0' ? 'j' : 'y'] = point.y;
+
+			return CurMapLayer._url + L.Util.getParamString(params, CurMapLayer._url, true);
+		}
+
+		function showGetFeatureInfo (latlng, content) {
+			var html_outout = " ";
+			if (content){
+
+
+
+				if (typeof content === 'object'){
+					//add a highlight to show what the user selected
+					geoJsonLayer.addData(content);
+					//it takes the default style for new features, so we have to reset the style each time a feature is added
+					geoJsonLayer.setStyle({
+						weight: 1,
+						opacity: 1,
+						color: '#0065a2',
+            fillColor: '#000000',
+						//dashArray: '5',
+						fillOpacity: 0.1
+					});
+					if (content.features.length == 0){
+						//if theres no features on the current layer, skip it
+						return '';
+					}else{
+						for(var i = 0; i < content.features.length; i++) {
+							//if there is something, find out what it is and style as needed
+							//first get the name of the layer
+							var layerName = content.features[i].id;
+							layerName = layerName.replace(/\.[^.]*$/g, '' );
+							//console.log(content);
+							switch(layerName){
+								case "mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg":
+									var pa_name = content.features[i].properties.wdpa_name;
+									var wdpaid = content.features[i].properties.wdpaid;
+									var IucnCat = content.features[i].properties.highest_iucn_cat;
+									var ReportedArea = content.features[i].properties.jrc_gis_area_km2;
+									ReportedArea = ReportedArea.toFixed(2);
+									html_outout +=
+                                  '<p><a href="/wdpa/' + wdpaid + '">' + pa_name + "</a></p>" +
+                                  '<center><i>Management category </i><p>'+IucnCat+'</p></center><hr>';
+
+
+									break;
+								case "eco_mar_ter_prot_con_2016":
+									var ecoBiome = content.features[i].properties.biome;
+									var ecoConnect = content.features[i].properties.connect;
+									var ecoName = content.features[i].properties.eco_name;
+									var ecoProtection = content.features[i].properties.protection;
+									ecoProtection = ecoProtection.toFixed(2);
+									var ecoRelm = content.features[i].properties.realm;
+									html_outout += 	'<h5>' + ecoName + "</h5>" +
+													'<h6>Relm: ' + ecoRelm + '</h6>' +
+													'<h6>Percentage Protected: ' + ecoProtection + '%</h6>';
+									break;
+								default:
+									//If you added a new layer and don't know what's inside.
+									console.log('unknown layer name: '+layerName);
+									console.log(content.features[i].properties);
+									break;
+							}
+						}
+					}
+				} else{
+					html_outout += 	"This layer did not return json, better check it out";
+				}
+			}
+			if (html_outout == " "){
+				return '';
+			}
+			else{
+				// Otherwise show the content in a popup, or something.
+				return html_outout;
+			}
+		}
+		function makeThePopUp(latlng, html_outout){
+			if (html_outout.length == 0){
+				return;
+			}
+			else{
+				L.popup({ maxWidth: 800})
+					  .setLatLng(latlng)
+					  .setContent(html_outout)
+					  .openOn(lMap);
+			}
+
+		}
+
+		//this clears the contents of the geojson layer when the pop-up gets closed.
+ 		lMap.addEventListener('popupclose', function() {geoJsonLayer.clearLayers();}, this);
+
+	})
+})(jQuery);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function($) {
 
- $(document).bind('leaflet.map', function(e, map, lMap)
-   {
+ $(document).bind('leaflet.map', function(e, map, lMap) {
+
 L.control.scale({position: 'topright'}).addTo(lMap);
 //BASEMAPS
 var streets  = L.tileLayer('https://api.mapbox.com/styles/v1/lucageo/ciywysi9f002e2snqsz0ukhz4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibHVjYWdlbyIsImEiOiJjaXIwY2FmNHAwMDZ1aTVubmhuMDYyMmtjIn0.1jWhLwVzKS6k1Ldn-bVQPg').addTo(lMap);
@@ -10,148 +220,59 @@ maxZoom: 20,
 subdomains:['mt0','mt1','mt2','mt3']
 });
 
+// var tree_loss_gain = L.tileLayer('http://earthengine.google.org/static/hansen_2013/loss_forest_gain/{z}/{x}/{y}.png',
+// {
+//
+//   zIndex: 35
+//
+// }).addTo(lMap);
 
 
 
+var occurrence = new L.tileLayer("https://storage.googleapis.com/global-surface-water/maptiles/occurrence/{z}/{x}/{y}.png",
+{ format: "image/png",
+//  maxZoom: 13,
+  zIndex: 35,
+  opacity:'1'
+//  errorTileUrl : "https://storage.googleapis.com/global-surface-water/downloads_ancillary/blank.png",
+//  attribution: "2016 EC JRC/Google"
+});
+//lMap.addLayer(occurrence);
 
+var transitions = new L.tileLayer("https://storage.googleapis.com/global-surface-water/maptiles/transitions/{z}/{x}/{y}.png",
+{ format: "image/png",
+//  maxZoom: 13,
+  zIndex: 35,
+  opacity:'1'
+//  errorTileUrl : "https://storage.googleapis.com/global-surface-water/downloads_ancillary/blank.png",
+//  attribution: "2016 EC JRC/Google"
+});
+//lMap.addLayer(transitions);
 
+var change = new L.tileLayer("https://storage.googleapis.com/global-surface-water/maptiles/change/{z}/{x}/{y}.png",
+{ format: "image/png",
+//  maxZoom: 13,
+  zIndex: 35,
+  opacity:'1'
+//  errorTileUrl : "https://storage.googleapis.com/global-surface-water/downloads_ancillary/blank.png",
+//  attribution: "2016 EC JRC/Google"
+});
 
+//lMap.addLayer(change);
 
-
-
-
-//  wdpa ONCLICK FUNCTION
-lMap.on('click', function(e) {
-   if (lMap.hasLayer(wdpa)) {
-var latlng= e.latlng;
-var url = getFeatureInfoUrl(
-                lMap,
-                wdpa,
-                e.latlng,
-                {
-                    'info_format': 'text/javascript',  //it allows us to get a jsonp
-                    'propertyName': 'wdpaid,wdpa_name,desig_eng,desig_type,iucn_cat,jrc_gis_area_km2,status,status_yr,mang_auth,country,iso3',
-                    'query_layers': 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg',
-                    'format_options':'callback:getJson'
-                }
-            );
-
- $.ajax({
-         jsonp: false,
-         url: url,
-         dataType: 'jsonp',
-         jsonpCallback: 'getJson',
-         success: handleJson_featureRequest
-       });
-    function handleJson_featureRequest(data)
-    {
-       // if LAYER COVER THE MAP
-       if (typeof data.features[0]!=='undefined')
-           {
-              // TAKE THE POERTIES OF THE LAYER
-              var prop=data.features[0].properties;
-             // AND TAKE THE WDPA ID
-              var filter="wdpaid='"+prop['wdpaid']+"'";
-             // AND SET THE FILTER OF WDPA HIGLIGHTED
-              wdpa_hi.setParams({CQL_FILTER:filter});
-              hi_highcharts_pa(prop,latlng);
-              // SHOW THE DIV CONTAINING GRAPHS AND INFO
-        }
-        else {
-          console.log(' no info')
-        }
-    }
-  }
-  });
-
-
-  //---------------------------------------------------------------
-  //  WMS LAYER - GET FEATUREINFO FUNCTION
-  //---------------------------------------------------------------
-
-  function getFeatureInfoUrl(map, layer, latlng, params) {
-
-      var point = map.latLngToContainerPoint(latlng, map.getZoom()),
-          size = map.getSize(),
-          bounds = map.getBounds(),
-          sw = bounds.getSouthWest(),
-          ne = bounds.getNorthEast();
-
-      var defaultParams = {
-          request: 'GetFeatureInfo',
-          service: 'WMS',
-          srs: 'EPSG:4326',
-          styles: '',
-          version: layer._wmsVersion,
-          format: layer.options.format,
-          bbox: bounds.toBBoxString(),
-          height: size.y,
-          width: size.x,
-          layers: layer.options.layers,
-          info_format: 'text/javascript'
-      };
-
-      params = L.Util.extend(defaultParams, params || {});
-      params[params.version === '1.3.0' ? 'i' : 'x'] = point.x;
-      params[params.version === '1.3.0' ? 'j' : 'y'] = point.y;
-      return layer._url + L.Util.getParamString(params, layer._url, true);
-  }
-  //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  //  WDPA HIGHLIGHT WMS SETUP
-  //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        var url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/dopa_explorer/wms';
-        var wdpa_hi=L.tileLayer.wms(url, {
-            layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg_hi',
-            transparent: true,
-            format: 'image/png',
-            opacity:'1',
-            zIndex: 34 // Use zIndex to order the tileLayers within the tilePane. The higher number, the upper vertically.
-         }).addTo(lMap);
-
-         wdpa_hi.setParams({CQL_FILTER:"wdpa_name LIKE '00000000000000000000000000000000000'"}); // GEOSERVER WMS FILTER
- //---------------------------------------------------------------
- // ONCLICK RESPONSE ON HIGLIGHTED WDPA
- //--------------------------------------------------------------
-        function hi_highcharts_pa(info,latlng){
-
-          var name=info['wdpa_name'];
-          var wdpaid=info['wdpaid'];
-          var desig_eng=info['desig_eng'];
-          var desig_type=info['desig_type'];
-          var iucn_cat=info['iucn_cat'];
-          var gis_area=info['jrc_gis_area_km2'];
-          var status=info['status'];
-          var status_yr=info['status_yr'];
-          var mang_auth=info['mang_auth'];
-          var country=info['country'];
-          var iso3=info['iso3'];
-          var iso3_first=iso3.slice(0,3);
-
-          //WDPA HIGLIGHTED POPUP
-          var popupContentwdpa = '<center><i class="fa fa-envira fa-2x" aria-hidden="true"></i><br></br><a href="/wdpa/'+wdpaid+'">'+name+'</a></center><hr><center><i class="fa fa-info-circle fa-2x" aria-hidden="true"></i><br></br><a target="_blank" href="https://www.protectedplanet.net/'+wdpaid+'">Explore in Protected Planet</a></center><hr>';
-// when available add: <center><i class="fa fa-globe fa-2x" aria-hidden="true"></i><br></br><a href="/country/'+iso3_first+'">'+country+'</a></center><hr>
-          var popup = L.popup()
-               .setLatLng([latlng.lat, latlng.lng])
-               .setContent(popupContentwdpa)
-               .openOn(lMap);
-        } //end of function hi_highcharts_pa
 
 //-- WDPA WMS GEOSERVER LAYER - SETUP
-     var url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/dopa_explorer/wms';
+     var url = 'http://lrm-maps.jrc.ec.europa.eu/geoserver/dopa_explorer/wms';
      var wdpa=L.tileLayer.wms(url, {
          layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg',
          transparent: true,
          format: 'image/png',
          opacity:'0.6',
+         featureInfoFormat: 'text/javascript',
+         makeLayerQueryable: true,
          zIndex: 33
       }).addTo(lMap);
-
-
-
-      wdpa.setParams({CQL_FILTER:"highest_iucn_cat <> ''"});
-
-
-
+        wdpa.setParams({CQL_FILTER:"highest_iucn_cat <> ''"});
 
       $('#dropwdpa').on('change', function() {
            var highest_iucn_cat = ($('#dropwdpa').val());
@@ -172,6 +293,7 @@ var url = getFeatureInfoUrl(
            'Satellite': satellite
           };
          var overlayMaps = {
+          //  'water':transitions,
               'PROTECTED AREAS':wdpa
 
           };
@@ -181,6 +303,250 @@ var url = getFeatureInfoUrl(
 
                     layerControl = L.control.layers(baseMaps, null,  {position: 'bottomright'});
      layerControl.addTo(lMap);
+
+
+ //--------------------------------------------------------------------------------------------------------
+ // Land Cover Change (1995-2015)
+ //--------------------------------------------------------------------------------------------------------
+setTimeout(function(){
+ google.charts.load('current', {'packages':['sankey']});
+ google.charts.setOnLoadCallback(drawChart);
+ var lcc = [
+                [ 'Natural and semi natural land', ' Managed Land', 12.33 ],
+                [ 'Natural and semi natural land', ' Mosaic Natural', 11.5 ],
+                [ 'Natural and semi natural land', ' Water / Snow and Ice', 0.000001 ],
+                [ 'Managed Land', ' Natural and semi natural land', 1.6 ],
+                [ 'Managed Land', ' Mosaic Natural', 2.5],
+                [ 'Managed Land', ' Water / Snow and Ice', 0.000001 ],
+                [ 'Mosaic Natural', ' Natural and semi natural land', 2.3 ],
+                [ 'Mosaic Natural', ' Managed Land', 8.6 ],
+                [ 'Mosaic Natural', ' Water / Snow and Ice', 0.000001 ],
+                [ 'Water / Snow and Ice', ' Natural and semi natural land', 1.9 ],
+                [ 'Water / Snow and Ice', ' Mosaic Natural', 3.0 ],
+                [ 'Water / Snow and Ice', ' Managed Land', 3.9 ]
+           ];
+
+
+ function drawChart() {
+   var data = new google.visualization.DataTable();
+   data.addColumn('string', 'From');
+   data.addColumn('string', 'To');
+   data.addColumn('number', 'Area (km2)');
+   data.addRows(lcc);
+
+   // Sets chart options.
+   var colors = ['#337465', '#CF3523', '#FFD78B', '#4E93AA','#CF3523','#337465', '#FFD78B', '#4E93AA' ];
+//               Forest     _Artifi   _Agricolt    _Water    Artifi     _Forest   Agricolt    Water    (follow the sequence of your classes)
+   var options = {
+     width: 940,
+     sankey: {
+        node: {
+          colors: colors,
+          interactivity: true,
+          labelPadding: 2,     // Horizontal distance between the label and the node.
+          width: 5,            // Thickness of the node.
+          nodePadding: 10     // Vertical distance between nodes.
+        },
+        link: {
+          colorMode: 'gradient',
+          colors: colors
+        }
+      }
+   };
+   // Instantiates and draws our chart, passing in some options.
+   var chart = new google.visualization.Sankey(document.getElementById('sankey_basic'));
+
+   chart.draw(data, options);
+
+
+
+
+
+
+ }
+
+    }, 100);
+
+
+ //--------------------------------------------------------------------------------------------------------
+ // water tab
+ //--------------------------------------------------------------------------------------------------------
+
+
+     setTimeout(function(){
+         var wdpaid_water_tab = $.trim($('.wdpa-id').text());
+     var urlwdpaid_water_tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/indicators_2017/get_pa_water_stats?pa_id=' + wdpaid_water_tab; //get land cover 2005 in pa
+
+       $.ajax({
+               url: urlwdpaid_water_tab,
+               dataType: 'json',
+               success: function(d) {
+                   if (d.metadata.recordCount == 0) {
+                   //  jQuery('#elevation_chart_wdpa');
+                     jQuery('#water_tab').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
+                   } else {
+
+                     var perm_now_km2 = [];
+                     var seas_now_km2 = [];
+                     var net_p_change_km2 = [];
+                     var net_s_change_km2 = [];
+                     var percent_net_perm_change = [];
+                     var percent_net_seas_change = [];
+
+                     var fields = {'perm_now_km2':"",'seas_now_km2':"",'net_p_change_km2':"",'net_s_change_km2':"",'percent_net_perm_change':"",'percent_net_seas_change':""};
+
+                       $(d.records).each(function(i, data) {
+
+                           $('#water_tab tbody').append('<tr id="'+i.toString()+'"></tr>');
+
+                           for (var prop in fields){
+                               if(prop == 'perm_now_km2'){
+                                   perm_now_km2.push(data[prop]);
+                                   //altitude_titles.push("Minimum");
+                                   $('#water_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
+                                   console.log(perm_now_km2);
+                               }
+                               else if(prop == 'seas_now_km2'){
+                                   seas_now_km2.push(data[prop]);
+                                   //altitude_titles.push("1st Qtl.");
+                                   $('#water_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
+                               }
+                               else if(prop == 'net_p_change_km2'){
+                                   net_p_change_km2.push(data[prop]);
+                                   //altitude_titles.push("Median");
+                                   $('#water_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
+                               }
+                               else if(prop == 'net_s_change_km2'){
+                                   net_s_change_km2.push(data[prop]);
+                                   //altitude_titles.push("3rd Qtl.");
+                                   $('#water_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
+                               }
+                               else if(prop == 'percent_net_perm_change'){
+                                   percent_net_perm_change.push(data[prop]);
+                                   //altitude_titles.push("Maximum");
+                                   $('#water_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
+                               }
+                               else if(prop == 'percent_net_seas_change'){
+                                   percent_net_seas_change.push(data[prop]);
+                                   //altitude_titles.push("Maximum");
+                                   $('#water_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
+                               }
+
+                           }
+                       });
+
+                   }
+               },
+           });
+
+     }, 300);
+
+     //-----------------------------------------------------------------------------
+     // global water graph
+     //-----------------------------------------------------------------------------
+     setTimeout(function(){
+         var wdpaid_water_per = $.trim($('.wdpa-id').text());
+     var urlwdpaid_water_per = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/indicators_2017/get_pa_water_stats?pa_id=' + wdpaid_water_per; //
+
+     $.ajax({
+         url: urlwdpaid_water_per,
+         dataType: 'json',
+         success: function(d) {
+             if (d.metadata.recordCount == 0) {
+                // jQuery('#water_per_chart_wdpa');
+                // jQuery('#water_per_chart_wdpa').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
+
+             } else {
+
+
+               var perm_now_km2;
+               var net_p_change_km2;
+
+               var net_p_1985_km2;
+
+                var seas_now_km2;
+                var net_s_change_km2;
+
+                 var net_s_1985_km2;
+
+
+                 $(d.records).each(function(i, data) {
+
+                          perm_now_km2=data.perm_now_km2;
+                          net_p_change_km2=data.net_p_change_km2;
+                          net_p_1985_km2 = parseFloat(perm_now_km2)-(parseFloat(net_p_change_km2));
+
+                          seas_now_km2=data.seas_now_km2;
+                          net_s_change_km2=data.net_s_change_km2;
+                          net_s_1985_km2 = parseFloat(seas_now_km2)-(parseFloat(net_s_change_km2));
+
+
+
+
+                 });
+
+                 $('#water_per_chart_wdpa').highcharts({
+
+                     chart: {
+                         type: 'column',
+                         zoomType: 'xy',
+                         width: 964,
+                     },
+                     title: {
+                         text: null
+                     },
+                     subtitle: {
+                          text: 'Area of Permanent and Seasonal Water'
+                     },
+                     credits: {
+                         enabled: true,
+                         text: 'DOPA Services DOPA Services V.2 , WDPA Jan 2017',
+                         href: 'http://dopa.jrc.ec.europa.eu'
+                     },
+                     xAxis: {
+                         categories: ['1985', '2015'],
+                         //crosshair: true
+                     },
+                     yAxis: {
+                         //min: 0,
+                         title: {
+                             text: 'Area (km2)'
+                         }
+                     },
+                     tooltip: {
+
+                        // shared: true,
+                          headerFormat: '<span style="font-size:12px">{series.name}</span><br>',
+             pointFormat: '<span>{point.name}</span> <b>{point.y:.2f}</b> km2 <br/>'
+
+                     },
+                     plotOptions: {
+                         column: {
+                             pointPadding: 0.2,
+                             borderWidth: 0
+                         }
+                     },
+
+                                 series:[{
+                                              name: 'Permanent Water',
+                                              color: '#22a6f5',
+                                              data: [net_p_1985_km2, perm_now_km2 ]
+                                          },
+                                          {
+                                                       name: 'Seasonal  Water',
+                                                       color: '#81d0ff',
+                                                       data: [net_s_1985_km2, seas_now_km2 ]
+                                                   }
+                                        ]
+                 });
+             }
+         },
+
+       });
+
+     }, 700);
+
+
 //-----------------------------------------------------------------------------
 // spyder graph threats
 //-----------------------------------------------------------------------------
@@ -334,7 +700,7 @@ var url = getFeatureInfoUrl(
 
                 credits: {
                     enabled: true,
-                    text: 'DOPA Services',
+                    text: 'DOPA Services V.2 , WDPA Ago 2014',
                     href: 'http://dopa.jrc.ec.europa.eu'
                 },
                 xAxis: {
@@ -528,7 +894,7 @@ var url = getFeatureInfoUrl(
 
                 credits: {
                     enabled: true,
-                    text: 'DOPA Services',
+                    text: 'DOPA Services V.2 , WDPA Ago 2014',
                     href: 'http://dopa.jrc.ec.europa.eu'
                 },
                 xAxis: {
@@ -709,7 +1075,7 @@ var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get
                        },
                        credits: {
                            enabled: true,
-                           text: 'WorldClim',
+                           text: 'WorldClim V.2 , WDPA Jan 2016',
                            href: 'http://www.worldclim.org/'
                        },
                        series: [{
@@ -778,7 +1144,7 @@ var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get
 
 setTimeout(function(){
     var wdpaid_el= $('.wdpa-id').text();
-var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_topo_pa?wdpaid=' + wdpaid_el;
+var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/indicators_2017/get_topostat_pa?wdpaid=' + wdpaid_el;
 
   $.ajax({
           url: urlelevation,
@@ -814,6 +1180,7 @@ var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat
                           }
                           else if(prop == 'mean'){
                               average.push(data[prop]);
+                              $('#elevation_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'q75'){
                               altitude.push(data[prop]);
@@ -904,15 +1271,15 @@ var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat
                       },
                       credits: {
                           enabled: true,
-                          text: 'Source: DOPA',
+                          text: 'DOPA Services V.2 , WDPA Ago 2014',
                           href: 'http://dopa.jrc.ec.europa.eu'
                       },
                       xAxis: {
                           categories: [
                           'Min.',
-                          '1st Quartile',
+                          // '1st Quartile',
                           'Median',
-                          '3rd Quartile',
+                          // '3rd Quartile',
                           'Max.'
                           ]
                       },
@@ -1007,7 +1374,7 @@ $.ajax({
                 },
                 credits: {
                     enabled: true,
-                    text: 'DOPA Services',
+                    text: 'DOPA Services V.2 , WDPA Ago 2014',
                     href: 'http://dopa.jrc.ec.europa.eu'
                 },
                 xAxis: {
@@ -1017,14 +1384,14 @@ $.ajax({
                 yAxis: {
                     min: 0,
                     title: {
-                        text: 'Area'
+                        text: 'Area (km2)'
                     }
                 },
                 tooltip: {
 
                    // shared: true,
-                     headerFormat: '<span style="font-size:16px">{series.name}</span><br>',
-        pointFormat: '<span>{point.name}</span> <b>{point.y:.2f}</b> hectareas <br/>'
+                     headerFormat: '<span style="font-size:12px">{series.name}</span><br>',
+        pointFormat: '<span>{point.name}</span> <b>{point.y:.2f}</b> (km2) <br/>'
 
                 },
                 plotOptions: {
@@ -1044,11 +1411,14 @@ $.ajax({
 });
 }, 1200);
 
+
+
 //-----------------------------------------------------------------------------
 // clc 2005 graph
 //-----------------------------------------------------------------------------
 setTimeout(function(){
-    var wdpaid_clc2005= $('.wdpa-id').text();
+
+var wdpaid_clc2005= $('.wdpa-id').text();
 var urlclc2005 = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_wdpa_lc_stats_glob2005?wdpaid=' + wdpaid_clc2005; //get land cover 2005 in pa
 
 $.ajax({
@@ -1059,26 +1429,19 @@ $.ajax({
             jQuery('#clc2005_chart_wdpa');
             jQuery('#clc2005_chart_wdpa').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
         } else {
-            var obj = {};
-            var colors_array = [];
-            var obj_array = [];
-            var _classif=[];
-            $(d.records).each(function(i, data) {
-                var lclass = data.lclass;
-                obj[lclass] = data;
 
-                    _classif.push(data.label);
-                    colors_array.push(data.color);
-                    obj_array.push({name: data.label,data:[data.area],percent:data.percent})
+            var obj_array = [];
+
+            $(d.records).each(function(i, data) {
+
+                    obj_array.push({'name': data.label,'value': data.area, 'color': data.color})
 
             });
 
             $('#clc2005_chart_wdpa').highcharts({
-                colors: colors_array,
+
                 chart: {
-                    type: 'column',
-                    zoomType: 'xy',
-                    width: 964,
+                    type: 'treemap',
                 },
                 title: {
                     text: null
@@ -1088,43 +1451,37 @@ $.ajax({
                 },
                 credits: {
                     enabled: true,
-                    text: 'DOPA Services',
+                    text: 'DOPA Services DOPA Services V.2 , WDPA Ago 2014',
                     href: 'http://dopa.jrc.ec.europa.eu'
                 },
-                xAxis: {
-                    categories: _classif,
-                    crosshair: true
-                },
-                yAxis: {
-                    min: 0,
-                    title: {
-                        text: 'Area'
-                    }
+
+                dataLabels: {
+                    enabled: false,
                 },
                 tooltip: {
-
-                   // shared: true,
-                     headerFormat: '<span style="font-size:16px">{series.name}</span><br>',
-        pointFormat: '<span>{point.name}</span> <b>{point.y:.2f}</b> hectareas <br/>'
-
+                     headerFormat: '<span style="font-size:12px">{series.value}</span><br>',
+                     pointFormat: '<span>{point.name}</span> <b>{point.value}</b> (km2) <br/>'
                 },
                 plotOptions: {
-                    column: {
-                        pointPadding: 0.2,
-                        borderWidth: 0
-                    }
-                },
+                      treemap: {
+                                layoutAlgorithm: 'squarified',
+                                fillOpacity: 0.3,
+                                dataLabels: {enabled: false},
+                                borderWidth: 3,
+                                borderColor: '#fff',
+                                borderOpacity: 0.5
+                                }
+                            },
 
-                            series:
-                               // name: 'Preuba',
-                                obj_array
-            });
+               series:  [{data: obj_array}]
+
+          });
         }
-    },
-
+     },
   });
-
 }, 1500);
+
+
 //-----------------------------------------------------------------------------
 // Pressure CHARTS
 //-----------------------------------------------------------------------------
@@ -1262,7 +1619,7 @@ jQuery(document).ready(function($) {
 						pane: {size: '100%'},
 						credits: {
 							enabled: true,
-							text: 'Source: DOPA',
+							text: 'DOPA Services V.2 , WDPA Ago 2014',
 							href: 'http://ehabitat-wps.jrc.ec.europa.eu/dopa_explorer/?pa='+$paid
 						},
 						xAxis: {
@@ -1285,83 +1642,15 @@ jQuery(document).ready(function($) {
 
                     // on click func on the charts bars
 
-                   switch (param)
-                   {
-                     case 'roads_in':
-                     $('#country-pressure-chart-roads_in').click(function (e){
-
-                       if($(e.target).hasClass('highcharts-point'))
-                       {
-                         var wdpa_info=wdpa_id[series_id];
-                         var href=location.href;
-                         var new_href;
-                         new_href='/wdpa/'+wdpa_info;
-                         window.open(new_href,'_blank');
-
-                       }
-                     })
-                     break;
-                     case 'ap':
-                     $('#country-pressure-chart-ap').click(function (e){
-                       if($(e.target).hasClass('highcharts-point'))
-                       {
-                         var wdpa_info=wdpa_id[series_id];
-                         var href=location.href;
-                         var new_href;
-                         new_href='/wdpa/'+wdpa_info;
-                         window.open(new_href,'_blank');
-
-                       }
-                     })
-                     break;
-                     case 'ppi':
-                     $('#country-pressure-chart-ppi').click(function (e){
-                       if($(e.target).hasClass('highcharts-point'))
-                       {
-                         var wdpa_info=wdpa_id[series_id];
-                         var href=location.href;
-                         var new_href;
-                         new_href='/wdpa/'+wdpa_info;
-                         window.open(new_href,'_blank');
-
-                       }
-                     })
-                     break;
-                     case 'ppi_change':
-                     $('#country-pressure-chart-ppi_change').click(function (e){
-                       if($(e.target).hasClass('highcharts-point'))
-                       {
-                         var wdpa_info=wdpa_id[series_id];
-                         var href=location.href;
-                         var new_href;
-                         new_href='/wdpa/'+wdpa_info;
-                         window.open(new_href,'_blank');
-
-                       }
-                     })
-                     break;
-                     case 'roads_pressure':
-                     $('#country-pressure-chart-roads_pressure').click(function (e){
-                       if($(e.target).hasClass('highcharts-point'))
-                       {
-                         var wdpa_info=wdpa_id[series_id];
-                         var href=location.href;
-                         var new_href;
-                         new_href='/wdpa/'+wdpa_info;
-                         window.open(new_href,'_blank');
-
-                       }
-                     })
-                     break;
-                     default:
-                         break;
-                       }
 
                        // end of on click func on the charts bars
 
 								});
 								return s.join('');
 							},
+              style: {
+                 pointerEvents: 'auto'
+               },
 							shared: true
 						},
 						yAxis: {
@@ -1923,6 +2212,8 @@ $("#showecomap1").click(function(event) {
   }
 });
 
+
+
 $("#tecoon").click(function(event) {
   event.preventDefault();
   if ($("#ecolegend").length === 0){
@@ -1933,10 +2224,10 @@ $("#tecoon").click(function(event) {
   }
 });
 
-//---------------------------------------------------------------
-//  Ecoregion LAYER - GET FEATUREINFO FUNCTION
-//---------------------------------------------------------------
-
+// //---------------------------------------------------------------
+// //  Ecoregion LAYER - GET FEATUREINFO FUNCTION
+// //---------------------------------------------------------------
+//
    function getFeatureInfoUrl_e(map, layer, latlng, params) {
 
   if (layer.wmsParams.layers=="lrm:eco_mar_ter_prot_con_2016")
@@ -1968,11 +2259,11 @@ $("#tecoon").click(function(event) {
        return layer._url + L.Util.getParamString(params, layer._url, true);
    }
  }
-
-
- //---------------------------------------------------------------
- // ONCLICK RESPONSE ON HIGLIGHTED ECOREGIONS
- //--------------------------------------------------------------
+//
+//
+//  //---------------------------------------------------------------
+//  // ONCLICK RESPONSE ON HIGLIGHTED ECOREGIONS
+//  //--------------------------------------------------------------
         function hi_highcharts_eco(info,latlng){
           var eco_name=info['eco_name'];
           var id=info['id'];
@@ -1986,12 +2277,12 @@ $("#tecoon").click(function(event) {
                .setContent(popupContenteco)
                .openOn(lMap);
  }
-
- //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
- //  Ecoregion HIGHLIGHT WMS SETUP
- //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-       var eco_ter_url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/lrm/wms';
+//
+//  //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//  //  Ecoregion HIGHLIGHT WMS SETUP
+//  //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//
+       var eco_ter_url = 'http://lrm-maps.jrc.ec.europa.eu/geoserver/lrm/wms';
        var eco_hi=L.tileLayer.wms(eco_ter_url, {
            layers: 'lrm:eco_mar_ter_prot_con_2016_hi',
            transparent: true,
@@ -2039,22 +2330,17 @@ setTimeout(function(){
                               var eco_filter_ter="eco_name LIKE'"+data[prop]+"'";
                             //  var eco_filter_mar="ecoregion LIKE'"+data[prop]+"'";
 // add terrestrial ecoregion layer --------------------------------------------------------------------------------
-                              var eco_ter_url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/lrm/wms';
+                              var eco_ter_url = 'http://lrm-maps.jrc.ec.europa.eu/geoserver/lrm/wms';
                               var eco_ter=L.tileLayer.wms(eco_ter_url, {
                                 layers: 'lrm:eco_mar_ter_prot_con_2016',
                                 transparent: true,
                                 format: 'image/png',
+                                featureInfoFormat: 'text/javascript',
+                                makeLayerQueryable: true,
                                 zIndex: 32
                               });
                               eco_ter.setParams({CQL_FILTER:eco_filter_ter});
-// add marine ecoregion layer --------------------------------------------------------------------------------------
-                              //  var eco_mar_url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/conservationmapping/wms';
-                              //  var eco_mar=L.tileLayer.wms(eco_mar_url, {
-                              //    layers: 'conservationmapping:eco_p_mar_2014',
-                              //    transparent: true,
-                              //    format: 'image/png'
-                              //  });
-                              //  eco_mar.setParams({CQL_FILTER:eco_filter_mar});
+
 // add layers to the map -------------------------------------------------------------------------------------------
                                 var baseMaps = {
                                   'Landscape': streets,
@@ -2065,9 +2351,9 @@ setTimeout(function(){
                                   //  'ecoregions marine':eco_mar,
                                 };
 
-                                //---------------------------------------------------------------
+                                // ---------------------------------------------------------------
                                 //  ecoregion ONCLICK FUNCTION
-                                //---------------------------------------------------------------
+                                // ---------------------------------------------------------------
                                 lMap.on('click', function(e) {
                                  if (lMap.hasLayer(eco_ter)) {
                                 var eco_latlng= e.latlng;
@@ -2119,11 +2405,11 @@ setTimeout(function(){
                                        });
                                    lMap.removeLayer(eco_ter);
                                    lMap.removeLayer(eco_hi);
-                                  // lMap.removeLayer(eco_mar);
+                                  $('#wdpamenulist').show();
 
                                  } else {
                                    lMap.addLayer(eco_ter);
-                                //   lMap.addLayer(eco_mar);
+                                $('#wdpamenulist').hide();
                                    lMap.addLayer(eco_hi);
 
                                    $('html,body').animate({
@@ -2147,11 +2433,12 @@ setTimeout(function(){
                                        });
                                    lMap.removeLayer(eco_ter);
                                    lMap.removeLayer(eco_hi);
+                                   $('#wdpamenulist').show();
                                 //   lMap.removeLayer(eco_mar);
 
                                  } else {
                                    lMap.addLayer(eco_ter);
-                                //   lMap.addLayer(eco_mar);
+                              $('#wdpamenulist').hide();
                                    lMap.addLayer(eco_hi);
 
                                    $('html,body').animate({
@@ -2230,9 +2517,118 @@ $( "#subfooter" ).addClass( "hidden-print1" );
 $( "#toTop" ).addClass( "hidden-print1" );
 $( ".leaflet-control-zoom" ).addClass( "hidden-print1" );
 $( "#block-block-137" ).addClass( "hidden-print1" );
+$( "#show_water_ch" ).addClass( "hidden-print1" );
+$( "#show_water_tr" ).addClass( "hidden-print1" );
+$( "#show_water_oc" ).addClass( "hidden-print1" );
+
+
+//--------------------------------------------------------------------------------------------------------
+// show water layers
+//--------------------------------------------------------------------------------------------------------
+
+    $("#show_water_oc").click(function(event) {
+      event.preventDefault();
+      if (lMap.hasLayer(occurrence)) { //only for terrestrial ecoregions
+            $('html,body').animate({
+                scrollTop: $('#breadcrumb').css('top')
+            }, 100, function() {
+                $('html, body').animate({
+                    scrollTop: 0
+                }, 100);
+            });
+        lMap.removeLayer(occurrence);
+        $( "#water_eccurence_legend" ).hide();
+
+
+      } else {
+        lMap.addLayer(occurrence);
+        lMap.removeLayer(transitions);
+        lMap.removeLayer(change);
+       $( "#water_eccurence_legend" ).show();
+       $( "#water_change_legend" ).hide();
+         $( "#water_transition_legend" ).hide();
 
 
 
+
+        $('html,body').animate({
+            scrollTop: $('#breadcrumb').css('top')
+        }, 100, function() {
+            $('html, body').animate({
+                scrollTop: 0
+            }, 100);
+        });
+      }
+    });
+
+
+    $("#show_water_tr").click(function(event) {
+      event.preventDefault();
+      if (lMap.hasLayer(transitions)) { //only for terrestrial ecoregions
+            $('html,body').animate({
+                scrollTop: $('#breadcrumb').css('top')
+            }, 100, function() {
+                $('html, body').animate({
+                    scrollTop: 0
+                }, 100);
+            });
+        lMap.removeLayer(transitions);
+          $( "#water_transition_legend" ).hide();
+
+
+
+
+      } else {
+        lMap.addLayer(transitions);
+        lMap.removeLayer(occurrence);
+        lMap.removeLayer(change);
+        $( "#water_transition_legend" ).show();
+        $( "#water_change_legend" ).hide();
+        $( "#water_eccurence_legend" ).hide();
+
+
+        $('html,body').animate({
+            scrollTop: $('#breadcrumb').css('top')
+        }, 100, function() {
+            $('html, body').animate({
+                scrollTop: 0
+            }, 100);
+        });
+      }
+    });
+
+    $("#show_water_ch").click(function(event) {
+      event.preventDefault();
+      if (lMap.hasLayer(change)) {
+            $('html,body').animate({
+                scrollTop: $('#breadcrumb').css('top')
+            }, 100, function() {
+                $('html, body').animate({
+                    scrollTop: 0
+                }, 100);
+            });
+        lMap.removeLayer(change);
+        $( "#water_change_legend" ).hide();
+
+
+
+      } else {
+        lMap.addLayer(change);
+        lMap.removeLayer(occurrence);
+        lMap.removeLayer(transitions);
+        $( "#water_change_legend" ).show();
+        $( "#water_eccurence_legend" ).hide();
+        $( "#water_transition_legend" ).hide();
+
+        $('html,body').animate({
+            scrollTop: $('#breadcrumb').css('top')
+        }, 100, function() {
+            $('html, body').animate({
+                scrollTop: 0
+            }, 100);
+        });
+      }
+    });
 
 
 // END OF MAIN FUNCTION
