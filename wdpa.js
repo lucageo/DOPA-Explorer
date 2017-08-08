@@ -1,13 +1,14 @@
-
+// FUNCTION THAT ALLOWS YOU TO SELECT MORE THAN ONE OVERLAPPING FEATURE
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 (function($) {
     $(document).bind('leaflet.map', function(e, map, lMap) {
-geoJsonLayer = L.geoJson().addTo(lMap);
-		lMap.on('click', getFeatureInfo, lMap);
+      geoJsonLayer = L.geoJson().addTo(lMap);
+		  lMap.on('click', getFeatureInfo, lMap);
 
-		function getFeatureInfo(evt){
-			ajax_array = [];
+		    function getFeatureInfo(evt){
+			       ajax_array = [];
 			//Lets start by making a list of all the layers that are using WMS on the map
-			lMap.eachLayer(function(layer){
+			       lMap.eachLayer(function(layer){
 			//	if (!layer.options.minZoom){layer.options.minZoom = 0;}
 
 				if (!layer.wmsParams || !layer.wmsParams.makeLayerQueryable || layer.options.minZoom > lMap.getZoom()){
@@ -25,13 +26,11 @@ geoJsonLayer = L.geoJson().addTo(lMap);
 							jsonpCallback: 'parseResponse',
 							success:function(data)
 							{
-								info=data;
+                info=data;
 							}
-
 						}).done(function(d)
 						{
 							ajax.info=d;
-
 						});
 						ajax_array.push(ajax);
 
@@ -41,18 +40,12 @@ geoJsonLayer = L.geoJson().addTo(lMap);
 							url: url,
 							success: function (data, status, xhr) {
 								info=data;
-								//console.log(data);
-								//var err = typeof data === 'string' ? null : data;
-
 							},
 							error: function (xhr, status, error) {
-								//showGetFeatureInfo(error);
 							}
 						}).done(function(d)
 						{
-							//console.log(d)
 							ajax.info=d;
-
 						});
 						ajax_array.push(ajax);
 					}
@@ -100,8 +93,6 @@ geoJsonLayer = L.geoJson().addTo(lMap);
 			var html_outout = " ";
 			if (content){
 
-
-
 				if (typeof content === 'object'){
 					//add a highlight to show what the user selected
 					geoJsonLayer.addData(content);
@@ -134,8 +125,6 @@ geoJsonLayer = L.geoJson().addTo(lMap);
 									html_outout +=
                                   '<p><a href="/wdpa/' + wdpaid + '">' + pa_name + "</a></p>" +
                                   '<center><i>Management category </i><p>'+IucnCat+'</p></center><hr>';
-
-
 									break;
 								case "eco_mar_ter_prot_con_2016":
 									var ecoBiome = content.features[i].properties.biome;
@@ -178,31 +167,14 @@ geoJsonLayer = L.geoJson().addTo(lMap);
 					  .setContent(html_outout)
 					  .openOn(lMap);
 			}
-
 		}
 
 		//this clears the contents of the geojson layer when the pop-up gets closed.
  		lMap.addEventListener('popupclose', function() {geoJsonLayer.clearLayers();}, this);
-
 	})
 })(jQuery);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -220,111 +192,97 @@ maxZoom: 20,
 subdomains:['mt0','mt1','mt2','mt3']
 });
 
-// var tree_loss_gain = L.tileLayer('http://earthengine.google.org/static/hansen_2013/loss_forest_gain/{z}/{x}/{y}.png',
-// {
-//
-//   zIndex: 35
-//
-// }).addTo(lMap);
-
-
-
+// WATER MAPS
 var occurrence = new L.tileLayer("https://storage.googleapis.com/global-surface-water/maptiles/occurrence/{z}/{x}/{y}.png",
 { format: "image/png",
-//  maxZoom: 13,
+
   zIndex: 35,
   opacity:'1'
-//  errorTileUrl : "https://storage.googleapis.com/global-surface-water/downloads_ancillary/blank.png",
-//  attribution: "2016 EC JRC/Google"
 });
-//lMap.addLayer(occurrence);
 
 var transitions = new L.tileLayer("https://storage.googleapis.com/global-surface-water/maptiles/transitions/{z}/{x}/{y}.png",
 { format: "image/png",
-//  maxZoom: 13,
   zIndex: 35,
   opacity:'1'
-//  errorTileUrl : "https://storage.googleapis.com/global-surface-water/downloads_ancillary/blank.png",
-//  attribution: "2016 EC JRC/Google"
 });
-//lMap.addLayer(transitions);
 
 var change = new L.tileLayer("https://storage.googleapis.com/global-surface-water/maptiles/change/{z}/{x}/{y}.png",
 { format: "image/png",
-//  maxZoom: 13,
   zIndex: 35,
   opacity:'1'
-//  errorTileUrl : "https://storage.googleapis.com/global-surface-water/downloads_ancillary/blank.png",
-//  attribution: "2016 EC JRC/Google"
 });
 
-//lMap.addLayer(change);
+// WDPA WMS GEOSERVER LAYER - SETUP
+ var url = 'http://lrm-maps.jrc.ec.europa.eu/geoserver/dopa_explorer/wms';
+ var wdpa=L.tileLayer.wms(url, {
+     layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg',
+     transparent: true,
+     format: 'image/png',
+     opacity:'0.6',
+     featureInfoFormat: 'text/javascript',
+     makeLayerQueryable: true,
+     zIndex: 33
+  }).addTo(lMap);
 
+// WDPA filter
+wdpa.setParams({CQL_FILTER:"highest_iucn_cat <> ''"});
 
-//-- WDPA WMS GEOSERVER LAYER - SETUP
-     var url = 'http://lrm-maps.jrc.ec.europa.eu/geoserver/dopa_explorer/wms';
-     var wdpa=L.tileLayer.wms(url, {
-         layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg',
-         transparent: true,
-         format: 'image/png',
-         opacity:'0.6',
-         featureInfoFormat: 'text/javascript',
-         makeLayerQueryable: true,
-         zIndex: 33
-      }).addTo(lMap);
-        wdpa.setParams({CQL_FILTER:"highest_iucn_cat <> ''"});
-
-      $('#dropwdpa').on('change', function() {
-           var highest_iucn_cat = ($('#dropwdpa').val());
-
-            wdpa.setParams({CQL_FILTER:"highest_iucn_cat LIKE '"+highest_iucn_cat+"'"});
-
-            console.info(highest_iucn_cat);
-          //  wdpa_hi.setParams({CQL_FILTER:"highest_iucn_cat LIKE '"+highest_iucn_cat+"'"});
-
-         });
+// IUCN Category dropdown list
+$('#dropwdpa').on('change', function() {
+  var highest_iucn_cat = ($('#dropwdpa').val());
+  wdpa.setParams({CQL_FILTER:"highest_iucn_cat LIKE '"+highest_iucn_cat+"'"});
+});
 
 
 //----------------------------------------------------------------
-// Layers
+// Layers available
 //----------------------------------------------------------------
-         var baseMaps = {
-           'Landscape': streets,
-           'Satellite': satellite
-          };
-         var overlayMaps = {
-          //  'water':transitions,
-              'PROTECTED AREAS':wdpa
+var baseMaps = {
+  'Landscape': streets,
+  'Satellite': satellite
+};
+var overlayMaps = {
+  'PROTECTED AREAS':wdpa
+};
 
-          };
-          //----------------------------------------------------------------
-          // Layers
-          //----------------------------------------------------------------
-
-                    layerControl = L.control.layers(baseMaps, null,  {position: 'bottomright'});
-     layerControl.addTo(lMap);
-
+// Add LAYER SWITCHER to the map
+layerControl = L.control.layers(baseMaps, null,  {position: 'bottomright'});
+layerControl.addTo(lMap);
 
  //--------------------------------------------------------------------------------------------------------
- // Land Cover Change (1995-2015)
+ // Land Cover Change (1995-2015) - Sankey GOOGLE CHART
  //--------------------------------------------------------------------------------------------------------
-setTimeout(function(){
+
+  var wdpaid_lcc_google = $.trim($('.wdpa-id').text());
+  var url_wdpaid_lcc_google = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/landcover/get_wdpa_lcc_esa?format=json&wdpaid=' + wdpaid_lcc_google; //get get_pa_water_stats
+
+  $.ajax({
+      url: url_wdpaid_lcc_google,
+      dataType: 'json',
+      success: function(d) {
+          if (d.metadata.recordCount == 0) {
+
+             jQuery('#sankey_basic').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
+
+          } else {
+
+             var lc1_1995;
+             var lc2_2015;
+             var area;
+             var obj_array_lcc = [];
+
+              $(d.records).each(function(i, data) {
+
+                       lc1_1995=data.lc1_1995;
+                       lc2_2015=data.lc2_2015;
+                       area=data.area;
+                       obj_array_lcc.push([data.lc1_1995,data.lc2_2015,data.area]);
+
+              });
+
  google.charts.load('current', {'packages':['sankey']});
  google.charts.setOnLoadCallback(drawChart);
- var lcc = [
-                [ 'Natural and semi natural land', ' Managed Land', 12.33 ],
-                [ 'Natural and semi natural land', ' Mosaic Natural', 11.5 ],
-                [ 'Natural and semi natural land', ' Water / Snow and Ice', 0.000001 ],
-                [ 'Managed Land', ' Natural and semi natural land', 1.6 ],
-                [ 'Managed Land', ' Mosaic Natural', 2.5],
-                [ 'Managed Land', ' Water / Snow and Ice', 0.000001 ],
-                [ 'Mosaic Natural', ' Natural and semi natural land', 2.3 ],
-                [ 'Mosaic Natural', ' Managed Land', 8.6 ],
-                [ 'Mosaic Natural', ' Water / Snow and Ice', 0.000001 ],
-                [ 'Water / Snow and Ice', ' Natural and semi natural land', 1.9 ],
-                [ 'Water / Snow and Ice', ' Mosaic Natural', 3.0 ],
-                [ 'Water / Snow and Ice', ' Managed Land', 3.9 ]
-           ];
+
 
 
  function drawChart() {
@@ -332,13 +290,14 @@ setTimeout(function(){
    data.addColumn('string', 'From');
    data.addColumn('string', 'To');
    data.addColumn('number', 'Area (km2)');
-   data.addRows(lcc);
+   data.addRows(obj_array_lcc);
 
    // Sets chart options.
-   var colors = ['#337465', '#CF3523', '#FFD78B', '#4E93AA','#CF3523','#337465', '#FFD78B', '#4E93AA' ];
+   var colors = ['#538135', '#bf8f00', '#c45911', '#2f5496','#bf8f00','#538135', '#c45911', '#2f5496' ];
 //               Forest     _Artifi   _Agricolt    _Water    Artifi     _Forest   Agricolt    Water    (follow the sequence of your classes)
    var options = {
      width: 940,
+     height: 300,
      sankey: {
         node: {
           colors: colors,
@@ -349,7 +308,7 @@ setTimeout(function(){
         },
         link: {
           colorMode: 'gradient',
-          colors: colors
+        colors: colors
         }
       }
    };
@@ -358,31 +317,26 @@ setTimeout(function(){
 
    chart.draw(data, options);
 
-
-
-
-
-
  }
 
-    }, 100);
+} //else
+},//sucsess
+}); //ajax
 
 
- //--------------------------------------------------------------------------------------------------------
- // water tab
- //--------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------
+// Global Inland Surface Water in Protected Area - Table
+//--------------------------------------------------------------------------------------------------------
 
-
-     setTimeout(function(){
-         var wdpaid_water_tab = $.trim($('.wdpa-id').text());
-     var urlwdpaid_water_tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/indicators_2017/get_pa_water_stats?pa_id=' + wdpaid_water_tab; //get land cover 2005 in pa
+setTimeout(function(){
+var wdpaid_water_tab = $.trim($('.wdpa-id').text());
+var urlwdpaid_water_tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/indicators_2017/get_pa_water_stats?pa_id=' + wdpaid_water_tab; //get get_pa_water_stats
 
        $.ajax({
                url: urlwdpaid_water_tab,
                dataType: 'json',
                success: function(d) {
                    if (d.metadata.recordCount == 0) {
-                   //  jQuery('#elevation_chart_wdpa');
                      jQuery('#water_tab').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
                    } else {
 
@@ -402,33 +356,26 @@ setTimeout(function(){
                            for (var prop in fields){
                                if(prop == 'perm_now_km2'){
                                    perm_now_km2.push(data[prop]);
-                                   //altitude_titles.push("Minimum");
                                    $('#water_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
-                                   console.log(perm_now_km2);
                                }
                                else if(prop == 'seas_now_km2'){
                                    seas_now_km2.push(data[prop]);
-                                   //altitude_titles.push("1st Qtl.");
                                    $('#water_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                                }
                                else if(prop == 'net_p_change_km2'){
                                    net_p_change_km2.push(data[prop]);
-                                   //altitude_titles.push("Median");
                                    $('#water_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                                }
                                else if(prop == 'net_s_change_km2'){
                                    net_s_change_km2.push(data[prop]);
-                                   //altitude_titles.push("3rd Qtl.");
                                    $('#water_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                                }
                                else if(prop == 'percent_net_perm_change'){
                                    percent_net_perm_change.push(data[prop]);
-                                   //altitude_titles.push("Maximum");
                                    $('#water_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                                }
                                else if(prop == 'percent_net_seas_change'){
                                    percent_net_seas_change.push(data[prop]);
-                                   //altitude_titles.push("Maximum");
                                    $('#water_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                                }
 
@@ -441,48 +388,39 @@ setTimeout(function(){
 
      }, 300);
 
-     //-----------------------------------------------------------------------------
-     // global water graph
-     //-----------------------------------------------------------------------------
-     setTimeout(function(){
-         var wdpaid_water_per = $.trim($('.wdpa-id').text());
-     var urlwdpaid_water_per = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/indicators_2017/get_pa_water_stats?pa_id=' + wdpaid_water_per; //
+//-----------------------------------------------------------------------------
+//  Global Inland Surface Water in Protected Area - Graph
+//-----------------------------------------------------------------------------
+
+setTimeout(function(){
+var wdpaid_water_per = $.trim($('.wdpa-id').text());
+var urlwdpaid_water_per = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/indicators_2017/get_pa_water_stats?pa_id=' + wdpaid_water_per; //get get_pa_water_stats
 
      $.ajax({
          url: urlwdpaid_water_per,
          dataType: 'json',
          success: function(d) {
              if (d.metadata.recordCount == 0) {
-                // jQuery('#water_per_chart_wdpa');
-                // jQuery('#water_per_chart_wdpa').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
+
+                jQuery('#water_per_chart_wdpa').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
 
              } else {
 
-
-               var perm_now_km2;
-               var net_p_change_km2;
-
-               var net_p_1985_km2;
-
+                var perm_now_km2;
+                var net_p_change_km2;
+                var net_p_1985_km2;
                 var seas_now_km2;
                 var net_s_change_km2;
-
-                 var net_s_1985_km2;
-
+                var net_s_1985_km2;
 
                  $(d.records).each(function(i, data) {
 
                           perm_now_km2=data.perm_now_km2;
                           net_p_change_km2=data.net_p_change_km2;
                           net_p_1985_km2 = parseFloat(perm_now_km2)-(parseFloat(net_p_change_km2));
-
                           seas_now_km2=data.seas_now_km2;
                           net_s_change_km2=data.net_s_change_km2;
                           net_s_1985_km2 = parseFloat(seas_now_km2)-(parseFloat(net_s_change_km2));
-
-
-
-
                  });
 
                  $('#water_per_chart_wdpa').highcharts({
@@ -500,25 +438,20 @@ setTimeout(function(){
                      },
                      credits: {
                          enabled: true,
-                         text: 'DOPA Services DOPA Services V.2 , WDPA Jan 2017',
+                         text: 'DOPA Services V.2 , WDPA Jan 2017',
                          href: 'http://dopa.jrc.ec.europa.eu'
                      },
                      xAxis: {
                          categories: ['1985', '2015'],
-                         //crosshair: true
                      },
                      yAxis: {
-                         //min: 0,
                          title: {
                              text: 'Area (km2)'
                          }
                      },
                      tooltip: {
-
-                        // shared: true,
                           headerFormat: '<span style="font-size:12px">{series.name}</span><br>',
-             pointFormat: '<span>{point.name}</span> <b>{point.y:.2f}</b> km2 <br/>'
-
+                          pointFormat: '<span>{point.name}</span> <b>{point.y:.2f}</b> km2 <br/>'
                      },
                      plotOptions: {
                          column: {
@@ -526,33 +459,29 @@ setTimeout(function(){
                              borderWidth: 0
                          }
                      },
-
-                                 series:[{
-                                              name: 'Permanent Water',
-                                              color: '#22a6f5',
-                                              data: [net_p_1985_km2, perm_now_km2 ]
-                                          },
-                                          {
-                                                       name: 'Seasonal  Water',
-                                                       color: '#81d0ff',
-                                                       data: [net_s_1985_km2, seas_now_km2 ]
-                                                   }
-                                        ]
-                 });
-             }
-         },
-
-       });
-
-     }, 700);
-
+                     series:[{
+                                  name: 'Permanent Water',
+                                  color: '#22a6f5',
+                                  data: [net_p_1985_km2, perm_now_km2 ]
+                              },
+                              {
+                                 name: 'Seasonal  Water',
+                                 color: '#81d0ff',
+                                 data: [net_s_1985_km2, seas_now_km2 ]
+                              }]
+             });//chart
+          } //else
+       },//sucsess
+   }); //ajax
+}, 700);
 
 //-----------------------------------------------------------------------------
-// spyder graph threats
+// Anthropogenic pressures on the Protected Area - Spyder Graph
 //-----------------------------------------------------------------------------
-  setTimeout(function(){
-    var wdpaid= $('.wdpa-id').text();
-  var url = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_radarplot_pa?wdpaid=' + wdpaid; // get radar plot in pa
+
+setTimeout(function(){
+var wdpaid= $('.wdpa-id').text();
+var url = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_radarplot_pa?wdpaid=' + wdpaid; // get radar plot in pa
 
   $.ajax({
     url: url,
@@ -589,7 +518,7 @@ setTimeout(function(){
                             else {
                             }
                         }
-                        break;
+                    break;
                     case 'Population':
                     for (var prop in data) {
                             if (prop == 'title') {
@@ -610,7 +539,7 @@ setTimeout(function(){
                             else {
                             }
                         }
-                        break;
+                    break;
                     case 'Internal Roads':
                     for (var prop in data) {
                                       if (prop == 'title') {
@@ -630,10 +559,10 @@ setTimeout(function(){
                                       }
                          else {
                          }
-                                  }
-                        break;
+                      }
+                    break;
                     case 'Surrounding Roads':
-                        for (var prop in data) {
+                    for (var prop in data) {
                             if (prop == 'title') {
                                 title.push("Surrounding Roads")
                             }
@@ -652,7 +581,7 @@ setTimeout(function(){
                             else {
                             }
                         }
-                        break;
+                    break;
                     case 'Popn. change':
                     for (var prop in data) {
                             if (prop == 'title') {
@@ -673,34 +602,27 @@ setTimeout(function(){
                             else {
                             }
                         }
-                        break;
-
+                    break;
                     default:
-                        break;
+                    break;
                 }
-
             });
 
             $('#spider_chart_wdpa_threats').highcharts({
                 chart: {
                     polar: true,
-                  //  type: 'bar',
-                  //  zoomType: 'xy',
-                     height: 420,
-                     width: 600,
-                     //colors: ['#c9db72', '#5b8059']
+                    height: 420,
+                    width: 600,
                 },
-
                 title: {
                     text: null
                 },
                 subtitle: {
                     text: "Threats Summary Data"
                 },
-
                 credits: {
                     enabled: true,
-                    text: 'DOPA Services V.2 , WDPA Ago 2014',
+                    text: 'DOPA Services V.2 , WDPA Aug 2014',
                     href: 'http://dopa.jrc.ec.europa.eu'
                 },
                 xAxis: {
@@ -731,8 +653,6 @@ setTimeout(function(){
                     lineWidth: 0,
                     min: 0,
                     tickInterval: 10,
-                  //  min: 0,
-                    //max: 100
                 },
 
                 series: [{
@@ -760,11 +680,12 @@ setTimeout(function(){
 }, 300);
 
 //-----------------------------------------------------------------------------
-// spyder graph species
+// Species Summary Data - Spyder Graph
 //-----------------------------------------------------------------------------
-  setTimeout(function(){
-    var wdpaid= $('.wdpa-id').text();
-  var url = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_radarplot_pa?wdpaid=' + wdpaid; // get radar plot in pa
+
+setTimeout(function(){
+var wdpaid= $('.wdpa-id').text();
+var url = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_radarplot_pa?wdpaid=' + wdpaid; // get radar plot in pa
 
   $.ajax({
     url: url,
@@ -772,7 +693,7 @@ setTimeout(function(){
     success: function(d) {
         if (d.metadata.recordCount == 0) {
             jQuery('#spider_chart_wdpa_species');
-             jQuery('#spider_chart_wdpa_species').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
+            jQuery('#spider_chart_wdpa_species').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
         } else {
             var title = [];
             var country_avg = [];
@@ -802,7 +723,7 @@ setTimeout(function(){
                             else {
                             }
                         }
-                        break;
+                    break;
                     case 'MAMMALIA':
                     for (var prop in data) {
                             if (prop == 'title') {
@@ -823,7 +744,7 @@ setTimeout(function(){
                             else {
                             }
                         }
-                        break;
+                    break;
                     case 'AVES':
                     for (var prop in data) {
                             if (prop == 'title') {
@@ -844,7 +765,7 @@ setTimeout(function(){
                             else {
                             }
                         }
-                        break;
+                    break;
                     case 'Terrestrial HDI':
                     // if ($pamarine=='100 % marine'){
                     //  break;
@@ -868,33 +789,27 @@ setTimeout(function(){
                             else {
                             }
                         }
-                        break;
-
+                    break;
                     default:
-                        break;
+                    break;
                 }
             });
 
             $('#spider_chart_wdpa_species').highcharts({
                 chart: {
                     polar: true,
-                  //  type: 'bar',
-                  //  zoomType: 'xy',
-                     height: 420,
-                     width: 600,
-                     //colors: ['#c9db72', '#5b8059']
+                    height: 420,
+                    width: 600,
                 },
-
                 title: {
                     text: null
                 },
                 subtitle: {
                     text: "Species Summary Data"
                 },
-
                 credits: {
                     enabled: true,
-                    text: 'DOPA Services V.2 , WDPA Ago 2014',
+                    text: 'DOPA Services V.2 , WDPA Aug 2014',
                     href: 'http://dopa.jrc.ec.europa.eu'
                 },
                 xAxis: {
@@ -925,8 +840,6 @@ setTimeout(function(){
                     lineWidth: 0,
                     min: 0,
                     tickInterval: 10,
-                  //  min: 0,
-                    //max: 100
                 },
 
                 series: [{
@@ -952,29 +865,29 @@ setTimeout(function(){
         }
       });
 }, 500);
+
 //-----------------------------------------------------------------------------
-//CLIMATE GRAPH
+//Average Climate -  Graph
 //-----------------------------------------------------------------------------
+
 setTimeout(function(){
-   var wdpaid_clima= $('.wdpa-id').text();
-var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_climate_pa?wdpaid=' + wdpaid_clima; // get climate data in pa
+var wdpaid_clima= $('.wdpa-id').text();
+var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_climate_pa?wdpaid=' + wdpaid_clima; // GET get_climate_pa
 
          $.ajax({
              url: urlclima,
              dataType: 'json',
              success: function(d) {
                  if (d.metadata.recordCount == 0) {
-                     //jQuery('#container2');
                      jQuery('#clima_chart_wdpa').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
                  } else {
+
                    var precip = [];
                    var tmax = [];
                    var tmin = [];
-
                    var tmean = [];
-                   $(d.records).each(function(i, data) {
-                       //	console.warn(i)
 
+                   $(d.records).each(function(i, data) {
                        switch (data.type) {
                            case 'prec':
                                for (var prop in data) {
@@ -983,45 +896,36 @@ var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get
                                    }
                                }
 
-                               break;
+                           break;
                            case 'tmin':
                                for (var prop in data) {
                                    if (prop !== 'type' && prop !== 'uom')
                                        tmin.push(Math.round((data[prop])* 10) / 10)
                                }
-
-                               break;
-
+                           break;
                            case 'tmax':
                                for (var prop in data) {
                                    if (prop !== 'type' && prop !== 'uom')
                                        tmax.push(Math.round((data[prop])* 10) / 10)
                                }
-                               break;
-
+                           break;
                            case 'tmean':
-
                                for (var prop in data) {
                                    if (prop !== 'type' && prop !== 'uom')
                                        tmean.push(Math.round((data[prop])* 10) / 10)
                                }
-                               break;
+                           break;
                            default:
-                               break;
+                          break;
                        }
-
-
                    });
-
 
                    $('#clima_chart_wdpa').highcharts({
                        chart: {
                            zoomType: 'xy',
-                           	width: 964,
-
+                           width: 964,
                        },
                        legend: {
-
                        },
                        title: {
                            text: null
@@ -1030,16 +934,13 @@ var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get
                             text: 'Monthly climate average'
                        },
                        xAxis: [{
-                           categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-                           ]
+                            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun','Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
                        }],
-                       yAxis: [{ // Primary yAxis
+                       yAxis: [{
                            labels: {
                                format: '{value}°C',
                                color: '#3E576F',
                                style: {
-                                   //color: Highcharts.getOptions().colors[2]
                                    color: '#3E576F'
                                }
                            },
@@ -1052,7 +953,7 @@ var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get
                            },
                            opposite: false
 
-                       }, { // Secondary yAxis
+                       }, {
                            gridLineWidth: 0,
                            title: {
                                text: 'Precipitation (mm)',
@@ -1067,8 +968,6 @@ var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get
                                }
                            },
                            opposite: true
-
-
                        }],
                        tooltip: {
                            shared: true
@@ -1131,19 +1030,18 @@ var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get
                                valueSuffix: ' °C'
                            }
                        }]
-                   }); //end of   $('#containerclima2').highcharts
-                 } //end of else
-             },// end of success: function(d)
-
-         });// end of ajax call
+                   });
+                 }
+             },
+         });
 }, 600);
 
 //-----------------------------------------------------------------------------
-//ELEVATION GRAPH
+// Average Profile - ELEVATION Table
 //-----------------------------------------------------------------------------
 
 setTimeout(function(){
-    var wdpaid_el= $('.wdpa-id').text();
+var wdpaid_el= $('.wdpa-id').text();
 var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/indicators_2017/get_topostat_pa?wdpaid=' + wdpaid_el;
 
   $.ajax({
@@ -1151,11 +1049,10 @@ var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/indic
           dataType: 'json',
           success: function(d) {
               if (d.metadata.recordCount == 0) {
-              //  jQuery('#elevation_chart_wdpa');
                 jQuery('#elevation_chart_wdpa').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
               } else {
+
                   var altitude = [];
-                  //var altitude_titles = [];
                   var average = [];
 
                   $(d.records).each(function(i, data) {
@@ -1165,17 +1062,14 @@ var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/indic
                       for (var prop in data){
                           if(prop == 'min'){
                               altitude.push(data[prop]);
-                              //altitude_titles.push("Minimum");
                               $('#elevation_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'q25'){
                               altitude.push(data[prop]);
-                              //altitude_titles.push("1st Qtl.");
                               $('#elevation_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'median'){
                               altitude.push(data[prop]);
-                              //altitude_titles.push("Median");
                               $('#elevation_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'mean'){
@@ -1184,82 +1078,78 @@ var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/indic
                           }
                           else if(prop == 'q75'){
                               altitude.push(data[prop]);
-                              //altitude_titles.push("3rd Qtl.");
                               $('#elevation_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                           else if(prop == 'max'){
                               altitude.push(data[prop]);
-                              //altitude_titles.push("Maximum");
                               $('#elevation_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
                           }
                       }
                   });
 
+// Export Elevation Table
 
-                  $(document).ready(function () {
-                       function exportTableToCSV($table, filename) {
-                           var $headers = $table.find('tr:has(th)')
-                               ,$rows = $table.find('tr:has(td)')
-                               ,tmpColDelim = String.fromCharCode(11) // vertical tab character
-                               ,tmpRowDelim = String.fromCharCode(0) // null character
-                               ,colDelim = '","'
-                               ,rowDelim = '"\r\n"';
-                               var csv = '"';
-                               csv += formatRows($headers.map(grabRow));
-                               csv += rowDelim;
-                               csv += formatRows($rows.map(grabRow)) + '"';
-                               var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
-                           $(this)
-                               .attr({
-                               'download': filename
-                                   ,'href': csvData
-                                   ,'target' : '_blank' //if you want it to open in a new window
-                           });
-                           function formatRows(rows){
-                               return rows.get().join(tmpRowDelim)
-                                   .split(tmpRowDelim).join(rowDelim)
-                                   .split(tmpColDelim).join(colDelim);
-                           }
-                           function grabRow(i,row){
+$(document).ready(function () {
+     function exportTableToCSV($table, filename) {
+         var $headers = $table.find('tr:has(th)')
+             ,$rows = $table.find('tr:has(td)')
+             ,tmpColDelim = String.fromCharCode(11) // vertical tab character
+             ,tmpRowDelim = String.fromCharCode(0) // null character
+             ,colDelim = '","'
+             ,rowDelim = '"\r\n"';
+             var csv = '"';
+             csv += formatRows($headers.map(grabRow));
+             csv += rowDelim;
+             csv += formatRows($rows.map(grabRow)) + '"';
+             var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+         $(this)
+             .attr({
+             'download': filename
+                 ,'href': csvData
+                 ,'target' : '_blank' //if you want it to open in a new window
+         });
+         function formatRows(rows){
+             return rows.get().join(tmpRowDelim)
+                 .split(tmpRowDelim).join(rowDelim)
+                 .split(tmpColDelim).join(colDelim);
+         }
+         function grabRow(i,row){
 
-                               var $row = $(row);
-                               var $cols = $row.find('td');
-                               if(!$cols.length) $cols = $row.find('th');
-                               return $cols.map(grabCol)
-                                           .get().join(tmpColDelim);
-                           }
-                           function grabCol(j,col){
-                               var $col = $(col),
-                                   $text = $col.text();
-                               return $text.replace('"', '""'); // escape double quotes
-                           }
-                       }
-                       $(".export_elevation").click(function (event) {
-                           var outputFile = window.prompt("Save file in .csv format with the following name:") || 'export';
-                           outputFile = outputFile.replace('.csv','') + '.csv'
-                           exportTableToCSV.apply(this, [$('#elevation_tab'), outputFile]);
-                       });
+             var $row = $(row);
+             var $cols = $row.find('td');
+             if(!$cols.length) $cols = $row.find('th');
+             return $cols.map(grabCol)
+                         .get().join(tmpColDelim);
+         }
+         function grabCol(j,col){
+             var $col = $(col),
+                 $text = $col.text();
+             return $text.replace('"', '""'); // escape double quotes
+         }
+     }
+     $(".export_elevation").click(function (event) {
+         var outputFile = window.prompt("Save file in .csv format with the following name:") || 'export';
+         outputFile = outputFile.replace('.csv','') + '.csv'
+         exportTableToCSV.apply(this, [$('#elevation_tab'), outputFile]);
+     });
 
-                      // or substitute with this one if you want to assign the name!
-                      //  $(".export_elevation").on('click', function (event) {
-                      //      // CSV
-                      //      var args = [$('#dvData>table'), 'export.csv'];
-                      //
-                      //      exportTableToCSV.apply(this, args);
-                      //  });
-                   });
+    // or substitute with this one if you want to assign the name!
+    //  $(".export_elevation").on('click', function (event) {
+    //      // CSV
+    //      var args = [$('#dvData>table'), 'export.csv'];
+    //
+    //      exportTableToCSV.apply(this, args);
+    //  });
+ });
 
-
-
-
+ //-----------------------------------------------------------------------------
+ // Average Profile - ELEVATION Graph
+ //-----------------------------------------------------------------------------
 
                   $('#elevation_chart_wdpa').highcharts({
                       chart: {
                           type: 'areaspline',
-                          // height: 400,
-                          // width: 400
                       },
-
                       title: {
                           text: null
                       },
@@ -1271,7 +1161,7 @@ var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/indic
                       },
                       credits: {
                           enabled: true,
-                          text: 'DOPA Services V.2 , WDPA Ago 2014',
+                          text: 'DOPA Services V.2 , WDPA Jan 2017',
                           href: 'http://dopa.jrc.ec.europa.eu'
                       },
                       xAxis: {
@@ -1310,7 +1200,6 @@ var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/indic
                       plotOptions: {
                           areaspline: {
                               color: '#679625',
-                              //fillOpacity: 1,
                               fillColor: {
                                   linearGradient: [0, 0, 0, 500],
                                   stops: [
@@ -1330,165 +1219,14 @@ var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/indic
       });
 
 }, 900);
-//-----------------------------------------------------------------------------
-// clc 2000 graph
-//-----------------------------------------------------------------------------
-setTimeout(function(){
-    var wdpaid_clc2000= $('.wdpa-id').text();
-var urlclc2000 = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_wdpa_lc_stats_glc2000?wdpaid='+ wdpaid_clc2000;
-
-$.ajax({
-    url: urlclc2000,
-    dataType: 'json',
-    success: function(d) {
-        if (d.metadata.recordCount == 0) {
-            //jQuery('#clc2000_chart_wdpa');
-            jQuery('#clc2000_chart_wdpa').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
-        } else {
-            var obj = {};
-            var colors_array = [];
-            var obj_array = [];
-            var _classif=[];
-            $(d.records).each(function(i, data) {
-                var lclass = data.lclass;
-                obj[lclass] = data;
-
-                    _classif.push(data.label);
-                    colors_array.push(data.color);
-                    obj_array.push({name: data.label,data:[data.area],percent:data.percent})
-
-            });
-
-            $('#clc2000_chart_wdpa').highcharts({
-                colors: colors_array,
-                chart: {
-                    type: 'column',
-                    zoomType: 'xy',
-                    width: 964,
-                },
-                title: {
-                    text: null
-                },
-                subtitle: {
-                     text: 'Landcover 2000'
-                },
-                credits: {
-                    enabled: true,
-                    text: 'DOPA Services V.2 , WDPA Ago 2014',
-                    href: 'http://dopa.jrc.ec.europa.eu'
-                },
-                xAxis: {
-                    categories: _classif,
-                    crosshair: true
-                },
-                yAxis: {
-                    min: 0,
-                    title: {
-                        text: 'Area (km2)'
-                    }
-                },
-                tooltip: {
-
-                   // shared: true,
-                     headerFormat: '<span style="font-size:12px">{series.name}</span><br>',
-        pointFormat: '<span>{point.name}</span> <b>{point.y:.2f}</b> (km2) <br/>'
-
-                },
-                plotOptions: {
-                    column: {
-                        pointPadding: 0.2,
-                        borderWidth: 0
-                    }
-                },
-
-                            series:
-                               // name: 'Preuba',
-                                obj_array
-            });
-        }
-    },
-
-});
-}, 1200);
-
 
 
 //-----------------------------------------------------------------------------
-// clc 2005 graph
-//-----------------------------------------------------------------------------
-setTimeout(function(){
-
-var wdpaid_clc2005= $('.wdpa-id').text();
-var urlclc2005 = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_wdpa_lc_stats_glob2005?wdpaid=' + wdpaid_clc2005; //get land cover 2005 in pa
-
-$.ajax({
-    url: urlclc2005,
-    dataType: 'json',
-    success: function(d) {
-        if (d.metadata.recordCount == 0) {
-            jQuery('#clc2005_chart_wdpa');
-            jQuery('#clc2005_chart_wdpa').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
-        } else {
-
-            var obj_array = [];
-
-            $(d.records).each(function(i, data) {
-
-                    obj_array.push({'name': data.label,'value': data.area, 'color': data.color})
-
-            });
-
-            $('#clc2005_chart_wdpa').highcharts({
-
-                chart: {
-                    type: 'treemap',
-                },
-                title: {
-                    text: null
-                },
-                subtitle: {
-                     text: 'Landcover 2005'
-                },
-                credits: {
-                    enabled: true,
-                    text: 'DOPA Services DOPA Services V.2 , WDPA Ago 2014',
-                    href: 'http://dopa.jrc.ec.europa.eu'
-                },
-
-                dataLabels: {
-                    enabled: false,
-                },
-                tooltip: {
-                     headerFormat: '<span style="font-size:12px">{series.value}</span><br>',
-                     pointFormat: '<span>{point.name}</span> <b>{point.value}</b> (km2) <br/>'
-                },
-                plotOptions: {
-                      treemap: {
-                                layoutAlgorithm: 'squarified',
-                                fillOpacity: 0.3,
-                                dataLabels: {enabled: false},
-                                borderWidth: 3,
-                                borderColor: '#fff',
-                                borderOpacity: 0.5
-                                }
-                            },
-
-               series:  [{data: obj_array}]
-
-          });
-        }
-     },
-  });
-}, 1500);
-
-
-//-----------------------------------------------------------------------------
-// Pressure CHARTS
+// Anthropogenic pressures on the Protected Area - CHARTS
 //-----------------------------------------------------------------------------
 setTimeout(function(){
 jQuery(document).ready(function($) {
     var $paid = $('.wdpa-id').text();
-  //  alert ($paid);
     var $paname = $('.wdpa-name').text();
     var $countrynum = $('.country-id').text();
     var $countryname = $('country-name').text();
@@ -1554,10 +1292,10 @@ jQuery(document).ready(function($) {
 			dataType: 'json',
 			success: function(d) {
 				if (d.metadata.recordCount == 0) {
-					//jQuery('#country-pressure-chart-'+param);
           jQuery('#country-pressure-chart-'+param).html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
 
 				} else {
+
 					var wdpa_id = [];
 					var indicatorvalue = [];
 					var marker_color = [];
@@ -1574,8 +1312,7 @@ jQuery(document).ready(function($) {
                       else{
                       marker_color.push(serviceNames[param].color);
                       }
-              wdpa_id.push(data[prop]);
-
+                      wdpa_id.push(data[prop]);
 							}
 							else if(prop == serviceNames[param].indicatorvalue){
 								indicatorvalue.push(data[prop]);
@@ -1587,7 +1324,7 @@ jQuery(document).ready(function($) {
 								normalised_avg = data[prop];
 							}
 							else if(prop == 'country_rank'){
-								//country_rank.push(data[prop]);
+
 
                     if (data[prop] == country_rank[country_rank.length-1]){
 
@@ -1619,7 +1356,7 @@ jQuery(document).ready(function($) {
 						pane: {size: '100%'},
 						credits: {
 							enabled: true,
-							text: 'DOPA Services V.2 , WDPA Ago 2014',
+							text: 'DOPA Services V.2 , WDPA Aug 2014',
 							href: 'http://ehabitat-wps.jrc.ec.europa.eu/dopa_explorer/?pa='+$paid
 						},
 						xAxis: {
@@ -1639,12 +1376,6 @@ jQuery(document).ready(function($) {
 										series_id = point.key-1;
 										s.push('Country Rank: <b>' + country_rank[series_id]+ '</b><br><span style="font-weight:normal;">WDPA ID: <b>'+ wdpa_id[series_id] + '</b><br>' + point.series.name +': '+
 										point.y +'<span><br><a target="_blank" href="/wdpa/'+wdpa_id[series_id]+'">Click to explore this Protected Area</a></span>');
-
-                    // on click func on the charts bars
-
-
-                       // end of on click func on the charts bars
-
 								});
 								return s.join('');
 							},
@@ -1659,24 +1390,23 @@ jQuery(document).ready(function($) {
 								color: '#3E576F',
 								style: {color: '#3E576F'}
 							},
-							min: 0,
+						//	min: 0,
 							max: 100,
 							plotLines: [{
-							color: '#f0c5c1',
-							width: 1,
-							value: normalised_avg,
-							zIndex:5,
-							label: {
-								text: 'Country Average: '+normalised_avg,
-                align: 'right',
-                x: -10,
-                style: {
-                    color: '#BBBBBB',
-                    fontWeight: 'normal'
-                }
-
-							}
-							}]
+  							color: '#f0c5c1',
+  							width: 1,
+  							value: normalised_avg,
+  							zIndex:5,
+  							label: {
+  								text: 'Country Average: '+normalised_avg,
+                  align: 'right',
+                  x: -10,
+                  style: {
+                      color: '#BBBBBB',
+                      fontWeight: 'normal'
+                  }
+  							}
+						 }]
 						},
 						plotOptions: {
 							areaspline: {
@@ -1703,7 +1433,6 @@ jQuery(document).ready(function($) {
 			},
 			error: function() {
 				jQuery('#country-pressure-chart.'+param);
-
 			}
 		});
 	}
@@ -1716,11 +1445,11 @@ jQuery(document).ready(function($) {
 }, 1900);
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-//  Tab Species
+//  Species Summary Data - Table
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
 setTimeout(function(){
-    var wdpaid_spec= $('.wdpa-id').text();
+var wdpaid_spec= $('.wdpa-id').text();
 var urlspeciesstatus = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/especies/get_pa_species_status_stats?format=json&wdpa_id=' + wdpaid_spec;
 
   $.ajax({
@@ -1728,7 +1457,6 @@ var urlspeciesstatus = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/e
           dataType: 'json',
           success: function(d) {
               if (d.metadata.recordCount == 0) {
-                // jQuery('#species_status_wdpa');
                 jQuery('#species_tab').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
               } else {
                    var  _class = [];
@@ -1742,7 +1470,6 @@ var urlspeciesstatus = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/e
                    var  data_deficient = [];
 
                   $(d.records).each(function(i, data) {
-                    //console.log(data);
                     if (data.class == 'Amphibia'){
                       $('#species_tab tbody').append('<tr id="'+i.toString()+'" class="Amphibia"></tr>');
                     } else if (data.class == 'Mammalia'){
@@ -1792,11 +1519,10 @@ var urlspeciesstatus = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/e
                           }
                           else {
                             }
-                      } // end of for
-
+                      }
                   });
 
-
+                  // Export Species Summary Data
                   $(document).ready(function () {
                        function exportTableToCSV($table, filename) {
                            var $headers = $table.find('tr:has(th)')
@@ -1843,218 +1569,15 @@ var urlspeciesstatus = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/e
 
                    });
                    // end of export
-
-                } //end of main else
-
-              } // end of sucsess
-
+               } //end of main else
+           } // end of sucsess
       }); // ajax call
-
 }, 2200);
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-//  Lc 2000 tab
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-setTimeout(function(){
-    var wdpaid_lcc2000= $('.wdpa-id').text();
-var urllcc2000tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabitat/get_wdpa_lc_stats_glc2000?format=json&wdpaid=' + wdpaid_lcc2000;
-
-  $.ajax({
-          url: urllcc2000tab,
-          dataType: 'json',
-          success: function(d) {
-              if (d.metadata.recordCount == 0) {
-                jQuery('#lc2000_tab').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
-              } else {
-                   var label = [];
-                   var area = [];
-                   var percent = [];
-                   var color = [];
-                   var fields = {'label':"",'percent':"",'area':"",'color':""};
-
-                  $(d.records).each(function(i, data) {
-
-                      $('#lc2000_tab tbody').append('<tr id="'+i.toString()+'" class="lc2000tr"></tr>');
-
-                      for (var prop in fields){
-                          if(prop == 'label'){
-                              label.push(data[prop]);
-                              $('#lc2000_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
-                          }
-                          else if(prop == 'percent'){
-                              percent.push(data[prop]);
-                              $('#lc2000_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
-                          }
-                          else if(prop == 'area'){
-                              area.push(data[prop]);
-                              $('#lc2000_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
-                          }
-                          else if(prop == 'color'){
-                              color.push(data[prop]);
-                              $('#lc2000_tab tbody tr[id="'+i+'"]').append('<td class="lc2000transpa" style="background-color:'+data[prop]+'!important;"></td>');
-                          }
-
-                          else {
-                            }
-                      } // end of for
-
-                  });
-                  $(document).ready(function () {
-                       function exportTableToCSV($table, filename) {
-                           var $headers = $table.find('tr:has(th)')
-                               ,$rows = $table.find('tr:has(td)')
-                               ,tmpColDelim = String.fromCharCode(11) // vertical tab character
-                               ,tmpRowDelim = String.fromCharCode(0) // null character
-                               ,colDelim = '","'
-                               ,rowDelim = '"\r\n"';
-                               var csv = '"';
-                               csv += formatRows($headers.map(grabRow));
-                               csv += rowDelim;
-                               csv += formatRows($rows.map(grabRow)) + '"';
-                               var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
-                           $(this)
-                               .attr({
-                               'download': filename
-                                   ,'href': csvData
-                                   ,'target' : '_blank' //if you want it to open in a new window
-                           });
-                           function formatRows(rows){
-                               return rows.get().join(tmpRowDelim)
-                                   .split(tmpRowDelim).join(rowDelim)
-                                   .split(tmpColDelim).join(colDelim);
-                           }
-                           function grabRow(i,row){
-
-                               var $row = $(row);
-                               var $cols = $row.find('td');
-                               if(!$cols.length) $cols = $row.find('th');
-                               return $cols.map(grabCol)
-                                           .get().join(tmpColDelim);
-                           }
-                           function grabCol(j,col){
-                               var $col = $(col),
-                                   $text = $col.text();
-                               return $text.replace('"', '""'); // escape double quotes
-                           }
-                       }
-                       $(".export_lc2000_tab").click(function (event) {
-                           var outputFile = window.prompt("Save file in .csv format with the following name") || 'export';
-                           outputFile = outputFile.replace('.csv','') + '.csv'
-                           exportTableToCSV.apply(this, [$('#lc2000_tab'), outputFile]);
-                       });
-
-                   });
-                } //end of main else
-
-              } // end of sucsess
-
-      }); // ajax call
-
-}, 2400);
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-//  Lc 2005 tab
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-setTimeout(function(){
-  var wdpaid_lcc2005= $('.wdpa-id').text();
-  var urllcc2005tab = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabitat/get_wdpa_lc_stats_glob2005?format=json&wdpaid=' + wdpaid_lcc2005;
-
-  $.ajax({
-          url: urllcc2005tab,
-          dataType: 'json',
-          success: function(d) {
-              if (d.metadata.recordCount == 0) {
-                jQuery('#lc2005_tab').html('<img src="/sites/default/files/sna2.png" alt="Mountain View">');
-              } else {
-                   var label = [];
-                   var area = [];
-                   var percent = [];
-                   var color = [];
-                   var fields = {'label':"",'percent':"",'area':"",'color':""};
-
-                  $(d.records).each(function(i, data) {
-
-                      $('#lc2005_tab tbody').append('<tr id="'+i.toString()+'" class="lc2005tr"></tr>');
-
-                      for (var prop in fields){
-                          if(prop == 'label'){
-                              label.push(data[prop]);
-                              $('#lc2005_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
-                          }
-                          else if(prop == 'percent'){
-                              percent.push(data[prop]);
-                              $('#lc2005_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
-                          }
-                          else if(prop == 'area'){
-                              area.push(data[prop]);
-                              $('#lc2005_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
-                          }
-                          else if(prop == 'color'){
-                              color.push(data[prop]);
-                              $('#lc2005_tab tbody tr[id="'+i+'"]').append('<td class="lc2005transpa" style="background-color:'+data[prop]+'!important;"></td>');
-                          }
-
-                          else {
-                            }
-                      } // end of for
-
-                  });
-                  $(document).ready(function () {
-                       function exportTableToCSV($table, filename) {
-                           var $headers = $table.find('tr:has(th)')
-                               ,$rows = $table.find('tr:has(td)')
-                               ,tmpColDelim = String.fromCharCode(11) // vertical tab character
-                               ,tmpRowDelim = String.fromCharCode(0) // null character
-                               ,colDelim = '","'
-                               ,rowDelim = '"\r\n"';
-                               var csv = '"';
-                               csv += formatRows($headers.map(grabRow));
-                               csv += rowDelim;
-                               csv += formatRows($rows.map(grabRow)) + '"';
-                               var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
-                           $(this)
-                               .attr({
-                               'download': filename
-                                   ,'href': csvData
-                                   ,'target' : '_blank' //if you want it to open in a new window
-                           });
-                           function formatRows(rows){
-                               return rows.get().join(tmpRowDelim)
-                                   .split(tmpRowDelim).join(rowDelim)
-                                   .split(tmpColDelim).join(colDelim);
-                           }
-                           function grabRow(i,row){
-
-                               var $row = $(row);
-                               var $cols = $row.find('td');
-                               if(!$cols.length) $cols = $row.find('th');
-                               return $cols.map(grabCol)
-                                           .get().join(tmpColDelim);
-                           }
-                           function grabCol(j,col){
-                               var $col = $(col),
-                                   $text = $col.text();
-                               return $text.replace('"', '""'); // escape double quotes
-                           }
-                       }
-                       $(".export_lc2005_tab").click(function (event) {
-                           var outputFile = window.prompt("Save file in .csv format with the following name:") || 'export';
-                           outputFile = outputFile.replace('.csv','') + '.csv'
-                           exportTableToCSV.apply(this, [$('#lc2005_tab'), outputFile]);
-                       });
-
-                   });
-                } //end of main else
-
-              } // end of sucsess
-
-      }); // ajax call
-
-}, 2600);
-
-
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-//  Species list tab
+//  Species List - Table
 //----------------------------------------------------------------------------------------------------------------------------------------------------
+
 setTimeout(function(){
   var wdpaid_sp_list= $('.wdpa-id').text();
   var urlsp_list = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/especies/get_pa_species_list?format=json&category=EN,CR,VU,NT,LC,EX,EW,DD&taxongroup=all&language1=english&language2=none&wdpa_id=' + wdpaid_sp_list;
@@ -2112,12 +1635,32 @@ setTimeout(function(){
                           }
                           else if(prop == 'status'){
                               status.push(data[prop]);
-                              $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
+                              var color = data[prop];
+                              if (color == "EX"){
+                              $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td style="background-color: #f26973;">1 Extinct (EX)</td>');
+                            }else if (color == "EW"){
+                              $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td style="background-color: #e57d85;">2 Extinct in the Wild (EW)</td>');
+                            }else if (color == "CR"){
+                              $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td style="background-color: #ff8b94;">3 Critically Endangered (CR)</td>');
+                            }else if (color == "EN"){
+                              $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td style="background-color: #ffaaa5;">4 Endangered (EN)</td>');
+                            }else if (color == "VU"){
+                              $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td style="background-color: #ffd3b6;">5 Vulnerable (VU)</td>');
+                            }else if (color == "NT"){
+                              $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td style="background-color: #dcedc1;">6 Near Threatened (NT)</td>');
+                            }else if (color == "LC"){
+                              $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td style="background-color: #a8e6cf;">7 Least Concern (LC)</td>');
+                            }else if (color == "DD"){
+                              $('#sp_list_tab tbody tr[id="'+i+'"]').append('<td style="background-color: #c1c1c1;">8 Data Deficient (DD)</td>');
+                            }
+                              //$('#sp_list_tab tbody tr[id="'+i+'"]').append('<td class= "speciesStatus" >'+data[prop]+'</td>');
                           }
                           else {
                           }
-                      } // end of for
+                      }
                   });
+
+                  // Export Species Table
 
                   $(document).ready(function () {
                        function exportTableToCSV($table, filename) {
@@ -2169,7 +1712,7 @@ setTimeout(function(){
                   $('#sp_list_tab').DataTable( {
                   "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]]
                   });
-              } // end of sucsess
+            } // end of sucsess
       }); // ajax call
 }, 2600);
 
@@ -2200,6 +1743,7 @@ legendeco.onAdd = function (lMap) {
 
  };
 
+// Button that allows to show the Ecoregion layer - ecoregion section
 $("#showecomap1").click(function(event) {
   event.preventDefault();
   if ($("#ecolegend").length === 0){
@@ -2213,7 +1757,7 @@ $("#showecomap1").click(function(event) {
 });
 
 
-
+// Button that allows to show/hide the Ecoregion layer - below the map
 $("#tecoon").click(function(event) {
   event.preventDefault();
   if ($("#ecolegend").length === 0){
@@ -2224,11 +1768,11 @@ $("#tecoon").click(function(event) {
   }
 });
 
-// //---------------------------------------------------------------
-// //  Ecoregion LAYER - GET FEATUREINFO FUNCTION
-// //---------------------------------------------------------------
-//
-   function getFeatureInfoUrl_e(map, layer, latlng, params) {
+//---------------------------------------------------------------
+//  Ecoregion LAYER - GET FEATUREINFO
+//---------------------------------------------------------------
+
+function getFeatureInfoUrl_e(map, layer, latlng, params) {
 
   if (layer.wmsParams.layers=="lrm:eco_mar_ter_prot_con_2016")
   {
@@ -2259,11 +1803,9 @@ $("#tecoon").click(function(event) {
        return layer._url + L.Util.getParamString(params, layer._url, true);
    }
  }
-//
-//
-//  //---------------------------------------------------------------
-//  // ONCLICK RESPONSE ON HIGLIGHTED ECOREGIONS
-//  //--------------------------------------------------------------
+
+// ONCLICK RESPONSE ON HIGLIGHTED ECOREGIONS
+
         function hi_highcharts_eco(info,latlng){
           var eco_name=info['eco_name'];
           var id=info['id'];
@@ -2277,11 +1819,11 @@ $("#tecoon").click(function(event) {
                .setContent(popupContenteco)
                .openOn(lMap);
  }
-//
-//  //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//  //  Ecoregion HIGHLIGHT WMS SETUP
-//  //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//  Ecoregion HIGHLIGHT WMS SETUP
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
        var eco_ter_url = 'http://lrm-maps.jrc.ec.europa.eu/geoserver/lrm/wms';
        var eco_hi=L.tileLayer.wms(eco_ter_url, {
            layers: 'lrm:eco_mar_ter_prot_con_2016_hi',
@@ -2294,7 +1836,7 @@ $("#tecoon").click(function(event) {
         eco_hi.setParams({CQL_FILTER:"eco_name LIKE ''"});
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-//  Ecoregion list in PA tab
+//  Ecoregion list in PA - Table
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 setTimeout(function(){
   var wdpaid_eco_list= $('.wdpa-id').text();
@@ -2326,10 +1868,10 @@ setTimeout(function(){
                               eco_name.push(data[prop]);
                                $('#eco_list_tab tbody tr[id="'+i+'"]').append('<td>'+'<a href="/ecoregion/'+data['ecoregion_id']+'" target="_blank">'+data[prop]+'</a>'+'</td>');
 
-// filters for marine and terrestrial ecoregion layer ------------------------------------------------------------
+                              // filters for marine and terrestrial ecoregion layer
                               var eco_filter_ter="eco_name LIKE'"+data[prop]+"'";
-                            //  var eco_filter_mar="ecoregion LIKE'"+data[prop]+"'";
-// add terrestrial ecoregion layer --------------------------------------------------------------------------------
+
+                              // add terrestrial ecoregion layer
                               var eco_ter_url = 'http://lrm-maps.jrc.ec.europa.eu/geoserver/lrm/wms';
                               var eco_ter=L.tileLayer.wms(eco_ter_url, {
                                 layers: 'lrm:eco_mar_ter_prot_con_2016',
@@ -2341,23 +1883,20 @@ setTimeout(function(){
                               });
                               eco_ter.setParams({CQL_FILTER:eco_filter_ter});
 
-// add layers to the map -------------------------------------------------------------------------------------------
-                                var baseMaps = {
-                                  'Landscape': streets,
-                                  'Google satellite': satellite
-                                 };
-                               var overlayMaps = {
-                                    'ecoregions':eco_ter,
-                                  //  'ecoregions marine':eco_mar,
-                                };
+                              // add layers to the map
+                              var baseMaps = {
+                                'Landscape': streets,
+                                'Google satellite': satellite
+                              };
+                              var overlayMaps = {
+                                'ecoregions':eco_ter,
+                              };
 
-                                // ---------------------------------------------------------------
                                 //  ecoregion ONCLICK FUNCTION
-                                // ---------------------------------------------------------------
                                 lMap.on('click', function(e) {
                                  if (lMap.hasLayer(eco_ter)) {
-                                var eco_latlng= e.latlng;
-                                var eco_ter_url = getFeatureInfoUrl_e(
+                                  var eco_latlng= e.latlng;
+                                  var eco_ter_url = getFeatureInfoUrl_e(
                                                 lMap,
                                                 eco_ter,
                                                 e.latlng,
@@ -2392,10 +1931,11 @@ setTimeout(function(){
                                             }
                                   });
 
-// Button - add ecoregion layer and scroll to the top --------------------------------------------------------
+                              // Button - add ecoregion layer and scroll to the top
+
                                $("#showecomap1").click(function(event) {
                                  event.preventDefault();
-                                 if (lMap.hasLayer(eco_ter)) { //only for terrestrial ecoregions
+                                 if (lMap.hasLayer(eco_ter)) {
                                        $('html,body').animate({
                                            scrollTop: $('#breadcrumb').css('top')
                                        }, 100, function() {
@@ -2423,7 +1963,7 @@ setTimeout(function(){
                                });
                                $("#tecoon").click(function(event) {
                                  event.preventDefault();
-                                 if (lMap.hasLayer(eco_ter)) { //only for terrestrial ecoregions
+                                 if (lMap.hasLayer(eco_ter)) {
                                        $('html,body').animate({
                                            scrollTop: $('#breadcrumb').css('top')
                                        }, 100, function() {
@@ -2434,13 +1974,11 @@ setTimeout(function(){
                                    lMap.removeLayer(eco_ter);
                                    lMap.removeLayer(eco_hi);
                                    $('#wdpamenulist').show();
-                                //   lMap.removeLayer(eco_mar);
-
-                                 } else {
+                                 }
+                                 else {
                                    lMap.addLayer(eco_ter);
-                              $('#wdpamenulist').hide();
+                                   $('#wdpamenulist').hide();
                                    lMap.addLayer(eco_hi);
-
                                    $('html,body').animate({
                                        scrollTop: $('#breadcrumb').css('top')
                                    }, 100, function() {
@@ -2450,9 +1988,7 @@ setTimeout(function(){
                                    });
                                  }
                                });
-
-                          } // end of else if
-
+                          }
                           else if(prop == 'is_marine'){
                               is_marine.push(data[prop]);
                               var color = data[prop];
@@ -2463,41 +1999,41 @@ setTimeout(function(){
                             }
                           }
                           else {
-
                             }
-                      } // end of for
-
+                      }
                   });
                 }
-                 //end of main else
-               $('#eco_list_tab').DataTable( {
+               $('#eco_list_tab').DataTable({
                   "bFilter": false,
                   "bPaginate": false,
                   "info": false
-                  });
-              } // end of sucsess
-
-      }); // ajax call
-
+              });
+          }
+      });
 }, 100);
 
-// color marine terretrial first table
+//--------------------------------------------------------------------------------------------------------
+// Assign the color to Marine and Terretrial Eecoregion Table
+//--------------------------------------------------------------------------------------------------------
+
 var table = document.getElementById('wdpa_general_info');
 var tbody = table.getElementsByTagName('tbody')[0];
 var cells = tbody.getElementsByClassName('views-field-field-wdpa-marine');
 
-if (parseFloat ($('td.views-field-field-wdpa-marine').html()) == 0) {
-  $(cells).html('<td style="background-color: #7ebe25; color: white; border-radius: 2px;">Terrestrial</td>');
-}
-else if (parseFloat ($('td.views-field-field-wdpa-marine').html()) == 2) {
-  $(cells).html('<td style="background-color: #22a6f5; color: white; border-radius: 2px;">Marine</td>');
-}
-else{
-  $(cells).html('<td style="background-color: #69ce9a; color: white; border-radius: 2px;">Terrestrial/Marine</td>');
-}
+  if (parseFloat ($('td.views-field-field-wdpa-marine').html()) == 0) {
+    $(cells).html('<td style="background-color: #7ebe25; color: white; border-radius: 2px;">Terrestrial</td>');
+  }
+  else if (parseFloat ($('td.views-field-field-wdpa-marine').html()) == 2) {
+    $(cells).html('<td style="background-color: #22a6f5; color: white; border-radius: 2px;">Marine</td>');
+  }
+  else{
+    $(cells).html('<td style="background-color: #69ce9a; color: white; border-radius: 2px;">Terrestrial/Marine</td>');
+  }
 
+
+//--------------------------------------------------------------------------------------------------------
 // hide from print
-//$( ".pane-25" ).addClass( "hidden-print1" );
+//--------------------------------------------------------------------------------------------------------
 
 $( "#header" ).addClass( "hidden-print1" );
 $( "#breadcrumb" ).addClass( "hidden-print1" );
@@ -2523,33 +2059,64 @@ $( "#show_water_oc" ).addClass( "hidden-print1" );
 
 
 //--------------------------------------------------------------------------------------------------------
-// show water layers
+// Show Surface Water Occurence Layers
 //--------------------------------------------------------------------------------------------------------
 
-    $("#show_water_oc").click(function(event) {
-      event.preventDefault();
-      if (lMap.hasLayer(occurrence)) { //only for terrestrial ecoregions
-            $('html,body').animate({
-                scrollTop: $('#breadcrumb').css('top')
-            }, 100, function() {
-                $('html, body').animate({
-                    scrollTop: 0
-                }, 100);
-            });
-        lMap.removeLayer(occurrence);
-        $( "#water_eccurence_legend" ).hide();
+$("#show_water_oc").click(function(event) {
+  event.preventDefault();
+  if (lMap.hasLayer(occurrence)) {
+        $('html,body').animate({
+            scrollTop: $('#breadcrumb').css('top')
+        }, 100, function() {
+            $('html, body').animate({
+                scrollTop: 0
+            }, 100);
+        });
+    lMap.removeLayer(occurrence);
+    $( "#water_eccurence_legend" ).hide();
 
+  } else {
+    lMap.addLayer(occurrence);
+    lMap.removeLayer(transitions);
+    lMap.removeLayer(change);
+   $( "#water_eccurence_legend" ).show();
+   $( "#water_change_legend" ).hide();
+   $( "#water_transition_legend" ).hide();
 
-      } else {
-        lMap.addLayer(occurrence);
-        lMap.removeLayer(transitions);
-        lMap.removeLayer(change);
-       $( "#water_eccurence_legend" ).show();
-       $( "#water_change_legend" ).hide();
-         $( "#water_transition_legend" ).hide();
+       $('html,body').animate({
+            scrollTop: $('#breadcrumb').css('top')
+        }, 100, function() {
+            $('html, body').animate({
+                scrollTop: 0
+            }, 100);
+        });
+    }
+});
 
+//--------------------------------------------------------------------------------------------------------
+// Show Surface Water Transition Layers
+//--------------------------------------------------------------------------------------------------------
 
+$("#show_water_tr").click(function(event) {
+  event.preventDefault();
+  if (lMap.hasLayer(transitions)) {
+        $('html,body').animate({
+            scrollTop: $('#breadcrumb').css('top')
+        }, 100, function() {
+            $('html, body').animate({
+                scrollTop: 0
+            }, 100);
+        });
+    lMap.removeLayer(transitions);
+      $( "#water_transition_legend" ).hide();
 
+  } else {
+    lMap.addLayer(transitions);
+    lMap.removeLayer(occurrence);
+    lMap.removeLayer(change);
+    $( "#water_transition_legend" ).show();
+    $( "#water_change_legend" ).hide();
+    $( "#water_eccurence_legend" ).hide();
 
         $('html,body').animate({
             scrollTop: $('#breadcrumb').css('top')
@@ -2558,34 +2125,33 @@ $( "#show_water_oc" ).addClass( "hidden-print1" );
                 scrollTop: 0
             }, 100);
         });
-      }
-    });
+    }
+});
 
+//--------------------------------------------------------------------------------------------------------
+// Show Surface Water Transition Layers
+//--------------------------------------------------------------------------------------------------------
 
-    $("#show_water_tr").click(function(event) {
-      event.preventDefault();
-      if (lMap.hasLayer(transitions)) { //only for terrestrial ecoregions
-            $('html,body').animate({
-                scrollTop: $('#breadcrumb').css('top')
-            }, 100, function() {
-                $('html, body').animate({
-                    scrollTop: 0
-                }, 100);
-            });
-        lMap.removeLayer(transitions);
-          $( "#water_transition_legend" ).hide();
+$("#show_water_ch").click(function(event) {
+  event.preventDefault();
+  if (lMap.hasLayer(change)) {
+        $('html,body').animate({
+            scrollTop: $('#breadcrumb').css('top')
+        }, 100, function() {
+            $('html, body').animate({
+                scrollTop: 0
+            }, 100);
+        });
+    lMap.removeLayer(change);
+    $( "#water_change_legend" ).hide();
 
-
-
-
-      } else {
-        lMap.addLayer(transitions);
-        lMap.removeLayer(occurrence);
-        lMap.removeLayer(change);
-        $( "#water_transition_legend" ).show();
-        $( "#water_change_legend" ).hide();
-        $( "#water_eccurence_legend" ).hide();
-
+  } else {
+    lMap.addLayer(change);
+    lMap.removeLayer(occurrence);
+    lMap.removeLayer(transitions);
+    $( "#water_change_legend" ).show();
+    $( "#water_eccurence_legend" ).hide();
+    $( "#water_transition_legend" ).hide();
 
         $('html,body').animate({
             scrollTop: $('#breadcrumb').css('top')
@@ -2594,43 +2160,1364 @@ $( "#show_water_oc" ).addClass( "hidden-print1" );
                 scrollTop: 0
             }, 100);
         });
-      }
-    });
-
-    $("#show_water_ch").click(function(event) {
-      event.preventDefault();
-      if (lMap.hasLayer(change)) {
-            $('html,body').animate({
-                scrollTop: $('#breadcrumb').css('top')
-            }, 100, function() {
-                $('html, body').animate({
-                    scrollTop: 0
-                }, 100);
-            });
-        lMap.removeLayer(change);
-        $( "#water_change_legend" ).hide();
+    }
+});
 
 
 
-      } else {
-        lMap.addLayer(change);
-        lMap.removeLayer(occurrence);
-        lMap.removeLayer(transitions);
-        $( "#water_change_legend" ).show();
-        $( "#water_eccurence_legend" ).hide();
-        $( "#water_transition_legend" ).hide();
-
-        $('html,body').animate({
-            scrollTop: $('#breadcrumb').css('top')
-        }, 100, function() {
-            $('html, body').animate({
-                scrollTop: 0
-            }, 100);
-        });
-      }
-    });
 
 
-// END OF MAIN FUNCTION
-})
+
+// toogle Average Climate
+$('#averageClimate div p').append($("<i class='fa fa-toggle-off'></i>"));
+$(document).ready(function(e) {
+  $('#averageClimate').click(function() {
+  if ($('#averageClimate div p').css('background-color')==="rgb(255, 255, 255)") {
+      $('#clima_chart_wdpa').show();
+      $('#MonthlyClimateAverage').show();
+      $('#averageClimate div p').attr('style', 'background-color: rgb(234, 234, 234)');
+      $('#averageClimate div p img').attr('style', 'filter: grayscale(0%)');
+      $('#averageClimate div p').children("i").remove();
+      $('#averageClimate div p').append($("<i class='fa fa-toggle-on'></i>"));
+  } else{
+      $('#clima_chart_wdpa').hide();
+      $('#MonthlyClimateAverage').hide();
+      $('#averageClimate div p img').attr('style', 'filter: grayscale(100%)');
+      $('#averageClimate div p').attr('style', 'background-color: rgb(255, 255, 255)');
+      $('#averageClimate div p').children("i").remove();
+      $('#averageClimate div p').append($("<i class='fa fa-toggle-off'></i>"));
+    }
+  });
+});
+// toogle Average Profile
+$('#avgprofile div p').append($("<i class='fa fa-toggle-off'></i>"));
+$(document).ready(function(e) {
+  $('#avgprofile').click(function() {
+  if ($('#avgprofile div p').css('background-color')==="rgb(255, 255, 255)") {
+      $('#elevation_tab').show();
+      $('#ElevationProfile').show();
+      $('.export_elevation').show();
+      $('#elevation_chart_wdpa').show();
+      $('#avgprofile div p img').attr('style', 'filter: grayscale(0%)');
+      $('#avgprofile div p').attr('style', 'background-color: rgb(234, 234, 234)');
+      $('#avgprofile div p').children("i").remove();
+      $('#avgprofile div p').append($("<i class='fa fa-toggle-on'></i>"));
+
+  } else{
+      $('#elevation_tab').hide();
+      $('.export_elevation').hide();
+      $('#ElevationProfile').hide();
+      $('#elevation_chart_wdpa').hide();
+      $('#avgprofile div p img').attr('style', 'filter: grayscale(100%)');
+      $('#avgprofile div p').attr('style', 'background-color: rgb(255, 255, 255)');
+      $('#avgprofile div p').children("i").remove();
+      $('#avgprofile div p').append($("<i class='fa fa-toggle-off'></i>"));
+    }
+  });
+});
+// toogle Average Water
+$('#avgclitit div p').append($("<i class='fa fa-toggle-off'></i>"));
+$(document).ready(function(e) {
+  $('#avgclitit').click(function() {
+  if ($('#avgclitit div p').css('background-color')==="rgb(255, 255, 255)") {
+      $('#water_per_chart_wdpa').show();
+      $('#GlobalInlandSurfaceWaterStatistics').show();
+      $('#avgclitit div p img').attr('style', 'filter: grayscale(0%)');
+      $('#water_tab').show();
+      $('#show_water_oc').show();
+      $('#show_water_ch').show();
+      $('#show_water_tr').show();
+      $('#avgclitit div p').attr('style', 'background-color: rgb(234, 234, 234)');
+      $('#avgclitit div p').children("i").remove();
+      $('#avgclitit div p').append($("<i class='fa fa-toggle-on'></i>"));
+
+  } else{
+      $('#water_per_chart_wdpa').hide();
+      $('#water_tab').hide();
+      $('#GlobalInlandSurfaceWaterStatistics').hide();
+      $('#avgclitit div p img').attr('style', 'filter: grayscale(100%)');
+      $('#show_water_oc').hide();
+      $('#show_water_ch').hide();
+      $('#show_water_tr').hide();
+      $('#avgclitit div p').attr('style', 'background-color: rgb(255, 255, 255)');
+      $('#avgclitit div p').children("i").remove();
+      $('#avgclitit div p').append($("<i class='fa fa-toggle-off'></i>"));
+    }
+  });
+});
+// toogle Average Land Cover
+$('.showlc2000graph').hide();
+$('.showlc2005graph').hide();
+$('#landCoverMain div p').append($("<i class='fa fa-toggle-off'></i>"));
+$(document).ready(function(e) {
+  $('#landCoverMain').click(function() {
+  if ($('#landCoverMain div p').css('background-color')==="rgb(255, 255, 255)") {
+      $('#lctitle2000').show();
+      //$('#LandCoverStatistics').show();
+      $('#landCoverMain div p img').attr('style', 'filter: grayscale(0%)');
+      $('#YearButton').show();
+      $('#lcc_div').show();
+      $('#landCoverMain div p').attr('style', 'background-color: rgb(234, 234, 234)');
+      $('#landCoverMain div p').children("i").remove();
+      $('#landCoverMain div p').append($("<i class='fa fa-toggle-on'></i>"));
+
+  } else{
+      $('#YearButton').hide();
+      $('#lctitle2000').hide();
+      $('#landCoverMain div p img').attr('style', 'filter: grayscale(100%)');
+      $('#lctitle2005').hide();
+      $('#LandCoverStatistics').hide();
+      $('#lcc_div').hide();
+      $('#TypeButton').hide();
+      $('#LandCoverMainGraphs').hide();
+      $('#LandCoverMainTabses').hide();
+      $('#landCoverMain div p').attr('style', 'background-color: rgb(255, 255, 255)');
+      $('#landCoverMain div p').children("i").remove();
+      $('#landCoverMain div p').append($("<i class='fa fa-toggle-off'></i>"));
+    }
+  });
+});
+
+// toogle Ecoregion
+$('#showecomap1').hide();
+$('#ecoregionprofile div p').append($("<i class='fa fa-toggle-off'></i>"));
+$(document).ready(function(e) {
+  $('#ecoregionprofile').click(function() {
+  if ($('#ecoregionprofile div p').css('background-color')==="rgb(255, 255, 255)") {
+      $('#showecomap1').show();
+      $('#EcoregionscoveredbytheProtectedArea').show();
+      $('#ecoregionprofile div p img').attr('style', 'filter: grayscale(0%)');
+      $('#eco_list_tab').show();
+      $('#ecoregionprofile div p').attr('style', 'background-color: rgb(234, 234, 234)');
+      $('#ecoregionprofile div p').children("i").remove();
+      $('#ecoregionprofile div p').append($("<i class='fa fa-toggle-on'></i>"));
+
+  } else{
+      $('#showecomap1').hide();
+      $('#eco_list_tab').hide();
+      $('#EcoregionscoveredbytheProtectedArea').hide();
+      $('.ecobutt').hide();
+      $('#ecoregionprofile div p img').attr('style', 'filter: grayscale(100%)');
+      $('#ecoregionprofile div p').attr('style', 'background-color: rgb(255, 255, 255)');
+      $('#ecoregionprofile div p').children("i").remove();
+      $('#ecoregionprofile div p').append($("<i class='fa fa-toggle-off'></i>"));
+    }
+  });
+});
+// toogle Species Summary Data
+$('#speciessummary div p').append($("<i class='fa fa-toggle-off'></i>"));
+$(document).ready(function(e) {
+  $('#speciessummary').click(function() {
+  if ($('#speciessummary div p').css('background-color')==="rgb(255, 255, 255)") {
+      $('#spider_chart_wdpa_species').show();
+      $('#SpeciesSummaryData').show();
+      $('#species_tab').show();
+      $('.export_species_tab ').show();
+      $('#speciessummary div p img').attr('style', 'filter: grayscale(0%)');
+      $('#speciessummary div p').attr('style', 'background-color: rgb(234, 234, 234)');
+      $('#speciessummary div p').children("i").remove();
+      $('#speciessummary div p').append($("<i class='fa fa-toggle-on'></i>"));
+
+  } else{
+      $('#spider_chart_wdpa_species').hide();
+      $('#species_tab').hide();
+      $('#SpeciesSummaryData').hide();
+      $('.export_species_tab ').hide();
+      $('#speciessummary div p img').attr('style', 'filter: grayscale(100%)');
+      $('#speciessummary div p').attr('style', 'background-color: rgb(255, 255, 255)');
+      $('#speciessummary div p').children("i").remove();
+      $('#speciessummary div p').append($("<i class='fa fa-toggle-off'></i>"));
+    }
+  });
+});
+// toogle Species Summary Data list
+$('#specieslisttitle div p').append($("<i class='fa fa-toggle-off'></i>"));
+$(document).ready(function(e) {
+  $('#specieslisttitle').click(function() {
+  if ($('#specieslisttitle div p').css('background-color')==="rgb(255, 255, 255)") {
+      $('#sp_list_tab_wrapper').show();
+      $('#sp_list_tab').show();
+      $('#SpeciesList').show();
+      $('#specieslisttitle div p img').attr('style', 'filter: grayscale(0%)');
+      $('.export_species_list_tab ').attr('style', 'display: block');
+      $('#specieslisttitle div p').attr('style', 'background-color: rgb(234, 234, 234)');
+      $('#specieslisttitle div p').children("i").remove();
+      $('#specieslisttitle div p').append($("<i class='fa fa-toggle-on'></i>"));
+
+  } else{
+      $('#sp_list_tab_wrapper').hide();
+      $('.export_species_list_tab ').hide();
+      $('#sp_list_tab').hide();
+      $('#SpeciesList').hide()
+      $('#specieslisttitle div p img').attr('style', 'filter: grayscale(100%)');
+      $('#specieslisttitle div p').attr('style', 'background-color: rgb(255, 255, 255)');
+      $('#specieslisttitle div p').children("i").remove();
+      $('#specieslisttitle div p').append($("<i class='fa fa-toggle-off'></i>"));
+    }
+  });
+});
+
+// toogle pressure summary
+$('#threatssummary div p').append($("<i class='fa fa-toggle-off'></i>"));
+$(document).ready(function(e) {
+  $('#threatssummary').click(function() {
+  if ($('#threatssummary div p').css('background-color')==="rgb(255, 255, 255)") {
+      $('#spider_chart_wdpa_threats').show();
+      $('#ProtectedAreaThreatsSummary').show();
+      $('#threatssummary div p img').attr('style', 'filter: grayscale(0%)');
+      $('#threatssummary div p').attr('style', 'background-color: rgb(234, 234, 234)');
+      $('#threatssummary div p').children("i").remove();
+      $('#threatssummary div p').append($("<i class='fa fa-toggle-on'></i>"));
+
+  } else{
+      $('#spider_chart_wdpa_threats').hide();
+      $('#ProtectedAreaThreatsSummary').hide();
+      $('#threatssummary div p img').attr('style', 'filter: grayscale(100%)');
+      $('#threatssummary div p').attr('style', 'background-color: rgb(255, 255, 255)');
+      $('#threatssummary div p').children("i").remove();
+      $('#threatssummary div p').append($("<i class='fa fa-toggle-off'></i>"));
+    }
+  });
+});
+// toogle pressure DETAILED
+$('#threatssummary2 div p').append($("<i class='fa fa-toggle-off'></i>"));
+$(document).ready(function(e) {
+  $('#threatssummary2').click(function() {
+  if ($('#threatssummary2 div p').css('background-color')==="rgb(255, 255, 255)") {
+      $('.tabs-style-iconbox').show();
+      $('#ProtectedAreaPressureStatistics').show();
+      $('#threatssummary2 div p img').attr('style', 'filter: grayscale(0%)');
+      $('#threatssummary2 div p').attr('style', 'background-color: rgb(234, 234, 234)');
+      $('#threatssummary2 div p').children("i").remove();
+      $('#threatssummary2 div p').append($("<i class='fa fa-toggle-on'></i>"));
+
+  } else{
+      $('.tabs-style-iconbox').hide();
+      $('#country-pressure-chart-ppi').hide();
+      $('#ProtectedAreaPressureStatistics').hide();
+      $('#country-pressure-chart-ppi_change').hide()
+      $('#country-pressure-chart-roads_pressure').hide()
+      $('#country-pressure-chart-roads_in').hide()
+      $('#country-pressure-chart-ap').hide()
+      $('#threatssummary2 div p img').attr('style', 'filter: grayscale(100%)');
+      $('#threatssummary2 div p').attr('style', 'background-color: rgb(255, 255, 255)');
+      $('#threatssummary2 div p').children("i").remove();
+      $('#threatssummary2 div p').append($("<i class='fa fa-toggle-off'></i>"));
+    }
+  });
+});
+
+
+
+
+
+//-----------------------------------------------------------------------------
+// landcover CHARTS
+//-----------------------------------------------------------------------------
+setTimeout(function(){
+jQuery(document).ready(function($) {
+   var wdoa_id_land_cover_all = $('.wdpa-id').text();
+   var DOPA_REST_URL = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/';
+   var serviceNames = {
+   '1995_1':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=1995&agg=1',
+     indicatorvalue: '1995_1',
+     title:'Land Cover 1995 level 1',
+     ytitle:'km2'
+   },
+   '1995_2':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=1995&agg=2',
+     indicatorvalue: '1995_2',
+     title:'Land Cover 1995 level 2',
+     ytitle:'km2'
+   },
+   '1995_3':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=1995&agg=3',
+     indicatorvalue: '2000_3',
+     title:'Land Cover 1995 level 3',
+     ytitle:'km2'
+   },
+   '2000_1':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2000&agg=1',
+     indicatorvalue: '2000_1',
+     title:'Land Cover 2000 level 1',
+     ytitle:'km2'
+   },
+   '2000_2':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2000&agg=2',
+     indicatorvalue: '2000_2',
+     title:'Land Cover 2000 level 2',
+     ytitle:'km2'
+   },
+   '2000_3':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2000&agg=3',
+     indicatorvalue: '2000_3',
+     title:'Land Cover 2000 level 3',
+     ytitle:'km2'
+   },
+   '2005_1':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2005&agg=1',
+     indicatorvalue: '2005_1',
+     title:'Land Cover 2005 level 1',
+     ytitle:'km2'
+   },
+   '2005_2':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2005&agg=2',
+     indicatorvalue: '2005_2',
+     title:'Land Cover 2005 level 2',
+     ytitle:'km2'
+   },
+   '2005_3':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2000&agg=3',
+     indicatorvalue: '2000_3',
+     title:'Land Cover 2005 level 3',
+     ytitle:'km2'
+   },
+   '2010_1':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2010&agg=1',
+     indicatorvalue: '2010_1',
+     title:'Land Cover 2010 level 1',
+     ytitle:'km2'
+   },
+   '2010_2':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2010&agg=2',
+     indicatorvalue: '2010_2',
+     title:'Land Cover 2010 level 2',
+     ytitle:'km2'
+   },
+   '2010_3':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2010&agg=3',
+     indicatorvalue: '2010_3',
+     title:'Land Cover 2010 level 3',
+     ytitle:'km2'
+   },
+   '2015_1':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2015&agg=1',
+     indicatorvalue: '2015_1',
+     title:'Land Cover 2015 level 1',
+     ytitle:'km2'
+   },
+   '2015_2':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2015&agg=2',
+     indicatorvalue: '2015_2',
+     title:'Land Cover 2015 level 2',
+     ytitle:'km2'
+   },
+   '2015_3':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2015&agg=3',
+     indicatorvalue: '2015_3',
+     title:'Land Cover 2015 level 3',
+     ytitle:'km2'
+   }
+};
+ // var present_pressure_url_ap;
+ // var present_pressure_url_ppi_change;
+ // var present_pressure_url_ppi;
+
+ function create_chart(param)
+ {
+   var url=DOPA_REST_URL+serviceNames[param].endpoint;
+   console.log(url);
+   return $.ajax({
+     url: url,
+     dataType: 'json',
+     success: function(d) {
+       if (d.metadata.recordCount == 0) {
+         jQuery('#lc_graph_wdpa_'+param);
+
+       } else {
+
+
+         var obj_array = [];
+
+
+         $(d.records).each(function(i, data) {
+
+                 obj_array.push({'name': data.label,'value': data.area, 'color': data.color})
+
+         });
+
+
+
+         $('#lc_graph_wdpa_'+param).highcharts({
+
+             chart: {
+                 type: 'treemap',
+             },
+             title: {
+                 text: null
+             },
+             subtitle: {
+                  text: serviceNames[param].title,
+             },
+             credits: {
+                 enabled: true,
+                 text: 'DOPA Services V.2 , WDPA Jan 2017',
+                 href: 'http://dopa.jrc.ec.europa.eu'
+             },
+
+             dataLabels: {
+                 enabled: false,
+             },
+             tooltip: {
+                  headerFormat: '<span style="font-size:12px">{series.value}</span><br>',
+                  pointFormat: '<span>{point.name}</span> <b>{point.value}</b> (km2) <br/>'
+             },
+             plotOptions: {
+                   treemap: {
+                             layoutAlgorithm: 'squarified',
+                             fillOpacity: 0.3,
+                             dataLabels: {enabled: false},
+                             borderWidth: 3,
+                             borderColor: '#fff',
+                             borderOpacity: 0.5
+                             }
+                         },
+
+            series:  [{data: obj_array}]
+
+       });
+
+
+
+       }
+     },
+     error: function() {
+       //jQuery('#country-pressure-chart.'+param);
+
+     }
+   });
+ }
+ create_chart('1995_1'),
+ create_chart('1995_2'),
+ create_chart('1995_3'),
+ create_chart('2000_1'),
+ create_chart('2000_2'),
+ create_chart('2000_3'),
+ create_chart('2005_1'),
+ create_chart('2005_2'),
+ create_chart('2005_3'),
+ create_chart('2010_1'),
+ create_chart('2010_2'),
+ create_chart('2010_3'),
+ create_chart('2015_1'),
+ create_chart('2015_2'),
+ create_chart('2015_3')
+});
+}, 2000);
+
+
+
+
+
+
+
+
+
+
+
+//-----------------------------------------------------------------------------
+// landcover Table
+//-----------------------------------------------------------------------------
+setTimeout(function(){
+jQuery(document).ready(function($) {
+   var wdoa_id_land_cover_all = $('.wdpa-id').text();
+   var DOPA_REST_URL = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/';
+   var serviceNames = {
+   '1995_1':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=1995&agg=1',
+     indicatorvalue: '1995_1',
+     title:'Land Cover 1995 level 1',
+     ytitle:'km2'
+   },
+   '1995_2':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=1995&agg=2',
+     indicatorvalue: '1995_2',
+     title:'Land Cover 1995 level 2',
+     ytitle:'km2'
+   },
+   '1995_3':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=1995&agg=3',
+     indicatorvalue: '2000_3',
+     title:'Land Cover 1995 level 3',
+     ytitle:'km2'
+   },
+   '2000_1':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2000&agg=1',
+     indicatorvalue: '2000_1',
+     title:'Land Cover 2000 level 1',
+     ytitle:'km2'
+   },
+   '2000_2':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2000&agg=2',
+     indicatorvalue: '2000_2',
+     title:'Land Cover 2000 level 2',
+     ytitle:'km2'
+   },
+   '2000_3':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2000&agg=3',
+     indicatorvalue: '2000_3',
+     title:'Land Cover 2000 level 3',
+     ytitle:'km2'
+   },
+   '2005_1':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2005&agg=1',
+     indicatorvalue: '2005_1',
+     title:'Land Cover 2005 level 1',
+     ytitle:'km2'
+   },
+   '2005_2':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2005&agg=2',
+     indicatorvalue: '2005_2',
+     title:'Land Cover 2005 level 2',
+     ytitle:'km2'
+   },
+   '2005_3':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2000&agg=3',
+     indicatorvalue: '2000_3',
+     title:'Land Cover 2005 level 3',
+     ytitle:'km2'
+   },
+   '2010_1':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2010&agg=1',
+     indicatorvalue: '2010_1',
+     title:'Land Cover 2010 level 1',
+     ytitle:'km2'
+   },
+   '2010_2':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2010&agg=2',
+     indicatorvalue: '2010_2',
+     title:'Land Cover 2010 level 2',
+     ytitle:'km2'
+   },
+   '2010_3':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2010&agg=3',
+     indicatorvalue: '2010_3',
+     title:'Land Cover 2010 level 3',
+     ytitle:'km2'
+   },
+   '2015_1':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2015&agg=1',
+     indicatorvalue: '2015_1',
+     title:'Land Cover 2015 level 1',
+     ytitle:'km2'
+   },
+   '2015_2':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2015&agg=2',
+     indicatorvalue: '2015_2',
+     title:'Land Cover 2015 level 2',
+     ytitle:'km2'
+   },
+   '2015_3':{
+     endpoint: 'landcover/get_wdpa_lc_esa?wdpaid='+wdoa_id_land_cover_all+'&year=2015&agg=3',
+     indicatorvalue: '2015_3',
+     title:'Land Cover 2015 level 3',
+     ytitle:'km2'
+   }
+};
+ // var present_pressure_url_ap;
+ // var present_pressure_url_ppi_change;
+ // var present_pressure_url_ppi;
+
+ function create_tab(param)
+ {
+   var url=DOPA_REST_URL+serviceNames[param].endpoint;
+   console.log(url);
+   return $.ajax({
+     url: url,
+     dataType: 'json',
+     success: function(d) {
+       if (d.metadata.recordCount == 0) {
+         jQuery('#lc_tab_wdpa_'+param);
+
+       } else {
+
+          var label = [];
+          var area = [];
+          var percent = [];
+          var color = [];
+          var fields = {'label':"",'percent':"",'area':"",'color':""};
+
+         $(d.records).each(function(i, data) {
+
+
+
+         $('#lc_tab_wdpa_'+param).append('<tr id="'+i.toString()+'" class="lc2005tr"></tr>');
+
+         for (var prop in fields){
+             if(prop == 'label'){
+                 label.push(data[prop]);
+                 $('#lc_tab_wdpa_'+param+' tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
+             }
+             else if(prop == 'percent'){
+                 percent.push(data[prop]);
+                 $('#lc_tab_wdpa_'+param+' tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
+             }
+             else if(prop == 'area'){
+                 area.push(data[prop]);
+                 $('#lc_tab_wdpa_'+param+' tbody tr[id="'+i+'"]').append('<td>'+data[prop]+'</td>');
+             }
+             else if(prop == 'color'){
+                 color.push(data[prop]);
+                 $('#lc_tab_wdpa_'+param+' tbody tr[id="'+i+'"]').append('<td class="lc2005transpa" style="background-color:'+data[prop]+'!important;"></td>');
+             }
+
+             else {
+               }
+         }
+     });
+
+
+
+
+
+       }
+     },
+     error: function() {
+       //jQuery('#country-pressure-chart.'+param);
+
+     }
+   });
+ }
+ create_tab('1995_1'),
+ create_tab('1995_2'),
+ create_tab('1995_3'),
+ create_tab('2000_1'),
+ create_tab('2000_2'),
+ create_tab('2000_3'),
+ create_tab('2005_1'),
+ create_tab('2005_2'),
+ create_tab('2005_3'),
+ create_tab('2010_1'),
+ create_tab('2010_2'),
+ create_tab('2010_3'),
+ create_tab('2015_1'),
+ create_tab('2015_2'),
+ create_tab('2015_3')
+});
+}, 1900);
+
+
+
+
+
+
+
+
+$(document).ready(function(e) {
+  $('.show_lc_but_wdpa_1').click(function() {
+     $('a.show_lc_but_wdpa_1').addClass('active')
+     $('a.show_lc_but_wdpa_2').removeClass('active')
+     $('a.show_lc_but_wdpa_3').removeClass('active')
+       $('#TypeButton').show();
+      $('.show_lc_but_wdpa_1995_1').show();
+      $('.show_lc_but_wdpa_1995_2').hide();
+      $('.show_lc_but_wdpa_1995_3').hide();
+      $('.show_lc_but_wdpa_2000_1').show();
+      $('.show_lc_but_wdpa_2000_2').hide();
+      $('.show_lc_but_wdpa_2000_3').hide();
+      $('.show_lc_but_wdpa_2005_1').show();
+      $('.show_lc_but_wdpa_2005_2').hide();
+      $('.show_lc_but_wdpa_2005_3').hide();
+      $('.show_lc_but_wdpa_2010_1').show();
+      $('.show_lc_but_wdpa_2010_2').hide();
+      $('.show_lc_but_wdpa_2010_3').hide();
+      $('.show_lc_but_wdpa_2015_1').show();
+      $('.show_lc_but_wdpa_2015_2').hide();
+      $('.show_lc_but_wdpa_2015_3').hide();
+  })
+});
+$(document).ready(function(e) {
+  $('.show_lc_but_wdpa_2').click(function() {
+    $('a.show_lc_but_wdpa_2').addClass('active')
+    $('a.show_lc_but_wdpa_3').removeClass('active')
+    $('a.show_lc_but_wdpa_1').removeClass('active')
+    $('#TypeButton').show();
+      $('.show_lc_but_wdpa_1995_1').hide();
+      $('.show_lc_but_wdpa_1995_2').show();
+      $('.show_lc_but_wdpa_1995_3').hide();
+      $('.show_lc_but_wdpa_2000_1').hide();
+      $('.show_lc_but_wdpa_2000_2').show();
+      $('.show_lc_but_wdpa_2000_3').hide();
+      $('.show_lc_but_wdpa_2005_1').hide();
+      $('.show_lc_but_wdpa_2005_2').show();
+      $('.show_lc_but_wdpa_2005_3').hide();
+      $('.show_lc_but_wdpa_2010_1').hide();
+      $('.show_lc_but_wdpa_2010_2').show();
+      $('.show_lc_but_wdpa_2010_3').hide();
+      $('.show_lc_but_wdpa_2015_1').hide();
+      $('.show_lc_but_wdpa_2015_2').show();
+      $('.show_lc_but_wdpa_2015_3').hide();
+  })
+});
+$(document).ready(function(e) {
+  $('.show_lc_but_wdpa_3').click(function() {
+    $('a.show_lc_but_wdpa_3').addClass('active')
+    $('a.show_lc_but_wdpa_2').removeClass('active')
+    $('a.show_lc_but_wdpa_1').removeClass('active')
+    $('#TypeButton').show();
+      $('.show_lc_but_wdpa_1995_1').hide();
+      $('.show_lc_but_wdpa_1995_2').hide();
+      $('.show_lc_but_wdpa_1995_3').show();
+      $('.show_lc_but_wdpa_2000_1').hide();
+      $('.show_lc_but_wdpa_2000_2').hide();
+      $('.show_lc_but_wdpa_2000_3').show();
+      $('.show_lc_but_wdpa_2005_1').hide();
+      $('.show_lc_but_wdpa_2005_2').hide();
+      $('.show_lc_but_wdpa_2005_3').show();
+      $('.show_lc_but_wdpa_2010_1').hide();
+      $('.show_lc_but_wdpa_2010_2').hide();
+      $('.show_lc_but_wdpa_2010_3').show();
+      $('.show_lc_but_wdpa_2015_1').hide();
+      $('.show_lc_but_wdpa_2015_2').hide();
+      $('.show_lc_but_wdpa_2015_3').show();
+  })
+});
+
+// 1995
+$(document).ready(function(e) {
+  $('.show_lc_but_wdpa_1995_1').click(function() {
+    $('#LandCoverMainGraphs').show();
+    $('#LandCoverMainTabses').show();
+    $('a.show_lc_but_wdpa_1995_1').addClass('active')
+    $('a.show_lc_but_wdpa_2010_1').removeClass('active')
+    $('a.show_lc_but_wdpa_2005_1').removeClass('active')
+    $('a.show_lc_but_wdpa_2000_1').removeClass('active')
+    $('a.show_lc_but_wdpa_2015_1').removeClass('active')
+      $('#lc_tab_wdpa_1995_1').show();
+      $('#lc_tab_wdpa_1995_2').hide();
+      $('#lc_tab_wdpa_1995_3').hide();
+      $('#lc_tab_wdpa_2000_1').hide();
+      $('#lc_tab_wdpa_2000_2').hide();
+      $('#lc_tab_wdpa_2000_3').hide();
+      $('#lc_tab_wdpa_2005_1').hide();
+      $('#lc_tab_wdpa_2005_2').hide();
+      $('#lc_tab_wdpa_2005_3').hide();
+      $('#lc_tab_wdpa_2010_1').hide();
+      $('#lc_tab_wdpa_2010_2').hide();
+      $('#lc_tab_wdpa_2010_3').hide();
+      $('#lc_tab_wdpa_2015_1').hide();
+      $('#lc_tab_wdpa_2015_2').hide();
+      $('#lc_tab_wdpa_2015_3').hide();
+
+      $('#lc_graph_wdpa_1995_1').show();
+      $('#lc_graph_wdpa_1995_2').hide();
+      $('#lc_graph_wdpa_1995_3').hide();
+      $('#lc_graph_wdpa_2000_1').hide();
+      $('#lc_graph_wdpa_2000_2').hide();
+      $('#lc_graph_wdpa_2000_3').hide();
+      $('#lc_graph_wdpa_2005_1').hide();
+      $('#lc_graph_wdpa_2005_2').hide();
+      $('#lc_graph_wdpa_2005_3').hide();
+      $('#lc_graph_wdpa_2010_1').hide();
+      $('#lc_graph_wdpa_2010_2').hide();
+      $('#lc_graph_wdpa_2010_3').hide();
+      $('#lc_graph_wdpa_2015_1').hide();
+      $('#lc_graph_wdpa_2015_2').hide();
+      $('#lc_graph_wdpa_2015_3').hide();
+  })
+
+  $('.show_lc_but_wdpa_1995_2').click(function() {
+    $('#LandCoverMainGraphs').show();
+    $('#LandCoverMainTabses').show();
+    $('a.show_lc_but_wdpa_1995_2').addClass('active')
+    $('a.show_lc_but_wdpa_2010_2').removeClass('active')
+    $('a.show_lc_but_wdpa_2005_2').removeClass('active')
+    $('a.show_lc_but_wdpa_2000_2').removeClass('active')
+    $('a.show_lc_but_wdpa_2015_2').removeClass('active')
+    $('#lc_tab_wdpa_1995_1').hide();
+    $('#lc_tab_wdpa_1995_2').show();
+    $('#lc_tab_wdpa_1995_3').hide();
+    $('#lc_tab_wdpa_2000_1').hide();
+    $('#lc_tab_wdpa_2000_2').hide();
+    $('#lc_tab_wdpa_2000_3').hide();
+    $('#lc_tab_wdpa_2005_1').hide();
+    $('#lc_tab_wdpa_2005_2').hide();
+    $('#lc_tab_wdpa_2005_3').hide();
+    $('#lc_tab_wdpa_2010_1').hide();
+    $('#lc_tab_wdpa_2010_2').hide();
+    $('#lc_tab_wdpa_2010_3').hide();
+    $('#lc_tab_wdpa_2015_1').hide();
+    $('#lc_tab_wdpa_2015_2').hide();
+    $('#lc_tab_wdpa_2015_3').hide();
+
+    $('#lc_graph_wdpa_1995_1').hide();
+    $('#lc_graph_wdpa_1995_2').show();
+    $('#lc_graph_wdpa_1995_3').hide();
+    $('#lc_graph_wdpa_2000_1').hide();
+    $('#lc_graph_wdpa_2000_2').hide();
+    $('#lc_graph_wdpa_2000_3').hide();
+    $('#lc_graph_wdpa_2005_1').hide();
+    $('#lc_graph_wdpa_2005_2').hide();
+    $('#lc_graph_wdpa_2005_3').hide();
+    $('#lc_graph_wdpa_2010_1').hide();
+    $('#lc_graph_wdpa_2010_2').hide();
+    $('#lc_graph_wdpa_2010_3').hide();
+    $('#lc_graph_wdpa_2015_1').hide();
+    $('#lc_graph_wdpa_2015_2').hide();
+    $('#lc_graph_wdpa_2015_3').hide();
+  })
+  $('.show_lc_but_wdpa_1995_3').click(function() {
+    $('#LandCoverMainGraphs').show();
+    $('#LandCoverMainTabses').show();
+    $('a.show_lc_but_wdpa_1995_3').addClass('active')
+    $('a.show_lc_but_wdpa_2010_3').removeClass('active')
+    $('a.show_lc_but_wdpa_2005_3').removeClass('active')
+    $('a.show_lc_but_wdpa_2000_3').removeClass('active')
+    $('a.show_lc_but_wdpa_2015_3').removeClass('active')
+    $('#lc_tab_wdpa_1995_1').hide();
+    $('#lc_tab_wdpa_1995_2').hide();
+    $('#lc_tab_wdpa_1995_3').show();
+    $('#lc_tab_wdpa_2000_1').hide();
+    $('#lc_tab_wdpa_2000_2').hide();
+    $('#lc_tab_wdpa_2000_3').hide();
+    $('#lc_tab_wdpa_2005_1').hide();
+    $('#lc_tab_wdpa_2005_2').hide();
+    $('#lc_tab_wdpa_2005_3').hide();
+    $('#lc_tab_wdpa_2010_1').hide();
+    $('#lc_tab_wdpa_2010_2').hide();
+    $('#lc_tab_wdpa_2010_3').hide();
+    $('#lc_tab_wdpa_2015_1').hide();
+    $('#lc_tab_wdpa_2015_2').hide();
+    $('#lc_tab_wdpa_2015_3').hide();
+
+    $('#lc_graph_wdpa_1995_1').hide();
+    $('#lc_graph_wdpa_1995_2').hide();
+    $('#lc_graph_wdpa_1995_3').show();
+    $('#lc_graph_wdpa_2000_1').hide();
+    $('#lc_graph_wdpa_2000_2').hide();
+    $('#lc_graph_wdpa_2000_3').hide();
+    $('#lc_graph_wdpa_2005_1').hide();
+    $('#lc_graph_wdpa_2005_2').hide();
+    $('#lc_graph_wdpa_2005_3').hide();
+    $('#lc_graph_wdpa_2010_1').hide();
+    $('#lc_graph_wdpa_2010_2').hide();
+    $('#lc_graph_wdpa_2010_3').hide();
+    $('#lc_graph_wdpa_2015_1').hide();
+    $('#lc_graph_wdpa_2015_2').hide();
+    $('#lc_graph_wdpa_2015_3').hide();
+  })
+});
+
+// 2000
+$(document).ready(function(e) {
+  $('.show_lc_but_wdpa_2000_1').click(function() {
+    $('#LandCoverMainGraphs').show();
+    $('#LandCoverMainTabses').show();
+    $('a.show_lc_but_wdpa_2000_1').addClass('active')
+    $('a.show_lc_but_wdpa_2010_1').removeClass('active')
+    $('a.show_lc_but_wdpa_2005_1').removeClass('active')
+    $('a.show_lc_but_wdpa_2015_1').removeClass('active')
+    $('a.show_lc_but_wdpa_1995_1').removeClass('active')
+      $('#lc_tab_wdpa_1995_1').hide();
+      $('#lc_tab_wdpa_1995_2').hide();
+      $('#lc_tab_wdpa_1995_3').hide();
+      $('#lc_tab_wdpa_2000_1').show();
+      $('#lc_tab_wdpa_2000_2').hide();
+      $('#lc_tab_wdpa_2000_3').hide();
+      $('#lc_tab_wdpa_2005_1').hide();
+      $('#lc_tab_wdpa_2005_2').hide();
+      $('#lc_tab_wdpa_2005_3').hide();
+      $('#lc_tab_wdpa_2010_1').hide();
+      $('#lc_tab_wdpa_2010_2').hide();
+      $('#lc_tab_wdpa_2010_3').hide();
+      $('#lc_tab_wdpa_2015_1').hide();
+      $('#lc_tab_wdpa_2015_2').hide();
+      $('#lc_tab_wdpa_2015_3').hide();
+
+      $('#lc_graph_wdpa_1995_1').hide();
+      $('#lc_graph_wdpa_1995_2').hide();
+      $('#lc_graph_wdpa_1995_3').hide();
+      $('#lc_graph_wdpa_2000_1').show();
+      $('#lc_graph_wdpa_2000_2').hide();
+      $('#lc_graph_wdpa_2000_3').hide();
+      $('#lc_graph_wdpa_2005_1').hide();
+      $('#lc_graph_wdpa_2005_2').hide();
+      $('#lc_graph_wdpa_2005_3').hide();
+      $('#lc_graph_wdpa_2010_1').hide();
+      $('#lc_graph_wdpa_2010_2').hide();
+      $('#lc_graph_wdpa_2010_3').hide();
+      $('#lc_graph_wdpa_2015_1').hide();
+      $('#lc_graph_wdpa_2015_2').hide();
+      $('#lc_graph_wdpa_2015_3').hide();
+  })
+
+  $('.show_lc_but_wdpa_2000_2').click(function() {
+    $('#LandCoverMainGraphs').show();
+    $('#LandCoverMainTabses').show();
+    $('a.show_lc_but_wdpa_2000_2').addClass('active')
+    $('a.show_lc_but_wdpa_2010_2').removeClass('active')
+    $('a.show_lc_but_wdpa_2005_2').removeClass('active')
+    $('a.show_lc_but_wdpa_2015_2').removeClass('active')
+    $('a.show_lc_but_wdpa_1995_2').removeClass('active')
+    $('#lc_tab_wdpa_1995_1').hide();
+    $('#lc_tab_wdpa_1995_2').hide();
+    $('#lc_tab_wdpa_1995_3').hide();
+    $('#lc_tab_wdpa_2000_1').hide();
+    $('#lc_tab_wdpa_2000_2').show();
+    $('#lc_tab_wdpa_2000_3').hide();
+    $('#lc_tab_wdpa_2005_1').hide();
+    $('#lc_tab_wdpa_2005_2').hide();
+    $('#lc_tab_wdpa_2005_3').hide();
+    $('#lc_tab_wdpa_2010_1').hide();
+    $('#lc_tab_wdpa_2010_2').hide();
+    $('#lc_tab_wdpa_2010_3').hide();
+    $('#lc_tab_wdpa_2015_1').hide();
+    $('#lc_tab_wdpa_2015_2').hide();
+    $('#lc_tab_wdpa_2015_3').hide();
+
+    $('#lc_graph_wdpa_1995_1').hide();
+    $('#lc_graph_wdpa_1995_2').hide();
+    $('#lc_graph_wdpa_1995_3').hide();
+    $('#lc_graph_wdpa_2000_1').hide();
+    $('#lc_graph_wdpa_2000_2').show();
+    $('#lc_graph_wdpa_2000_3').hide();
+    $('#lc_graph_wdpa_2005_1').hide();
+    $('#lc_graph_wdpa_2005_2').hide();
+    $('#lc_graph_wdpa_2005_3').hide();
+    $('#lc_graph_wdpa_2010_1').hide();
+    $('#lc_graph_wdpa_2010_2').hide();
+    $('#lc_graph_wdpa_2010_3').hide();
+    $('#lc_graph_wdpa_2015_1').hide();
+    $('#lc_graph_wdpa_2015_2').hide();
+    $('#lc_graph_wdpa_2015_3').hide();
+  })
+  $('.show_lc_but_wdpa_2000_3').click(function() {
+    $('#LandCoverMainGraphs').show();
+    $('#LandCoverMainTabses').show();
+    $('a.show_lc_but_wdpa_2000_3').addClass('active')
+    $('a.show_lc_but_wdpa_2010_3').removeClass('active')
+    $('a.show_lc_but_wdpa_2005_3').removeClass('active')
+    $('a.show_lc_but_wdpa_2015_3').removeClass('active')
+    $('a.show_lc_but_wdpa_1995_3').removeClass('active')
+    $('#lc_tab_wdpa_1995_1').hide();
+    $('#lc_tab_wdpa_1995_2').hide();
+    $('#lc_tab_wdpa_1995_3').hide();
+    $('#lc_tab_wdpa_2000_1').hide();
+    $('#lc_tab_wdpa_2000_2').hide();
+    $('#lc_tab_wdpa_2000_3').show();
+    $('#lc_tab_wdpa_2005_1').hide();
+    $('#lc_tab_wdpa_2005_2').hide();
+    $('#lc_tab_wdpa_2005_3').hide();
+    $('#lc_tab_wdpa_2010_1').hide();
+    $('#lc_tab_wdpa_2010_2').hide();
+    $('#lc_tab_wdpa_2010_3').hide();
+    $('#lc_tab_wdpa_2015_1').hide();
+    $('#lc_tab_wdpa_2015_2').hide();
+    $('#lc_tab_wdpa_2015_3').hide();
+
+    $('#lc_graph_wdpa_1995_1').hide();
+    $('#lc_graph_wdpa_1995_2').hide();
+    $('#lc_graph_wdpa_1995_3').hide();
+    $('#lc_graph_wdpa_2000_1').hide();
+    $('#lc_graph_wdpa_2000_2').hide();
+    $('#lc_graph_wdpa_2000_3').show();
+    $('#lc_graph_wdpa_2005_1').hide();
+    $('#lc_graph_wdpa_2005_2').hide();
+    $('#lc_graph_wdpa_2005_3').hide();
+    $('#lc_graph_wdpa_2010_1').hide();
+    $('#lc_graph_wdpa_2010_2').hide();
+    $('#lc_graph_wdpa_2010_3').hide();
+    $('#lc_graph_wdpa_2015_1').hide();
+    $('#lc_graph_wdpa_2015_2').hide();
+    $('#lc_graph_wdpa_2015_3').hide();
+  })
+});
+// 2005
+$(document).ready(function(e) {
+  $('.show_lc_but_wdpa_2005_1').click(function() {
+    $('#LandCoverMainGraphs').show();
+    $('#LandCoverMainTabses').show();
+    $('a.show_lc_but_wdpa_2005_1').addClass('active')
+    $('a.show_lc_but_wdpa_2010_1').removeClass('active')
+    $('a.show_lc_but_wdpa_2015_1').removeClass('active')
+    $('a.show_lc_but_wdpa_2000_1').removeClass('active')
+    $('a.show_lc_but_wdpa_1995_1').removeClass('active')
+      $('#lc_tab_wdpa_1995_1').hide();
+      $('#lc_tab_wdpa_1995_2').hide();
+      $('#lc_tab_wdpa_1995_3').hide();
+      $('#lc_tab_wdpa_2000_1').hide();
+      $('#lc_tab_wdpa_2000_2').hide();
+      $('#lc_tab_wdpa_2000_3').hide();
+      $('#lc_tab_wdpa_2005_1').show();
+      $('#lc_tab_wdpa_2005_2').hide();
+      $('#lc_tab_wdpa_2005_3').hide();
+      $('#lc_tab_wdpa_2010_1').hide();
+      $('#lc_tab_wdpa_2010_2').hide();
+      $('#lc_tab_wdpa_2010_3').hide();
+      $('#lc_tab_wdpa_2015_1').hide();
+      $('#lc_tab_wdpa_2015_2').hide();
+      $('#lc_tab_wdpa_2015_3').hide();
+
+      $('#lc_graph_wdpa_1995_1').hide();
+      $('#lc_graph_wdpa_1995_2').hide();
+      $('#lc_graph_wdpa_1995_3').hide();
+      $('#lc_graph_wdpa_2000_1').hide();
+      $('#lc_graph_wdpa_2000_2').hide();
+      $('#lc_graph_wdpa_2000_3').hide();
+      $('#lc_graph_wdpa_2005_1').show();
+      $('#lc_graph_wdpa_2005_2').hide();
+      $('#lc_graph_wdpa_2005_3').hide();
+      $('#lc_graph_wdpa_2010_1').hide();
+      $('#lc_graph_wdpa_2010_2').hide();
+      $('#lc_graph_wdpa_2010_3').hide();
+      $('#lc_graph_wdpa_2015_1').hide();
+      $('#lc_graph_wdpa_2015_2').hide();
+      $('#lc_graph_wdpa_2015_3').hide();
+  })
+
+  $('.show_lc_but_wdpa_2005_2').click(function() {
+    $('#LandCoverMainGraphs').show();
+    $('#LandCoverMainTabses').show();
+    $('a.show_lc_but_wdpa_2005_2').addClass('active')
+    $('a.show_lc_but_wdpa_2010_2').removeClass('active')
+    $('a.show_lc_but_wdpa_2015_2').removeClass('active')
+    $('a.show_lc_but_wdpa_2000_2').removeClass('active')
+    $('a.show_lc_but_wdpa_1995_2').removeClass('active')
+    $('#lc_tab_wdpa_1995_1').hide();
+    $('#lc_tab_wdpa_1995_2').hide();
+    $('#lc_tab_wdpa_1995_3').hide();
+    $('#lc_tab_wdpa_2000_1').hide();
+    $('#lc_tab_wdpa_2000_2').hide();
+    $('#lc_tab_wdpa_2000_3').hide();
+    $('#lc_tab_wdpa_2005_1').hide();
+    $('#lc_tab_wdpa_2005_2').show();
+    $('#lc_tab_wdpa_2005_3').hide();
+    $('#lc_tab_wdpa_2010_1').hide();
+    $('#lc_tab_wdpa_2010_2').hide();
+    $('#lc_tab_wdpa_2010_3').hide();
+    $('#lc_tab_wdpa_2015_1').hide();
+    $('#lc_tab_wdpa_2015_2').hide();
+    $('#lc_tab_wdpa_2015_3').hide();
+
+    $('#lc_graph_wdpa_1995_1').hide();
+    $('#lc_graph_wdpa_1995_2').hide();
+    $('#lc_graph_wdpa_1995_3').hide();
+    $('#lc_graph_wdpa_2000_1').hide();
+    $('#lc_graph_wdpa_2000_2').hide();
+    $('#lc_graph_wdpa_2000_3').hide();
+    $('#lc_graph_wdpa_2005_1').hide();
+    $('#lc_graph_wdpa_2005_2').show();
+    $('#lc_graph_wdpa_2005_3').hide();
+    $('#lc_graph_wdpa_2010_1').hide();
+    $('#lc_graph_wdpa_2010_2').hide();
+    $('#lc_graph_wdpa_2010_3').hide();
+    $('#lc_graph_wdpa_2015_1').hide();
+    $('#lc_graph_wdpa_2015_2').hide();
+    $('#lc_graph_wdpa_2015_3').hide();
+  })
+  $('.show_lc_but_wdpa_2005_3').click(function() {
+    $('#LandCoverMainGraphs').show();
+    $('#LandCoverMainTabses').show();
+    $('a.show_lc_but_wdpa_2005_3').addClass('active')
+    $('a.show_lc_but_wdpa_2010_3').removeClass('active')
+    $('a.show_lc_but_wdpa_2015_3').removeClass('active')
+    $('a.show_lc_but_wdpa_2000_3').removeClass('active')
+    $('a.show_lc_but_wdpa_1995_3').removeClass('active')
+    $('#lc_tab_wdpa_1995_1').hide();
+    $('#lc_tab_wdpa_1995_2').hide();
+    $('#lc_tab_wdpa_1995_3').hide();
+    $('#lc_tab_wdpa_2000_1').hide();
+    $('#lc_tab_wdpa_2000_2').hide();
+    $('#lc_tab_wdpa_2000_3').hide();
+    $('#lc_tab_wdpa_2005_1').hide();
+    $('#lc_tab_wdpa_2005_2').hide();
+    $('#lc_tab_wdpa_2005_3').show();
+    $('#lc_tab_wdpa_2010_1').hide();
+    $('#lc_tab_wdpa_2010_2').hide();
+    $('#lc_tab_wdpa_2010_3').hide();
+    $('#lc_tab_wdpa_2015_1').hide();
+    $('#lc_tab_wdpa_2015_2').hide();
+    $('#lc_tab_wdpa_2015_3').hide();
+
+    $('#lc_graph_wdpa_1995_1').hide();
+    $('#lc_graph_wdpa_1995_2').hide();
+    $('#lc_graph_wdpa_1995_3').hide();
+    $('#lc_graph_wdpa_2000_1').hide();
+    $('#lc_graph_wdpa_2000_2').hide();
+    $('#lc_graph_wdpa_2000_3').hide();
+    $('#lc_graph_wdpa_2005_1').hide();
+    $('#lc_graph_wdpa_2005_2').hide();
+    $('#lc_graph_wdpa_2005_3').show();
+    $('#lc_graph_wdpa_2010_1').hide();
+    $('#lc_graph_wdpa_2010_2').hide();
+    $('#lc_graph_wdpa_2010_3').hide();
+    $('#lc_graph_wdpa_2015_1').hide();
+    $('#lc_graph_wdpa_2015_2').hide();
+    $('#lc_graph_wdpa_2015_3').hide();
+  })
+});
+// 2010
+$(document).ready(function(e) {
+  $('.show_lc_but_wdpa_2010_1').click(function() {
+    $('#LandCoverMainGraphs').show();
+    $('#LandCoverMainTabses').show();
+    $('a.show_lc_but_wdpa_2010_1').addClass('active')
+    $('a.show_lc_but_wdpa_2015_1').removeClass('active')
+    $('a.show_lc_but_wdpa_2005_1').removeClass('active')
+    $('a.show_lc_but_wdpa_2000_1').removeClass('active')
+    $('a.show_lc_but_wdpa_1995_1').removeClass('active')
+      $('#lc_tab_wdpa_1995_1').hide();
+      $('#lc_tab_wdpa_1995_2').hide();
+      $('#lc_tab_wdpa_1995_3').hide();
+      $('#lc_tab_wdpa_2000_1').hide();
+      $('#lc_tab_wdpa_2000_2').hide();
+      $('#lc_tab_wdpa_2000_3').hide();
+      $('#lc_tab_wdpa_2005_1').hide();
+      $('#lc_tab_wdpa_2005_2').hide();
+      $('#lc_tab_wdpa_2005_3').hide();
+      $('#lc_tab_wdpa_2010_1').show();
+      $('#lc_tab_wdpa_2010_2').hide();
+      $('#lc_tab_wdpa_2010_3').hide();
+      $('#lc_tab_wdpa_2015_1').hide();
+      $('#lc_tab_wdpa_2015_2').hide();
+      $('#lc_tab_wdpa_2015_3').hide();
+
+      $('#lc_graph_wdpa_1995_1').hide();
+      $('#lc_graph_wdpa_1995_2').hide();
+      $('#lc_graph_wdpa_1995_3').hide();
+      $('#lc_graph_wdpa_2000_1').hide();
+      $('#lc_graph_wdpa_2000_2').hide();
+      $('#lc_graph_wdpa_2000_3').hide();
+      $('#lc_graph_wdpa_2005_1').hide();
+      $('#lc_graph_wdpa_2005_2').hide();
+      $('#lc_graph_wdpa_2005_3').hide();
+      $('#lc_graph_wdpa_2010_1').show();
+      $('#lc_graph_wdpa_2010_2').hide();
+      $('#lc_graph_wdpa_2010_3').hide();
+      $('#lc_graph_wdpa_2015_1').hide();
+      $('#lc_graph_wdpa_2015_2').hide();
+      $('#lc_graph_wdpa_2015_3').hide();
+  })
+
+  $('.show_lc_but_wdpa_2010_2').click(function() {
+    $('#LandCoverMainGraphs').show();
+    $('#LandCoverMainTabses').show();
+    $('a.show_lc_but_wdpa_2010_2').addClass('active')
+    $('a.show_lc_but_wdpa_2015_2').removeClass('active')
+    $('a.show_lc_but_wdpa_2005_2').removeClass('active')
+    $('a.show_lc_but_wdpa_2000_2').removeClass('active')
+    $('a.show_lc_but_wdpa_1995_2').removeClass('active')
+    $('#lc_tab_wdpa_1995_1').hide();
+    $('#lc_tab_wdpa_1995_2').hide();
+    $('#lc_tab_wdpa_1995_3').hide();
+    $('#lc_tab_wdpa_2000_1').hide();
+    $('#lc_tab_wdpa_2000_2').hide();
+    $('#lc_tab_wdpa_2000_3').hide();
+    $('#lc_tab_wdpa_2005_1').hide();
+    $('#lc_tab_wdpa_2005_2').hide();
+    $('#lc_tab_wdpa_2005_3').hide();
+    $('#lc_tab_wdpa_2010_1').hide();
+    $('#lc_tab_wdpa_2010_2').show();
+    $('#lc_tab_wdpa_2010_3').hide();
+    $('#lc_tab_wdpa_2015_1').hide();
+    $('#lc_tab_wdpa_2015_2').hide();
+    $('#lc_tab_wdpa_2015_3').hide();
+
+    $('#lc_graph_wdpa_2010_1').hide();
+    $('#lc_graph_wdpa_1995_2').hide();
+    $('#lc_graph_wdpa_1995_3').hide();
+    $('#lc_graph_wdpa_2000_1').hide();
+    $('#lc_graph_wdpa_2000_2').hide();
+    $('#lc_graph_wdpa_2000_3').hide();
+    $('#lc_graph_wdpa_2005_1').hide();
+    $('#lc_graph_wdpa_2005_2').hide();
+    $('#lc_graph_wdpa_2005_3').hide();
+    $('#lc_graph_wdpa_2010_1').hide();
+    $('#lc_graph_wdpa_2010_2').show();
+    $('#lc_graph_wdpa_2010_3').hide();
+    $('#lc_graph_wdpa_2015_1').hide();
+    $('#lc_graph_wdpa_2015_2').hide();
+    $('#lc_graph_wdpa_2015_3').hide();
+  })
+  $('.show_lc_but_wdpa_2010_3').click(function() {
+    $('#LandCoverMainGraphs').show();
+    $('#LandCoverMainTabses').show();
+    $('a.show_lc_but_wdpa_2010_3').addClass('active')
+    $('a.show_lc_but_wdpa_2015_3').removeClass('active')
+    $('a.show_lc_but_wdpa_2005_3').removeClass('active')
+    $('a.show_lc_but_wdpa_2000_3').removeClass('active')
+    $('a.show_lc_but_wdpa_1995_3').removeClass('active')
+    $('#lc_tab_wdpa_1995_1').hide();
+    $('#lc_tab_wdpa_1995_2').hide();
+    $('#lc_tab_wdpa_1995_3').hide();
+    $('#lc_tab_wdpa_2000_1').hide();
+    $('#lc_tab_wdpa_2000_2').hide();
+    $('#lc_tab_wdpa_2000_3').hide();
+    $('#lc_tab_wdpa_2005_1').hide();
+    $('#lc_tab_wdpa_2005_2').hide();
+    $('#lc_tab_wdpa_2005_3').hide();
+    $('#lc_tab_wdpa_2010_1').hide();
+    $('#lc_tab_wdpa_2010_2').hide();
+    $('#lc_tab_wdpa_2010_3').show();
+    $('#lc_tab_wdpa_2015_1').hide();
+    $('#lc_tab_wdpa_2015_2').hide();
+    $('#lc_tab_wdpa_2015_3').hide();
+
+    $('#lc_graph_wdpa_1995_1').hide();
+    $('#lc_graph_wdpa_1995_2').hide();
+    $('#lc_graph_wdpa_1995_3').hide();
+    $('#lc_graph_wdpa_2000_1').hide();
+    $('#lc_graph_wdpa_2000_2').hide();
+    $('#lc_graph_wdpa_2000_3').hide();
+    $('#lc_graph_wdpa_2005_1').hide();
+    $('#lc_graph_wdpa_2005_2').hide();
+    $('#lc_graph_wdpa_2005_3').hide();
+    $('#lc_graph_wdpa_2010_1').hide();
+    $('#lc_graph_wdpa_2010_2').hide();
+    $('#lc_graph_wdpa_2010_3').show();
+    $('#lc_graph_wdpa_2015_1').hide();
+    $('#lc_graph_wdpa_2015_2').hide();
+    $('#lc_graph_wdpa_2015_3').hide();
+  })
+});
+
+// 2015
+$(document).ready(function(e) {
+  $('.show_lc_but_wdpa_2015_1').click(function() {
+    $('#LandCoverMainGraphs').show();
+    $('#LandCoverMainTabses').show();
+    $('a.show_lc_but_wdpa_2015_1').addClass('active')
+    $('a.show_lc_but_wdpa_2010_1').removeClass('active')
+    $('a.show_lc_but_wdpa_2005_1').removeClass('active')
+    $('a.show_lc_but_wdpa_2000_1').removeClass('active')
+    $('a.show_lc_but_wdpa_1995_1').removeClass('active')
+      $('#lc_tab_wdpa_1995_1').hide();
+      $('#lc_tab_wdpa_1995_2').hide();
+      $('#lc_tab_wdpa_1995_3').hide();
+      $('#lc_tab_wdpa_2000_1').hide();
+      $('#lc_tab_wdpa_2000_2').hide();
+      $('#lc_tab_wdpa_2000_3').hide();
+      $('#lc_tab_wdpa_2005_1').hide();
+      $('#lc_tab_wdpa_2005_2').hide();
+      $('#lc_tab_wdpa_2005_3').hide();
+      $('#lc_tab_wdpa_2010_1').hide();
+      $('#lc_tab_wdpa_2010_2').hide();
+      $('#lc_tab_wdpa_2010_3').hide();
+      $('#lc_tab_wdpa_2015_1').show();
+      $('#lc_tab_wdpa_2015_2').hide();
+      $('#lc_tab_wdpa_2015_3').hide();
+
+      $('#lc_graph_wdpa_1995_1').hide();
+      $('#lc_graph_wdpa_1995_2').hide();
+      $('#lc_graph_wdpa_1995_3').hide();
+      $('#lc_graph_wdpa_2000_1').hide();
+      $('#lc_graph_wdpa_2000_2').hide();
+      $('#lc_graph_wdpa_2000_3').hide();
+      $('#lc_graph_wdpa_2005_1').hide();
+      $('#lc_graph_wdpa_2005_2').hide();
+      $('#lc_graph_wdpa_2005_3').hide();
+      $('#lc_graph_wdpa_2010_1').hide();
+      $('#lc_graph_wdpa_2010_2').hide();
+      $('#lc_graph_wdpa_2010_3').hide();
+      $('#lc_graph_wdpa_2015_1').show();
+      $('#lc_graph_wdpa_2015_2').hide();
+      $('#lc_graph_wdpa_2015_3').hide();
+  })
+
+  $('.show_lc_but_wdpa_2015_2').click(function() {
+    $('#LandCoverMainGraphs').show();
+    $('#LandCoverMainTabses').show();
+    $('a.show_lc_but_wdpa_2015_2').addClass('active')
+    $('a.show_lc_but_wdpa_2010_2').removeClass('active')
+    $('a.show_lc_but_wdpa_2005_2').removeClass('active')
+    $('a.show_lc_but_wdpa_2000_2').removeClass('active')
+    $('a.show_lc_but_wdpa_1995_2').removeClass('active')
+    $('#lc_tab_wdpa_1995_1').hide();
+    $('#lc_tab_wdpa_1995_2').hide();
+    $('#lc_tab_wdpa_1995_3').hide();
+    $('#lc_tab_wdpa_2000_1').hide();
+    $('#lc_tab_wdpa_2000_2').hide();
+    $('#lc_tab_wdpa_2000_3').hide();
+    $('#lc_tab_wdpa_2005_1').hide();
+    $('#lc_tab_wdpa_2005_2').hide();
+    $('#lc_tab_wdpa_2005_3').hide();
+    $('#lc_tab_wdpa_2010_1').hide();
+    $('#lc_tab_wdpa_2010_2').hide();
+    $('#lc_tab_wdpa_2010_3').hide();
+    $('#lc_tab_wdpa_2015_1').hide();
+    $('#lc_tab_wdpa_2015_2').show();
+    $('#lc_tab_wdpa_2015_3').hide();
+
+    $('#lc_graph_wdpa_2010_1').hide();
+    $('#lc_graph_wdpa_1995_2').hide();
+    $('#lc_graph_wdpa_1995_3').hide();
+    $('#lc_graph_wdpa_2000_1').hide();
+    $('#lc_graph_wdpa_2000_2').hide();
+    $('#lc_graph_wdpa_2000_3').hide();
+    $('#lc_graph_wdpa_2005_1').hide();
+    $('#lc_graph_wdpa_2005_2').hide();
+    $('#lc_graph_wdpa_2005_3').hide();
+    $('#lc_graph_wdpa_2010_1').hide();
+    $('#lc_graph_wdpa_2010_2').hide();
+    $('#lc_graph_wdpa_2010_3').hide();
+    $('#lc_graph_wdpa_2015_1').hide();
+    $('#lc_graph_wdpa_2015_2').show();
+    $('#lc_graph_wdpa_2015_3').hide();
+  })
+  $('.show_lc_but_wdpa_2015_3').click(function() {
+    $('#LandCoverMainGraphs').show();
+    $('#LandCoverMainTabses').show();
+    $('a.show_lc_but_wdpa_2015_3').addClass('active')
+    $('a.show_lc_but_wdpa_2010_3').removeClass('active')
+    $('a.show_lc_but_wdpa_2005_3').removeClass('active')
+    $('a.show_lc_but_wdpa_2000_3').removeClass('active')
+    $('a.show_lc_but_wdpa_1995_3').removeClass('active')
+    $('#lc_tab_wdpa_1995_1').hide();
+    $('#lc_tab_wdpa_1995_2').hide();
+    $('#lc_tab_wdpa_1995_3').hide();
+    $('#lc_tab_wdpa_2000_1').hide();
+    $('#lc_tab_wdpa_2000_2').hide();
+    $('#lc_tab_wdpa_2000_3').hide();
+    $('#lc_tab_wdpa_2005_1').hide();
+    $('#lc_tab_wdpa_2005_2').hide();
+    $('#lc_tab_wdpa_2005_3').hide();
+    $('#lc_tab_wdpa_2010_1').hide();
+    $('#lc_tab_wdpa_2010_2').hide();
+    $('#lc_tab_wdpa_2010_3').hide();
+    $('#lc_tab_wdpa_2015_1').hide();
+    $('#lc_tab_wdpa_2015_2').hide();
+    $('#lc_tab_wdpa_2015_3').show();
+
+    $('#lc_graph_wdpa_1995_1').hide();
+    $('#lc_graph_wdpa_1995_2').hide();
+    $('#lc_graph_wdpa_1995_3').hide();
+    $('#lc_graph_wdpa_2000_1').hide();
+    $('#lc_graph_wdpa_2000_2').hide();
+    $('#lc_graph_wdpa_2000_3').hide();
+    $('#lc_graph_wdpa_2005_1').hide();
+    $('#lc_graph_wdpa_2005_2').hide();
+    $('#lc_graph_wdpa_2005_3').hide();
+    $('#lc_graph_wdpa_2010_1').hide();
+    $('#lc_graph_wdpa_2010_2').hide();
+    $('#lc_graph_wdpa_2010_3').hide();
+    $('#lc_graph_wdpa_2015_1').hide();
+    $('#lc_graph_wdpa_2015_2').hide();
+    $('#lc_graph_wdpa_2015_3').show();
+  })
+});
+
+
+
+
+
+
+
+
+
+
+// $('a.btn-danger').click(function(){
+//     if($(this).hasClass('active')){
+//         $(this).removeClass('active')
+//     } else {
+//         $(this).addClass('active')
+//     }
+// });
+
+
+
+// End of the script
+
+  })
+
 })(jQuery);
