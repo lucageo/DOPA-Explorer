@@ -1,8 +1,18 @@
 (function($) {
  $(document).bind('leaflet.map', function(e, map, lMap)
    {
-     lMap.spin(true);
-
+     lMap.spin(true, {
+lines: 11,
+length: 39,
+width: 2,
+radius: 78,
+corners: 0,
+opacity: 0,
+speed: 1,
+trail: 89,
+shadow:'on',
+hwaccel:'on'
+});
 //------------------------------------------------------------------------------
 // BASIC SETUP
 //------------------------------------------------------------------------------
@@ -14,13 +24,17 @@
   // detect fullscreen toggling
   lMap.on('enterFullscreen', function(){
   if(window.console) window.console.log('enterFullscreen');
+  $(".leaflet-control-attribution").css('position', 'absolute');
   });
   lMap.on('exitFullscreen', function(){
   if(window.console) window.console.log('exitFullscreen');
+  $(".leaflet-control-attribution").css('position', 'relative');
   });
   L.control.navbar().addTo(lMap);
   var zoomBox = L.control.zoomBox({ modal: false });
   lMap.addControl(zoomBox);
+//lMap.scrollWheelZoom.disable();
+
 
   //----------------------------------------------------------------------------
   // BASE LAYERS
@@ -29,7 +43,7 @@
   var mbAttr = '', mbUrl = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw';
   var grayscale  = L.tileLayer(mbUrl, {id: 'mapbox.streets',   attribution: 'January 2017 version of the World Database on Protected Areas (WDPA)'});
   var grayscale2   = L.tileLayer(mbUrl, {id: 'mapbox.light', attribution: 'January 2017 version of the World Database on Protected Areas (WDPA)'});//.addTo(lMap);
-  var streets  = L.tileLayer('https://api.mapbox.com/styles/v1/lucageo/ciywysi9f002e2snqsz0ukhz4/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibHVjYWdlbyIsImEiOiJjaXIwY2FmNHAwMDZ1aTVubmhuMDYyMmtjIn0.1jWhLwVzKS6k1Ldn-bVQPg',{
+  var streets  = L.tileLayer('https://api.mapbox.com/styles/v1/lucageo/cj9somw1h28h12rm6k2jp0eum/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibHVjYWdlbyIsImEiOiJjaXIwY2FmNHAwMDZ1aTVubmhuMDYyMmtjIn0.1jWhLwVzKS6k1Ldn-bVQPg',{
 attribution: 'January 2017 version of the World Database on Protected Areas (WDPA)'
 }).addTo(lMap);
   var esri = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{
@@ -43,6 +57,25 @@ attribution: 'January 2017 version of the World Database on Protected Areas (WDP
 
 
 
+ var wurla = 'http://lrm-maps.jrc.ec.europa.eu/geoserver/conservationmapping/wms';
+ var wdpa_a=L.tileLayer.wms(wurla, {
+     layers: 'conservationmapping:WDPA_poly_Sep2017',
+     transparent: true,
+     format: 'image/png',
+     opacity:'1',
+     zIndex: 10 // Use zIndex to order the tileLayers within the tilePane. The higher number, the upper vertically.
+  });
+
+  lMap.on('zoomend', function() {
+      if (lMap.getZoom() < 8){
+
+              lMap.removeLayer(wdpa_a);
+
+      } else if (lMap.getZoom() >= 8){
+        lMap.addLayer(wdpa_a);
+      } else{}
+
+  });
 
 //------------------------------------------------------------------------------
 // Available Layers
@@ -63,16 +96,16 @@ layerControl.addTo(lMap);
 
 function pop_country_layer(feature, layer) {
 
-   var Popup_Content_Country = '<center><i class="fa fa-globe fa-4x" aria-hidden="true"></i><hr><a href="/country/'+feature.properties.iso_2digit+'">'+feature.properties.co_name+'</a></center>';
+   var Popup_Content_Country = '<center><i class="fa fa-globe fa-4x" aria-hidden="true"></i><hr><a href="/country/'+feature.properties.iso_2digit+'">'+feature.properties.name_c+'</a></center>';
 
    var t_country = function(){
      return [	{
                name: '% of Protection',
-               data: [parseFloat(Math.round(feature.properties.count_vals*100)/100)]
+               data: [parseFloat(Math.round(feature.properties.t_prot_per*100)/100)]
                },
                {
                name: '% of Connectivity',
-               data: [parseFloat(Math.round(feature.properties.count_vals*100)/100)/2]
+               data: [parseFloat(Math.round(feature.properties.t_conn_per*100)/100)]
                }
              ]
      }
@@ -80,11 +113,13 @@ function pop_country_layer(feature, layer) {
           layer.on('popupopen', function(e) {
 
             $('#container_country_data').highcharts({
-              chart: {type:'bar', height: 300, width: 370},
-              colors: ['#56c02a', '#347d15'],
+              chart: {type:'bar', height: 300, width: 370,
+              backgroundColor:'rgba(255, 255, 255, 0)',
+            },
+              colors: ['#388459', '#365f48'],
               title: {text: null},
               subtitle: {
-                  text: 'Country coverage by protected areas and connectivity'
+                  text: 'Country coverage by protected areas and connectivity (ProtConn)'
               },
               credits: {
                   enabled: true,
@@ -107,7 +142,7 @@ function pop_country_layer(feature, layer) {
                   overflow: 'justify'
               },
               plotLines: [{
-                 color: '#22A6F5',
+                 color: '#5f5f5f',
                  value: '17',
                  width: '2',
                  zIndex: 12
@@ -117,16 +152,11 @@ function pop_country_layer(feature, layer) {
               series: t_country(feature)
 
             });
+            $('#container64').html('<p>Aichi Target 11 treshold (17%)</p><hr>');
+            $('#container_country_name').html('<center><a href="/country/'+feature.properties.iso_2digit+'">'+feature.properties.name_c+'</a></center><hr>');
+            $('#container_country_info5').html('<span><div class="sdg_terr_pa"><p>Terrestrial Area</p></div><a href="https://sustainabledevelopment.un.org/sdg15"><img border="0" alt="sdg" src="sites/default/files/sdg_terr.png" width="70" height="70"></a><div class="sdg_terr"><p><b>'+ parseFloat(Math.round(feature.properties.t_prot_per*100)/100)+'</b>%</p></div><div class="sdg_terr_pa_cov"><p>Coverage</p></div><div class="sdg_terrt"><p><b>'+ parseFloat(Math.round(feature.properties.t_pro_area*100)/100)+'</b> km2</p></div><div class="sdg_terr_pat_cov"><p>Protected Land Area</p></div><div class="sdg_terrtotal"><p><b>'+ parseFloat(Math.round(feature.properties.land_area*100)/100)+'</b> km2</p></div><div class="sdg_terr_patotal_cov"><p>Total Land Area</p></div></span>');
+            $('#container_country_info4').html('<span><div class="sdg_mar_pa"><p>Marine Area</p></div><a href="https://sustainabledevelopment.un.org/sdg14"><img border="0" alt="sdg" src="sites/default/files/sdg_mar.png" width="70" height="70"></a><div class="sdg_mar"><p><b>'+ parseFloat(Math.round(feature.properties.m_prot_per*100)/100)+'</b>%</p></div><div class="sdg_mar_pa_cov"><p>Coverage</p></div><div class="sdg_mart"><p><b>'+ parseFloat(Math.round(feature.properties.m_pro_area*100)/100)+'</b> km2</p></div><div class="sdg_marr_pat_cov"><p>Protected Marine Area</p></div><div class="sdg_terrtotal_mar"><p><b>'+ parseFloat(Math.round(feature.properties.mar_area*100)/100)+'</b> km2</p></div><div class="sdg_mar_patotal_cov"><p>Total Marine Area</p></div></span>');
 
-            $('#container_country_name').html('<center><a href="/country/'+feature.properties.iso_2digit+'">'+feature.properties.co_name+'</a></center><hr>');
-            $('#container_country_info5').html('<span><div class="sdg_terr_pa"><p>Area Terrestrial</p></div><a href="https://sustainabledevelopment.un.org/sdg15"><img border="0" alt="sdg" src="sites/default/files/sdg_terr.png" width="70" height="70"></a><div class="sdg_terr"><p><b>'+ parseFloat(Math.round(feature.properties.count_vals*100)/100)+'</b>%</p></div><div class="sdg_terr_pa_cov"><p>Coverage</p></div><div class="sdg_terrt"><p><b>'+ parseFloat(feature.properties.shape_area)/2+'</b> km2</p></div><div class="sdg_terr_pat_cov"><p>Land Area Protected</p></div><div class="sdg_terrtotal"><p><b>'+ parseFloat(feature.properties.shape_area)+'</b> km2</p></div><div class="sdg_terr_patotal_cov"><p>Total Land Area</p></div></span>');
-            $('#container_country_info4').html('<span><div class="sdg_mar_pa"><p>Area Marine</p></div><a href="https://sustainabledevelopment.un.org/sdg14"><img border="0" alt="sdg" src="sites/default/files/sdg_mar.png" width="70" height="70"></a><div class="sdg_mar"><p><b>'+ parseFloat(Math.round(feature.properties.count_vals*100)/100)+'</b>%</p></div><div class="sdg_mar_pa_cov"><p>Coverage</p></div><div class="sdg_mart"><p><b>'+ parseFloat(feature.properties.shape_area)/2+'</b> km2</p></div><div class="sdg_marr_pat_cov"><p>Marine Area Protected</p></div><div class="sdg_terrtotal_mar"><p><b>'+ parseFloat(feature.properties.shape_area)+'</b> km2</p></div><div class="sdg_mar_patotal_cov"><p>Total Marine Area</p></div></span>');
-            // $('#container_country_info3').html('<p>Protection (%) <b>'+ parseFloat(Math.round(feature.properties.count_vals*100)/100)+'</b></p><hr>');
-            // $('#container_country_info').html('<p>Conectivity (%) <b>'+ parseFloat(Math.round(feature.properties.count_vals*100)/100)/2+'</b></p><hr>');
-            // $('#container_country_info2').html('<p>Additional Info <b> ... </b></p><hr>');
-            // $('#container_country_info6').html('<a href="https://www.cbd.int/sp/targets/rationale/target-11/"><img border="0" alt="Aichi Target 11" src="sites/default/files/11.png" width="30" height="30"></a>');
-            // $('#visit_country').html('<p><span><a href="/country/'+feature.properties.iso_2digit+'" class="wdpalink" > Explore </a></span></p>');
-            // $('#visit_country').show();
 
           });
 
@@ -152,22 +182,22 @@ function pop_country_layer(feature, layer) {
 
 function getColor(d) {
 
- return d > 500  ? '#126597' :
-        d > 300  ? '#2E7AA7' :
-        d > 200  ? '#4A8FB8' :
-        d > 100  ? '#67A4C9' :
-        d > 75   ? '#83B9D9' :
-        d > 50   ? '#9FCEEA' :
-        d > 10   ? '#BCE3FB' :
-                   '#fff';
+ return d > 50  ? '#074046' :
+        d > 30  ? '#0d585f' :
+        d > 20  ? '#287274' :
+        d > 15  ? '#63a6a0' :
+        d > 10   ? '#89c0b6' :
+        d > 5   ? '#b4d9cc' :
+        d > 1   ? '#e4f1e1' :
+                   '#e4f1e1';
 }
 
 var legend = L.control({position: 'bottomleft'});
     legend.onAdd = function (lMap) {
         var div = L.DomUtil.create('div', 'info legend'),
          labels = ['<div id="countrylegend"><p>Country coverage by protected areas (%)</p></div>'],
-           grades = [10, 50, 75, 100, 200, 300, 500],
-           key_labels = [' 1 % ',' 5 % ',' 10 % ',' 20 % ',' 30 % ',' 50 % ',' 75 % '];
+           grades = [1, 5, 10, 15, 20, 30, 50],
+           key_labels = [' 1 % ',' 5 % ',' 10 % ',' 15 % ',' 20 % ',' 30 % ',' 50 % '];
                for (var i = 0; i < grades.length; i++) {
                 div.innerHTML += labels.push('<i style="background:' + getColor(grades[i] + 1) + '"></i> ' + key_labels[i] + (key_labels[i + 1] ? '&ndash;' + key_labels[i + 1] + '<br>' : '+'));
                }
@@ -179,12 +209,12 @@ legend.addTo(lMap);
 // styling the GeoJSON layer, uses getColor function above
 var stylecou = function(feature) {
  return {
-   fillColor: getColor(feature.properties.count_vals),
-   weight: 1,
+   fillColor: getColor(feature.properties.t_prot_per),
+   weight: 0.1,
    opacity: 1,
    color: 'white',
-   dashArray: '3',
-   fillOpacity: 0.7,
+   //dashArray: '3',
+   fillOpacity: 0.8,
    zIndex: 1
  }
 }
@@ -194,7 +224,7 @@ var stylecou = function(feature) {
 
 // SQL filter applied on the layer - is gonna be added below to the GeoJSON layer
 var filter = function(feature) {
- return feature.properties.cartodb_id > 0;
+ return feature.properties.cartodb_id > 100;
 }
 
 // Highlight layer
@@ -241,13 +271,13 @@ var onEachFeature = function(feature, layer) {
 
 // Define layer
 var Country_layer = L.geoJson(null, {
-  filter: filter,
+  //filter: filter,
   onEachFeature: onEachFeature,
   style: stylecou
 });//.addTo(lMap);
 
 // Call to CARTO
-var query = "SELECT * FROM world_country_prot";
+var query = "SELECT * FROM dopa_countries_new_p ";
 var sql = new cartodb.SQL({ user: 'climateadapttst' });
 sql.execute(query, null, { format: 'geojson' }).done(function(data) {
 Country_layer.addData(data);
@@ -593,14 +623,14 @@ if (layer.wmsParams.layers=="lrm:eco_mar_ter_prot_con_2016")
 // Ecoregion LAYER - LEGEND
 //------------------------------------------------------------------------------
 function getColoreco(deco) {
- return deco > 50       ? '#045275' :
-        deco > 17       ? '#00718b' :
-        deco > 12       ? '#089099' :
-        deco > 8        ? '#46aea0' :
-        deco > 5        ? '#7ccba2' :
-        deco > 2        ? '#b7e6a5' :
-        deco > 0        ? '#f7feae' :
-                          '#f7feae';
+ return deco > 50       ? '#022528' :
+        deco > 17       ? '#287274' :
+        deco > 12       ? '#448c8a' :
+        deco > 8        ? '#63a6a0' :
+        deco > 5        ? '#89c0b6' :
+        deco > 2        ? '#b4d9cc' :
+        deco > 0        ? '#e4f1e1' :
+                          '#e4f1e1';
 }
 var legendeco = L.control({position: 'bottomleft'});
 legendeco.onAdd = function (lMap) {
@@ -640,15 +670,122 @@ function hi_highcharts_eco(info,latlng){
   //create variables of each column you want to show from the attribute table of the wdpa wms - each variable need to be set in under "getfeatureinfourl" function
   var eco_name=info['eco_name'];
   var id=info['id'];
+  var is_marine=info['is_marine'];
   var biome=info['biome'];
   var realm=info['realm'];
   var connect=info['connect'];
   var protection=info['protection'];
   var area=info['area'];
 
-  // Ecoregion higlighted popup
-  var popupContenteco = '<center><i class="fa fa-envira fa-2x" aria-hidden="true"></i><hr><a href="/ecoregion/'+id+'">'+eco_name+'</a></center><hr>';
 
+  // Ecoregion higlighted popup
+  if (is_marine ==='No' ) {
+    var popupContenteco = '<center><i class="fa fa-tree fa-2x" aria-hidden="true"></i><hr><a href="/ecoregion/'+id+'">'+eco_name+'</a></center><hr>';
+    $('#container4').highcharts({
+      chart: {type:'bar', height: 300, width: 370,
+      backgroundColor:'rgba(255, 255, 255, 0)'
+    },
+      colors: ['#388459', '#365f48'],
+      title: {text: null},
+      subtitle: {
+          text: 'Ecoregion coverage by terrestrial protected areas and connectivity'
+      },
+      credits: {
+          enabled: true,
+          text: '© DOPA Services',
+          href: 'http://dopa.jrc.ec.europa.eu/en/services'
+      },
+       xAxis: {
+              categories: ['%'],
+              title: {
+                  text: null
+              }
+          },
+     yAxis: {
+            max: 50,
+            title: {
+                text: 'WDPA version: Jan 2017',
+                align: 'high'
+            },
+            labels: {
+                overflow: 'justify'
+            },
+            plotLines: [{
+               color: '#5f5f5f',
+               value: '17',
+               width: '2',
+               zIndex: 12
+           }]
+        },
+
+      series: [	{
+                name: '% of Protection',
+                data: [parseFloat(Math.round(protection*100)/100)]
+                },
+                {
+                name: '% of Connectivity',
+                data: [parseFloat(Math.round(connect*100)/100)/2]
+                }
+              ]
+
+    });
+  }
+  else {
+    var popupContenteco = '<center><i class="fa fa-tint fa-2x" aria-hidden="true"></i><hr><a href="/ecoregion/'+id+'">'+eco_name+'</a></center><hr>';
+
+
+
+    $('#container4').highcharts({
+      chart: {type:'bar', height: 300, width: 370,
+      backgroundColor:'rgba(255, 255, 255, 0)'
+    },
+      colors: ['#388459', '#365f48'],
+      title: {text: null},
+      subtitle: {
+          text: 'Ecoregion coverage by protected areas'
+      },
+      credits: {
+          enabled: true,
+          text: '© DOPA Services',
+          href: 'http://dopa.jrc.ec.europa.eu/en/services'
+      },
+       xAxis: {
+              categories: ['%'],
+              title: {
+                  text: null
+              }
+          },
+     yAxis: {
+            max: 50,
+            title: {
+                text: 'WDPA version: Jan 2017',
+                align: 'high'
+            },
+            labels: {
+                overflow: 'justify'
+            },
+            plotLines: [{
+               color: '#5f5f5f',
+               value: '17',
+               width: '2',
+               zIndex: 12
+           }]
+        },
+
+      series: [	{
+                name: '% of Protection',
+                data: [parseFloat(Math.round(protection*100)/100)]
+                }
+
+              ]
+
+    });
+
+
+
+
+
+  }
   var popup_eco = L.popup()
        .setLatLng([latlng.lat, latlng.lng])
        .setContent(popupContenteco)
@@ -657,172 +794,16 @@ function hi_highcharts_eco(info,latlng){
        $('#container5').html('<center><a href="/ecoregion/'+id+'">'+eco_name+'</a></center>');
        // Ecoregion BIOME
        $('#container55').html('<p>Area (km2) <b>'+parseFloat(Math.round(area*100)/100)+'</b></p><hr>');
-       $('#container6').html('<hr><p>Biome <b>'+biome+'</b></p><hr>');
+       $('#container6').html('<p>Biome <b>'+biome+'</b></p><hr>');
        // Ecoregion REALM
        $('#container7').html('<p>Realm <b>'+realm+'</b></p><hr>');
-       // Ecoregion Explore button
-      //  $('#visit_ecoregion').html('<p><span><a href="/ecoregion/'+id+'" class="wdpalink" > Explore </a></span></p>');
-       // Ecoregion Protection Gauge Graph
-       $('#container4').highcharts ({
+       // Ecoregion REALM
+       $('#container24').html('<p>Aichi Target 11 treshold (17%)</p><hr>');
+       // Ecoregion Protection  Graph
 
-               chart: {
-                   type: 'solidgauge',
-                   backgroundColor: 'rgba(255, 255, 255, 0)',
-                   borderColor: '#ffffff'           },
 
-               title: null,
 
-               pane: {
-                   center: ['50%', '50%'],
-                   size: '60%',
-                   startAngle: -90,
-                   endAngle: 90,
-                   background: {
-                        backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#FAFAFA',
-                       innerRadius: '100%',
-                       outerRadius: '60%',
-                       shape: 'arc'
-                   }
-               },
 
-                  yAxis: {
-                      min: 0,
-                      max: 100,
-                        y: 20,
-                      title: {
-                          text: 'Ecoregion Protection',
-                           y: -73
-                      },
-
-                      stops: [
-                          [0.0, '#f7feae'],   // yellow
-                          [0.02, '#b7e6a5'],  // light green
-                          [0.05, '#7ccba2'],  // green
-                          [0.08, '#46aea0'],  // dark green
-                          [0.12, '#089099'],  // light blue
-                          [0.17, '#00718b'],  // blue
-                          [0.5, '#045275']    // dark blue
-                      ],
-
-                      lineWidth: 0,
-                      minorTickInterval: null,
-                      tickAmount:0,
-                      labels: {
-                          y: 20
-                      }
-                  },
-
-                  credits: {
-                      enabled: false
-                  },
-
-                  plotOptions: {
-                      solidgauge: {
-                          dataLabels: {
-                              y: 1,
-                              borderWidth: 0,
-                              useHTML: true
-                          }
-                      }
-                  },
-
-                  series: [{
-                      name: 'Protection',
-                      data: [parseFloat(Math.round(protection*100)/100)],
-                      dataLabels: {
-                        format: '<div style="text-align:center"><span style="font-size:20px;color:' +
-                                ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y}</span><br/>' +
-                                '<span style="font-size:12px;color:silver">%</span></div>',
-                        y: -30
-                      },
-                      tooltip: {
-                          valueSuffix: ' %'
-                      }
-                  }]
-
-              });
-
-             // Ecoregion Connectivity Gauge Graph
-             $('#container24').highcharts ({
-
-               chart: {
-                   type: 'solidgauge',
-                   backgroundColor: 'rgba(255, 255, 255, 0)',
-                   borderColor: '#ffffff'
-               },
-
-               title: null,
-
-               pane: {
-                   center: ['50%', '50%'],
-                   size: '60%',
-                   startAngle: -90,
-                   endAngle: 90,
-                   background: {
-                        backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#FAFAFA',
-                       innerRadius: '100%',
-                       outerRadius: '60%',
-                       shape: 'arc'
-                   }
-               },
-
-                  yAxis: {
-                      min: 0,
-                      max: 100,
-                        y: 20,
-                      title: {
-                          text: 'Ecoregion Connectivity',
-                           y: -73
-                      },
-
-                      stops: [
-                        [0.0, '#f7feae'],   // yellow
-                        [0.02, '#b7e6a5'],  // light green
-                        [0.05, '#7ccba2'],  // green
-                        [0.08, '#46aea0'],  // dark green
-                        [0.12, '#089099'],  // light blue
-                        [0.17, '#00718b'],  // blue
-                        [0.5, '#045275']    // dark blue
-
-                      ],
-
-                      lineWidth: 0,
-                      minorTickInterval: null,
-                      tickAmount:0,
-                      labels: {
-                          y: 20
-                      }
-                  },
-
-                  credits: {
-                      enabled: false
-                  },
-
-                  plotOptions: {
-                      solidgauge: {
-                          dataLabels: {
-                              y: 1,
-                              borderWidth: 0,
-                              useHTML: true
-                          }
-                      }
-                  },
-
-                  series: [{
-                      name: 'Connectivity',
-                      data: [parseFloat(Math.round(connect*100)/100)],
-                      dataLabels: {
-                        format: '<div style="text-align:center"><span style="font-size:20px;color:' +
-           ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y}</span><br/>' +
-           '<span style="font-size:12px;color:silver">%</span></div>',
-                        y: -30
-                      },
-                      tooltip: {
-                          valueSuffix: ' %'
-                      }
-                  }]
-
-          }); // container24
 } // hi_highcharts_eco
 
 //------------------------------------------------------------------------------
@@ -840,7 +821,7 @@ lMap.on('click', function(e) {
                     e.latlng,
                     {
                         'info_format': 'text/javascript',  //it allows us to get a jsonp
-                        'propertyName': 'area,id,eco_name,biome,realm,protection,connect',
+                        'propertyName': 'area,id,eco_name,biome,is_marine,realm,protection,connect',
                         'query_layers': 'lrm:eco_mar_ter_prot_con_2016',
                         'format_options':'callback:getJson'
                     }
@@ -876,7 +857,7 @@ lMap.on('click', function(e) {
 
             }
             else {
-              console.log(' no info')
+              // console.log(' no info')
             }
         }
   }
@@ -936,7 +917,7 @@ lMap.on('click', function(e) {
                           //  $('#visit_wdpa').show();
                      }
                      else {
-                       console.log(' no info')
+                      //  console.log(' no info')
                      }
 
                 } // Close handleJson_featureRequest
@@ -953,7 +934,7 @@ var filter_wdpa = function(feature) {
  return feature.properties.wdpaid > 1;
 }
 var wdpa_group = new L.LayerGroup();
-var query4 = "SELECT * FROM wdpa_gen_2017_controids";
+var query4 = "SELECT the_geom, wdpaid, names  FROM wdpa_gen_2017_controids";
 var sql4 = new cartodb.SQL({ user: 'climateadapttst' });
 
 sql4.execute(query4, null, { format: 'geojson' }).done(function(data4) {
@@ -994,7 +975,7 @@ var wdpa=L.tileLayer.wms(url, {
     layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg',
     transparent: true,
     format: 'image/png',
-    opacity:'0.6',
+    opacity:'0.9',
     zIndex: 33
  }).addTo(lMap);
 
@@ -1036,16 +1017,18 @@ function getFeatureInfoUrl(map, layer, latlng, params) {
 // WDPA WMS LEGEND
 //---------------------------------------------------------------
 function getColor4(d4) {
-  return d4 > 10  ?   '#7db132' :
-         d4 > 20  ?   '#7db132':
+  return d4 > 30  ?   '#c9d6ce' :
+         d4 > 20  ?   '#c9d6ce':
+         d4 > 15  ?   '#266e83':
+         d4 > 10  ?   '#749381':
                       '#80bfd9';
                   }
 var legend4 = L.control({position: 'bottomleft'});
 legend4.onAdd = function (lMap) {
   var div = L.DomUtil.create('div', 'info legend'),
     labels = ['<div id="wdpalegend"><p> Protected area type</p></div>'],
-    grades4 = [10,20],
-    key_labels4 = ['Marine', 'Terrestrial'];
+    grades4 = [10,15,20,30],
+    key_labels4 = ['Marine (≥ 50 sqkm)', 'Terrestrial (≥ 50 sqkm)', 'Coastal (≥ 50 sqkm)', 'All (At local scale)'];
     for (var i4 = 0; i4 < grades4.length; i4++) {div.innerHTML += labels.push('<i style="background:' + getColor4(grades4[i4]) + '"></i> ' + ( key_labels4[i4] ? key_labels4[i4] + '<br>' : '+')); }
     div.innerHTML = labels.join('');
     return div;
@@ -1108,7 +1091,7 @@ function hi_highcharts_pa(info,latlng){
   //WDPA HIGLIGHTED POPUP
 
   if (gis_area > 99){
-  var popupContentwdpa = '<center><i class="fa fa-envira fa-2x" aria-hidden="true"></i><br></br><a href="/wdpa/'+wdpaid+'">'+name+'</a></center>';
+  var popupContentwdpa = '<center><i class="fa fa-envira fa-2x" aria-hidden="true"></i><p>'+name+'</p><i>('+country+')</i><hr><a href="/wdpa/'+wdpaid+'">See Report</a></center>';
   // when available add: <center><i class="fa fa-globe fa-2x" aria-hidden="true"></i><br></br><a href="/country/'+iso3_first+'">'+country+'</a></center><hr>
   }
   else{
@@ -1138,22 +1121,21 @@ function hi_highcharts_pa(info,latlng){
     //WDPA HIGLIGHTED HEADER RIGHT BOX
 
     if (gis_area > 99){
-    $('#container8').html('<center><a href="/wdpa/'+wdpaid+'">'+name+'</a><b> ('+country+') </b></center>');
+    $('#container8').html('<center><a href="/wdpa/'+wdpaid+'">'+name+'</a><br><b> '+country+' </b></center>');
+
     } else{
     $('#container8').html('<center><b>'+name+'</b></center>');
     }
 
     //WDPA higlighted general info bottom-right box
-    $('#container2').html('<p><span>Designation &nbsp;</span><b>'+desig_eng+'</b></p>'+
+    $('#container2').html( '<div class="popup" onclick="myFunction()"><i class="fa fa-info" aria-hidden="true"></i><span class="popuptext" id="myPopup">Habitat complexity, threatened species and pressures of the protected area versus the average for all protected areas in the country.</span></div>'+
+                          '<p><span>Designation &nbsp;</span><b>'+desig_eng+'</b></p>'+
                           '<p><span>Designation Type &nbsp;</span><b>'+desig_type+'</b></p>'+
                           '<p><span>IUCN Category &nbsp;</span><b>'+iucn_cat+'</b></p>'+
                           '<p><span>Reported Area (km²) &nbsp;</span><b>'+parseFloat(Math.round(reported_area*100)/100)+'</b></p>'+
-                          '<p><span>Year &nbsp;</span><b>'+status_yr+'</b></p>'+
-                          '<p><span>Management Authority &nbsp;</span><b>'+mang_auth+'</b></p>'+
-                          '<p><span>Status&nbsp;</span><b>'+status+'</b></p>');
-
+                          '<p><span>Year &nbsp;</span><b>'+status_yr+'</b></p>');
       //WDPA higlighted general info below map
-      $('#someinfo').html('<em><span><b>'+name+'</b></span> (ID: '+wdpaid+') is in <span><b>'+country+'</b></span>, has been designated as '+desig_eng+' at '+desig_type+' level<em class="year_des"> in <span><b class ="years">'+status_yr+'</b></em></span>, it covers <span><b>'+parseFloat(Math.round(gis_area*100)/100)+' km² </b></span><em class="mang_auth">and is managed by '+mang_auth+'</em></span>.<br><hr></hr><em> ');
+      $('#someinfo').html('<em><span><b>'+name+'</b></span> is in <span><b>'+country+'</b></span>, has been designated as '+desig_eng+' at '+desig_type+' level<em class="year_des"> in <span><b class ="years">'+status_yr+'</b></em></span>, it covers <span><b>'+parseFloat(Math.round(gis_area*100)/100)+' km² </b></span><em class="mang_auth">and is managed by '+mang_auth+'</em></span>.<br><em> ');
       // when is available add: <a href="/country/'+iso3_first+'" class="countrylink" >'+country+'</a>
 
       // show explore button when is bigger than 99 km2 ----> to be changed to "50"
@@ -1195,10 +1177,13 @@ $.ajax({
       if (d.metadata.recordCount == 0) {
           jQuery('#container3');
           jQuery('#container3').html('<img src="/sites/default/files/sna.png" alt="Mountain View" style="width:421px;height:242px;">');
+          $('#pa_infographics').hide();
       } else {
           var title = [];
           var country_avg = [];
           var site_norm_value = [];
+          $('#pa_infographics').show();
+          $('#infographic_full_report').html('<a href="/wdpa/'+wdpaid+'">Full Report</a>');
 
           $(d.records).each(function(i, data) {
 
@@ -1215,6 +1200,14 @@ $.ajax({
                               country_avg.push(0);
                           }
                           else if (prop == 'site_norm_value') {
+
+                            $('#pa_infographics').show();
+                            $('#infographic_agr_title').html('<p>Agriculture</p><i>Country normalized score for the agricultural pressure in the protected area </i>');
+                            $('#infographic_bar_wdpa_general_agr').show();
+                            $('#infographic_bar_wdpa_agr_').remove();
+                            $('#infographic_bar_wdpa_agr_name').remove();
+                            $('#infographic_bar_wdpa_general_agr').append('<div id ="infographic_bar_wdpa_agr_" style="width:'+parseInt(data[prop])+'%";></div>').show('slow');
+                            $('#infographic_bar_wdpa_general_agr').append('<div id ="infographic_bar_wdpa_agr_name" ><p class="counter" >'+parseInt(data[prop])+'</p></div>').show('slow');
                               if(data[prop]>=0)
                               site_norm_value.push(data[prop]);
                               else
@@ -1236,10 +1229,23 @@ $.ajax({
                               country_avg.push(0);
                           }
                           else if (prop == 'site_norm_value') {
-                              if(data[prop]>=0)
+
+                              if(data[prop]>=0){
                               site_norm_value.push(data[prop]);
-                              else
+                              $('#infographic_pop_title').html('<p>Population</p><i>Country normalized score for the population pressure in the protected area /i>');
+                              $('#infographic_bar_wdpa_general_pop').show();
+                              $('#infographic_bar_wdpa_pop_').remove();
+                              $('#infographic_bar_wdpa_pop_name').remove();
+                              $('#infographic_bar_wdpa_general_pop').append('<div id ="infographic_bar_wdpa_pop_" style="width:'+parseInt(data[prop])+'%";></div>').show('slow');
+                              $('#infographic_bar_wdpa_general_pop').append('<div id ="infographic_bar_wdpa_pop_name" ><p class="counter" >'+parseInt(data[prop])+'</p></div>').show('slow');
+                            }
+                              else{
                               site_norm_value.push(0);
+                              $('#infographic_bar_wdpa_general_pop').append('<div id ="infographic_bar_wdpa_pop_" style="width:0%";></div>').show('slow');
+                              $('#infographic_bar_wdpa_general_pop').append('<div id ="infographic_bar_wdpa_pop_name" ><p class="counter">No Data</p></div>').show('slow');
+                              $('#infographic_bar_wdpa_pop_').remove();
+                              $('#infographic_bar_wdpa_pop_name').remove();
+                            }
                           }
                           else {
                           }
@@ -1257,6 +1263,12 @@ $.ajax({
                            country_avg.push(0);
                                     }
                        else if (prop == 'site_norm_value') {
+                         $('#infographic_introad_title').html('<p>Internal Roads</p><i>Country normalized score for the internal roads pressure index</i>');
+                         $('#infographic_bar_wdpa_general_introad').show();
+                         $('#infographic_bar_wdpa_introad_').remove();
+                         $('#infographic_bar_wdpa_introad_name').remove();
+                         $('#infographic_bar_wdpa_general_introad').append('<div id ="infographic_bar_wdpa_introad_" style="width:'+parseInt(data[prop])+'%";></div>').show('slow');
+                         $('#infographic_bar_wdpa_general_introad').append('<div id ="infographic_bar_wdpa_introad_name" ><p class="counter">'+parseInt(data[prop])+'</p></div>').show('slow');
                            if(data[prop]>=0)
                            site_norm_value.push(data[prop]);
                            else
@@ -1264,7 +1276,7 @@ $.ajax({
                                     }
                        else {
                        }
-                                }
+                     }
                       break;
                   case 'Surrounding Roads':
                       for (var prop in data) {
@@ -1278,6 +1290,12 @@ $.ajax({
                               country_avg.push(0);
                           }
                           else if (prop == 'site_norm_value') {
+                            $('#infographic_eroad_title').html('<p>Surrounding Roads</p><i>Country normalized score for the external roads pressure outside the protected area (30km buffer)</i>');
+                            $('#infographic_bar_wdpa_general_eroad').show();
+                            $('#infographic_bar_wdpa_eroad_').remove();
+                            $('#infographic_bar_wdpa_eroad_name').remove();
+                            $('#infographic_bar_wdpa_general_eroad').append('<div id ="infographic_bar_wdpa_eroad_" style="width:'+parseInt(data[prop])+'%";></div>').show('slow');
+                            $('#infographic_bar_wdpa_general_eroad').append('<div id ="infographic_bar_wdpa_eroad_name" ><p class="counter">'+parseInt(data[prop])+'</p></div>').show('slow');
                               if(data[prop]>=0)
                               site_norm_value.push(data[prop]);
                               else
@@ -1299,6 +1317,12 @@ $.ajax({
                               country_avg.push(0);
                           }
                           else if (prop == 'site_norm_value') {
+                            $('#infographic_amph_title').html('<p>Amphibians</p><i>Country normalized score for the theoretical presence of amphibians in the protected area </i>');
+                            $('#infographic_bar_wdpa_general_amph').show();
+                            $('#infographic_bar_wdpa_amph_').remove();
+                            $('#infographic_bar_wdpa_amph_name').remove();
+                            $('#infographic_bar_wdpa_general_amph').append('<div id ="infographic_bar_wdpa_amph_" style="width:'+parseInt(data[prop])+'%";></div>').show('slow');
+                            $('#infographic_bar_wdpa_general_amph').append('<div id ="infographic_bar_wdpa_amph_name" ><p class="counter">'+parseInt(data[prop])+'</p></div>').show('slow');
                               if(data[prop]>=0)
                               site_norm_value.push(data[prop]);
                               else
@@ -1309,9 +1333,11 @@ $.ajax({
                       }
                       break;
                   case 'MAMMALIA':
+
                   for (var prop in data) {
                           if (prop == 'title') {
                               title.push("Mammals")
+
                           }
                           else if (prop == 'country_avg') {
                               if(data[prop]>=0)
@@ -1320,11 +1346,20 @@ $.ajax({
                               country_avg.push(0);
                           }
                           else if (prop == 'site_norm_value') {
+                            $('#infographic_mammals_title').html('<p>Mammals</p><i>Country normalized score for the theoretical presence of mammals in the protected area </i>');
+                            $('#infographic_bar_wdpa_general_mammals').show();
+                            $('#infographic_bar_wdpa_mammals_').remove();
+                            $('#infographic_bar_wdpa_mammals_name').remove();
+                            $('#infographic_bar_wdpa_general_mammals').append('<div id ="infographic_bar_wdpa_mammals_" style="width:'+parseInt(data[prop])+'%";></div>').show('slow');
+                            $('#infographic_bar_wdpa_general_mammals').append('<div id ="infographic_bar_wdpa_mammals_name" ><p class="counter">'+parseInt(data[prop])+'</p></div>').show('slow');
+
                               if(data[prop]>=0)
                               site_norm_value.push(data[prop]);
-                              else
+                              // $('#infographic_bar_wdpa_general_mammals').html('<center>ssss</center>');
+                            else
                               site_norm_value.push(0);
-                          }
+
+                        }
                           else {
                           }
                       }
@@ -1341,6 +1376,12 @@ $.ajax({
                               country_avg.push(0);
                           }
                           else if (prop == 'site_norm_value') {
+                            $('#infographic_birds_title').html('<p>Birds</p><i>Country normalized score for the theoretical presence of bird in the protected area</i>');
+                            $('#infographic_bar_wdpa_general_birds').show();
+                            $('#infographic_bar_wdpa_birds_').remove();
+                            $('#infographic_bar_wdpa_birds_name').remove();
+                            $('#infographic_bar_wdpa_general_birds').append('<div id ="infographic_bar_wdpa_birds_" style="width:'+parseInt(data[prop])+'%";></div>').show('slow');
+                            $('#infographic_bar_wdpa_general_birds').append('<div id ="infographic_bar_wdpa_birds_name" ><p class="counter">'+parseInt(data[prop])+'</p></div>').show('slow');
                               if(data[prop]>=0)
                               site_norm_value.push(data[prop]);
                               else
@@ -1362,10 +1403,23 @@ $.ajax({
                               country_avg.push(0);
                           }
                           else if (prop == 'site_norm_value') {
-                              if(data[prop]>=0)
+
+                              if(data[prop]>=0){
                               site_norm_value.push(data[prop]);
-                              else
+                              $('#infographic_popc_title').html('<p>Population Change</p><i>Protected area normalized score of the change in population density pressure index</i>');
+                              $('#infographic_bar_wdpa_general_popc').show();
+                              $('#infographic_bar_wdpa_popc_').remove();
+                              $('#infographic_bar_wdpa_popc_name').remove();
+                              $('#infographic_bar_wdpa_general_popc').append('<div id ="infographic_bar_wdpa_popc_" style="width:'+parseInt(data[prop])+'%";></div>').show('slow');
+                              $('#infographic_bar_wdpa_general_popc').append('<div id ="infographic_bar_wdpa_popc_name" ><p class="counter">'+parseInt(data[prop])+'</p></div>').show('slow');
+                            }
+                              else{
                               site_norm_value.push(0);
+                              $('#infographic_bar_wdpa_general_popc').append('<div id ="infographic_bar_wdpa_popc_" style="width:0%";></div>').show('slow');
+                              $('#infographic_bar_wdpa_general_popc').append('<div id ="infographic_bar_wdpa_popc_name" ><p class="counter">No Data</p></div>').show('slow');
+                              $('#infographic_bar_wdpa_popc_').remove();
+                              $('#infographic_bar_wdpa_popc_name').remove();
+                            }
                           }
                           else {
                           }
@@ -1377,7 +1431,7 @@ $.ajax({
                   // }
                   for (var prop in data) {
                           if (prop == 'title') {
-                              title.push("Terrestrial HDI")
+                              title.push("Habitat Diversity")
                           }
                           else if (prop == 'country_avg') {
                               if(data[prop]>=0)
@@ -1386,10 +1440,23 @@ $.ajax({
                               country_avg.push(0);
                           }
                           else if (prop == 'site_norm_value') {
-                              if(data[prop]>=0)
+
+                              if(data[prop]>=0){
                               site_norm_value.push(data[prop]);
-                              else
+                              $('#infographic_hdi_title').html('<p>Number of distinct habitats ≥ 10 km2</p><i>Country normalized score for the habitat diversity in the protected area </i>');
+                              $('#infographic_bar_wdpa_general_hdi').show();
+                              $('#infographic_bar_wdpa_hdi_').remove();
+                              $('#infographic_bar_wdpa_hdi_name').remove();
+                              $('#infographic_bar_wdpa_general_hdi').append('<div id ="infographic_bar_wdpa_hdi_" style="width:'+parseInt(data[prop])+'%";></div>').show('slow');
+                              $('#infographic_bar_wdpa_general_hdi').append('<div id ="infographic_bar_wdpa_hdi_name" ><p class="counter">'+parseInt(data[prop])+'</p></div>').show('slow');
+                            }
+                              else{
                               site_norm_value.push(0);
+                              $('#infographic_bar_wdpa_general_hdi').append('<div id ="infographic_bar_wdpa_hdi_" style="width:0%";></div>').show('slow');
+                              $('#infographic_bar_wdpa_general_hdi').append('<div id ="infographic_bar_wdpa_hdi_name" ><p class="counter">No Data</p></div>').show('slow');
+                              $('#infographic_bar_wdpa_hdi_').remove();
+                              $('#infographic_bar_wdpa_hdi_name').remove();
+                            }
                           }
                           else {
                           }
@@ -1406,8 +1473,9 @@ $.ajax({
 
           $('#container3').highcharts({
               chart: {
+               backgroundColor:'rgba(255, 255, 255, 0)',
                   polar: true,
-                   height: 320,
+                   height: 365,
                    width: 420,
               },
 
@@ -1415,7 +1483,7 @@ $.ajax({
                   text: null
               },
               subtitle: {
-                  text: "SUMMARY DATA"
+                  text: ""
               },
 
               credits: {
@@ -1434,11 +1502,11 @@ $.ajax({
 
                       $.each(this.points, function(i, point) {
                           if(point.series.name == "Country Average"){
-                              s.push('<span style="color:rgb(124, 181, 236);font-weight:bold;">'+ point.series.name +' : '+
+                              s.push('<span style="color:rgb(130, 162, 145);font-weight:bold;">'+ point.series.name +' : '+
                               point.y +'<span>');
                           }
                           else{
-                              s.push('<span style="color:rgb(0, 0, 0);">'+ point.series.name +' : '+
+                              s.push('<span style="color:#184c52;">'+ point.series.name +' : '+
                               point.y +'<span>');
                           }
                       });
@@ -1462,7 +1530,7 @@ $.ajax({
                   },
                   name: 'Country Average',
                   data: country_avg,
-                  color: '#D5DBDF'
+                  color: '#b2ccc5'
               },
               {
                   type: 'line',
@@ -1471,7 +1539,7 @@ $.ajax({
                   },
                   name: 'Protected Area',
                   data: site_norm_value,
-                  color: '#22a6f5'
+                  color: '#184c52'
               }]
           });
         }
@@ -1537,9 +1605,9 @@ $(".patopwdpa").click(function(event) {
  if (lMap.hasLayer(wdpa)) {
 
       lMap.removeLayer(wdpa_group);
-      $(".patopwdpa").css('background-color', '#f9f9f9').css('color', '#22A6F5');
-      $(".patopecoregion").css("background-color", 'white').css('color', '#828282');
-      $(".patopcountry").css('background-color', 'white').css('color', '#828282');
+      $(".patopwdpa").css('background-color', '#efefef').css('color', '#2e424a');
+      $(".patopecoregion").css("background-color", '#fff').css('color', '#2e424a');
+      $(".patopcountry").css('background-color', '#fff').css('color', '#2e424a');
 
  }
  else {
@@ -1552,9 +1620,9 @@ $(".patopwdpa").click(function(event) {
       lMap.removeLayer(ecoregion);
       $('#block-block-128').hide();
       lMap.closePopup();
-      $(".patopwdpa").css('background-color', '#f9f9f9').css('color', '#22A6F5');
-      $(".patopecoregion").css("background-color", 'white').css('color', '#828282');
-      $(".patopcountry").css('background-color', 'white').css('color', '#828282');
+      $(".patopwdpa").css('background-color', '#efefef').css('color', '#2e424a');
+      $(".patopecoregion").css("background-color", '#fff').css('color', '#2e424a');
+      $(".patopcountry").css('background-color', '#fff').css('color', '#2e424a');
  }
 });
 
@@ -1562,23 +1630,26 @@ $(".patopcountry").click(function(event) {
  event.preventDefault();
  if (lMap.hasLayer(Country_layer)) {
 
-   $(".patopecoregion").css('background-color', 'white').css('color', '#828282');
-   $(".patopcountry").css('background-color', '#f9f9f9').css('color', '#22A6F5');
-   $(".patopwdpa").css('background-color', 'white').css('color', '#828282');
+   $(".patopecoregion").css('background-color', '#fff').css('color', '#2e424a');
+   $(".patopcountry").css('background-color', '#efefef').css('color', '#2e424a');
+   $(".patopwdpa").css('background-color', '#fff').css('color', '#2e424a');
 
  } else {
       lMap.addLayer(Country_layer);
+      lMap.removeLayer(wdpa_group);
       lMap.removeLayer(Region_layer);
       lMap.removeLayer(ecoregion);
       lMap.removeLayer(wdpa);
+      lMap.removeLayer(wdpa_hi);
       lMap.closePopup();
 
       $("#someinfo").hide();
       $( "#block-block-127" ).hide();
       $( "#block-block-128" ).hide();
-      $(".patopwdpa").css('background-color', 'white').css('color', '#828282');
-      $(".patopecoregion").css("background-color", 'white').css('color', '#828282');
-      $(".patopcountry").css('background-color', '#f9f9f9').css('color', '#22A6F5');
+      $(".patopwdpa").css('background-color', '#fff').css('color', '#2e424a');
+      $(".patopecoregion").css("background-color", '#fff').css('color', '#2e424a');
+      $(".patopcountry").css('background-color', '#efefef').css('color', '#2e424a');
+      $('#pa_infographics').hide();
 
  }
 });
@@ -1588,9 +1659,9 @@ $(".patopecoregion").click(function(event) {
  event.preventDefault();
  if (lMap.hasLayer(ecoregion)) {
 
-      $(".patopecoregion").css('background-color', '#f9f9f9').css('color', '#22A6F5');
-      $(".patopcountry").css('background-color', 'white').css('color', '#828282');
-      $(".patopwdpa").css('background-color', 'white').css('color', '#828282');
+      $(".patopecoregion").css('background-color', '#efefef').css('color', '#2e424a');
+      $(".patopcountry").css('background-color', '#fff').css('color', '#2e424a');
+      $(".patopwdpa").css('background-color', '#fff').css('color', '#2e424a');
 
  } else {
       lMap.addLayer(ecoregion);
@@ -1599,15 +1670,17 @@ $(".patopecoregion").click(function(event) {
       lMap.removeLayer(Region_layer);
       lMap.removeLayer(Country_layer);
       lMap.removeLayer(wdpa);
+      lMap.removeLayer(wdpa_group);
       lMap.removeLayer(wdpa_hi);
       lMap.closePopup();
 
       $("#someinfo").hide();
       $( "#block-block-127" ).hide();
       $( "#block-block-136" ).hide();
-      $(".patopecoregion").css('background-color', '#f9f9f9').css('color', '#22A6F5');
-      $(".patopcountry").css('background-color', 'white').css('color', '#828282');
-      $(".patopwdpa").css('background-color', 'white').css('color', '#828282');
+      $(".patopecoregion").css('background-color', '#efefef').css('color', '#2e424a');
+      $(".patopcountry").css('background-color', '#fff').css('color', '#2e424a');
+      $(".patopwdpa").css('background-color', '#fff').css('color', '#2e424a');
+        $('#pa_infographics').hide();
  }
 });
 
@@ -1692,25 +1765,6 @@ var sliderVal;
 //-----------------------------------------------------------------------------
 // END OF Opacity Slider
 //-----------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
