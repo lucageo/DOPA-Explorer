@@ -1,18 +1,19 @@
 (function($) {
  $(document).bind('leaflet.map', function(e, map, lMap)
    {
-     lMap.spin(true, {
-lines: 11,
-length: 39,
-width: 2,
-radius: 78,
-corners: 0,
-opacity: 0,
-speed: 1,
-trail: 89,
-shadow:'on',
-hwaccel:'on'
-});
+    lMap.spin(true, {
+      lines: 11,
+      length: 39,
+      width: 2,
+      radius: 78,
+      corners: 0,
+      opacity: 0,
+      speed: 1,
+      trail: 89,
+      shadow:'on',
+      hwaccel:'on'
+    });
+
 //------------------------------------------------------------------------------
 // BASIC SETUP
 //------------------------------------------------------------------------------
@@ -23,39 +24,35 @@ hwaccel:'on'
   lMap.addControl(fsControl);
   // detect fullscreen toggling
   lMap.on('enterFullscreen', function(){
-  if(window.console) window.console.log('enterFullscreen');
-  $(".leaflet-control-attribution").css('position', 'absolute');
+    if(window.console) window.console.log('enterFullscreen');
+    $(".leaflet-control-attribution").css('position', 'absolute');
   });
   lMap.on('exitFullscreen', function(){
-  if(window.console) window.console.log('exitFullscreen');
-  $(".leaflet-control-attribution").css('position', 'relative');
+    if(window.console) window.console.log('exitFullscreen');
+    $(".leaflet-control-attribution").css('position', 'relative');
   });
   L.control.navbar().addTo(lMap);
   var zoomBox = L.control.zoomBox({ modal: false });
   lMap.addControl(zoomBox);
 //lMap.scrollWheelZoom.disable();
 
+//----------------------------------------------------------------------------
+// BASE LAYERS
+//----------------------------------------------------------------------------
 
-  //----------------------------------------------------------------------------
-  // BASE LAYERS
-  //----------------------------------------------------------------------------
+var mbAttr = '', mbUrl = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw';
+var grayscale  = L.tileLayer(mbUrl, {id: 'mapbox.streets',   attribution: 'October 2017 version of the World Database on Protected Areas (WDPA)'});
+var grayscale2   = L.tileLayer(mbUrl, {id: 'mapbox.light', attribution: 'October 2017 version of the World Database on Protected Areas (WDPA)'});//.addTo(lMap);
 
-  var mbAttr = '', mbUrl = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw';
-  var grayscale  = L.tileLayer(mbUrl, {id: 'mapbox.streets',   attribution: 'January 2017 version of the World Database on Protected Areas (WDPA)'});
-  var grayscale2   = L.tileLayer(mbUrl, {id: 'mapbox.light', attribution: 'January 2017 version of the World Database on Protected Areas (WDPA)'});//.addTo(lMap);
-  var streets  = L.tileLayer('https://api.mapbox.com/styles/v1/lucageo/cj9somw1h28h12rm6k2jp0eum/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibHVjYWdlbyIsImEiOiJjaXIwY2FmNHAwMDZ1aTVubmhuMDYyMmtjIn0.1jWhLwVzKS6k1Ldn-bVQPg',{
-attribution: 'January 2017 version of the World Database on Protected Areas (WDPA)'
-}).addTo(lMap);
-  var esri = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{
-  maxZoom: 20,
-  subdomains:['mt0','mt1','mt2','mt3']
-  });
+var streets  = L.tileLayer('https://api.mapbox.com/styles/v1/lucageo/cjajjjqnzav1w2smvm1kub1hw/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibHVjYWdlbyIsImEiOiJjaXIwY2FmNHAwMDZ1aTVubmhuMDYyMmtjIn0.1jWhLwVzKS6k1Ldn-bVQPg',{attribution: 'October 2017 version of the World Database on Protected Areas (WDPA)'}).addTo(lMap);
+var esri = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3']});
 
- //set lat long and zoom level
- lMap.setView([20, 0], 3);
+//set lat long and zoom level
+lMap.setView([20, 0], 3);
 
-
-
+//----------------------------------------------------------------------------
+// WDPA ALL LAYERS
+//----------------------------------------------------------------------------
 
  var wurla = 'http://lrm-maps.jrc.ec.europa.eu/geoserver/conservationmapping/wms';
  var wdpa_a=L.tileLayer.wms(wurla, {
@@ -63,22 +60,25 @@ attribution: 'January 2017 version of the World Database on Protected Areas (WDP
      transparent: true,
      format: 'image/png',
      opacity:'1',
-     zIndex: 10 // Use zIndex to order the tileLayers within the tilePane. The higher number, the upper vertically.
+     zIndex: 10
   });
-
+ // SHOW WDPA ALL ONLY AT BIG SCALE
   lMap.on('zoomend', function() {
       if (lMap.getZoom() < 8){
 
               lMap.removeLayer(wdpa_a);
+              wdpa.setOpacity(1);
 
       } else if (lMap.getZoom() >= 8){
         lMap.addLayer(wdpa_a);
+        wdpa.setOpacity(0.3);
       } else{}
 
   });
 
+
 //------------------------------------------------------------------------------
-// Available Layers
+// BASEMAPS Layers - DISPLAYED ON THE MAP
 //------------------------------------------------------------------------------
 var baseMaps = {
 'Landscape': streets,
@@ -91,429 +91,15 @@ layerControl = L.control.layers(baseMaps, null,  {position: 'bottomleft'});
 layerControl.addTo(lMap);
 
 //------------------------------------------------------------------------------
-// POPUP & INFO of COUNTRY LAYER - CARTODB
-//------------------------------------------------------------------------------
-
-function pop_country_layer(feature, layer) {
-
-   var Popup_Content_Country = '<center><i class="fa fa-globe fa-4x" aria-hidden="true"></i><hr><a href="/country/'+feature.properties.iso_2digit+'">'+feature.properties.name_c+'</a></center>';
-
-   var t_country = function(){
-     return [	{
-               name: '% of Protection',
-               data: [parseFloat(Math.round(feature.properties.t_prot_per*100)/100)]
-               },
-               {
-               name: '% of Connectivity',
-               data: [parseFloat(Math.round(feature.properties.t_conn_per*100)/100)]
-               }
-             ]
-     }
-
-          layer.on('popupopen', function(e) {
-
-            $('#container_country_data').highcharts({
-              chart: {type:'bar', height: 300, width: 370,
-              backgroundColor:'rgba(255, 255, 255, 0)',
-            },
-              colors: ['#388459', '#365f48'],
-              title: {text: null},
-              subtitle: {
-                  text: 'Country coverage by protected areas and connectivity (ProtConn)'
-              },
-              credits: {
-                  enabled: true,
-                  text: '© DOPA Services',
-                  href: 'http://dopa.jrc.ec.europa.eu/en/services'
-              },
-       xAxis: {
-              categories: ['%'],
-              title: {
-                  text: null
-              }
-          },
-       yAxis: {
-              max: 50,
-              title: {
-                  text: 'WDPA version: Jan 2017',
-                  align: 'high'
-              },
-              labels: {
-                  overflow: 'justify'
-              },
-              plotLines: [{
-                 color: '#5f5f5f',
-                 value: '17',
-                 width: '2',
-                 zIndex: 12
-             }]
-          },
-
-              series: t_country(feature)
-
-            });
-            $('#container64').html('<p>Aichi Target 11 treshold (17%)</p><hr>');
-            $('#container_country_name').html('<center><a href="/country/'+feature.properties.iso_2digit+'">'+feature.properties.name_c+'</a></center><hr>');
-            $('#container_country_info5').html('<span><div class="sdg_terr_pa"><p>Terrestrial Area</p></div><a href="https://sustainabledevelopment.un.org/sdg15"><img border="0" alt="sdg" src="sites/default/files/sdg_terr.png" width="70" height="70"></a><div class="sdg_terr"><p><b>'+ parseFloat(Math.round(feature.properties.t_prot_per*100)/100)+'</b>%</p></div><div class="sdg_terr_pa_cov"><p>Coverage</p></div><div class="sdg_terrt"><p><b>'+ parseFloat(Math.round(feature.properties.t_pro_area*100)/100)+'</b> km2</p></div><div class="sdg_terr_pat_cov"><p>Protected Land Area</p></div><div class="sdg_terrtotal"><p><b>'+ parseFloat(Math.round(feature.properties.land_area*100)/100)+'</b> km2</p></div><div class="sdg_terr_patotal_cov"><p>Total Land Area</p></div></span>');
-            $('#container_country_info4').html('<span><div class="sdg_mar_pa"><p>Marine Area</p></div><a href="https://sustainabledevelopment.un.org/sdg14"><img border="0" alt="sdg" src="sites/default/files/sdg_mar.png" width="70" height="70"></a><div class="sdg_mar"><p><b>'+ parseFloat(Math.round(feature.properties.m_prot_per*100)/100)+'</b>%</p></div><div class="sdg_mar_pa_cov"><p>Coverage</p></div><div class="sdg_mart"><p><b>'+ parseFloat(Math.round(feature.properties.m_pro_area*100)/100)+'</b> km2</p></div><div class="sdg_marr_pat_cov"><p>Protected Marine Area</p></div><div class="sdg_terrtotal_mar"><p><b>'+ parseFloat(Math.round(feature.properties.mar_area*100)/100)+'</b> km2</p></div><div class="sdg_mar_patotal_cov"><p>Total Marine Area</p></div></span>');
-
-
-          });
-
-
-      layer.on('popupclose', function(e){
-        $('#container_country_data').html("");
-      });
-          layer.on({
-               mouseover: highlightFeatureecor,
-               mouseout: resetHighlightecor,
-              'click': function (e) {
-                    select(e.target);
-                     }
-                     });
-
-      layer.bindPopup(Popup_Content_Country);
-
-}
-
-//------------------------------------------------------------------------------
-// LEGEND of COUNTRY LAYER - CARTODB
-//------------------------------------------------------------------------------
-
-function getColor(d) {
-
- return d > 50  ? '#074046' :
-        d > 30  ? '#0d585f' :
-        d > 20  ? '#287274' :
-        d > 15  ? '#63a6a0' :
-        d > 10   ? '#89c0b6' :
-        d > 5   ? '#b4d9cc' :
-        d > 1   ? '#e4f1e1' :
-                   '#e4f1e1';
-}
-
-var legend = L.control({position: 'bottomleft'});
-    legend.onAdd = function (lMap) {
-        var div = L.DomUtil.create('div', 'info legend'),
-         labels = ['<div id="countrylegend"><p>Country coverage by protected areas (%)</p></div>'],
-           grades = [1, 5, 10, 15, 20, 30, 50],
-           key_labels = [' 1 % ',' 5 % ',' 10 % ',' 15 % ',' 20 % ',' 30 % ',' 50 % '];
-               for (var i = 0; i < grades.length; i++) {
-                div.innerHTML += labels.push('<i style="background:' + getColor(grades[i] + 1) + '"></i> ' + key_labels[i] + (key_labels[i + 1] ? '&ndash;' + key_labels[i + 1] + '<br>' : '+'));
-               }
-           div.innerHTML = labels.join('');
-         return div;
-      };
-legend.addTo(lMap);
-
-// styling the GeoJSON layer, uses getColor function above
-var stylecou = function(feature) {
- return {
-   fillColor: getColor(feature.properties.t_prot_per),
-   weight: 0.1,
-   opacity: 1,
-   color: 'white',
-   //dashArray: '3',
-   fillOpacity: 0.8,
-   zIndex: 1
- }
-}
-//------------------------------------------------------------------------------
-// SETUP of COUNTRY LAYER - CARTODB - highlight AND zoomToFeature
-//------------------------------------------------------------------------------
-
-// SQL filter applied on the layer - is gonna be added below to the GeoJSON layer
-var filter = function(feature) {
- return feature.properties.cartodb_id > 100;
-}
-
-// Highlight layer
-function highlightFeature(e) {
- var layer = e.target;
- layer.setStyle({
-   weight: 2,
-   color: '#ffffff',
-   dashArray: '',
-   fillOpacity: 0.8
- });
-}
-
-// Highlight layer - Reset
-function resetHighlight(e) {
-  Country_layer.resetStyle(e.target);
-}
-
-// Zoom to feature
-function zoomToFeature(e) {
-  lMap.fitBounds(e.target.getBounds());
-}
-
-//------------------------------------------------------------------------------
-// CARTO COUNTRY LAYER
-//------------------------------------------------------------------------------
-var onEachFeature = function(feature, layer) {
-       if (feature.properties) {
-
-          pop_country_layer(feature, layer);
-
-          layer.on({
-             mouseover: highlightFeature,
-             mouseout: resetHighlight,
-             'click': function (e) {
-                   select(e.target);
-                   $( "#block-block-136" ).show();
-                    $( ".pabottom" ).hide();
-              // zoomToFeatureeco(e);
-             }
-          });
-      }
-}
-
-// Define layer
-var Country_layer = L.geoJson(null, {
-  //filter: filter,
-  onEachFeature: onEachFeature,
-  style: stylecou
-});//.addTo(lMap);
-
-// Call to CARTO
-var query = "SELECT * FROM dopa_countries_new_p ";
-var sql = new cartodb.SQL({ user: 'climateadapttst' });
-sql.execute(query, null, { format: 'geojson' }).done(function(data) {
-Country_layer.addData(data);
-});
-
-//------------------------------------------------------------------------------
-// FUNCTION SELECT (TO SHOW THE GRAPH) OF THE region LAYER
-//------------------------------------------------------------------------------
-  function select (layer) {
-    if (selected !== null) {
-        var previous = selected;
-        }
-    else {}
-    selected = layer;
-  }
-
-  var selected = null;
-
-//------------------------------------------------------------------------------
-//  POPUP & INFO of region LAYER - CARTODB
-//------------------------------------------------------------------------------
-
-function pop_region_layer(feature, layer) {
-
-var popupContent1 = '<center><a href="/region/'+feature.properties.continent+'">'+feature.properties.continent+'</a></center><hr>';
-
-var t1=function()
-{
-  return [	{
-            name: '% of Connectivity',
-            data: [parseFloat(Math.round(feature.properties.connection*100)/100)]
-            },
-            {
-            name: '% of Protection',
-            data: [parseFloat(Math.round(feature.properties.protection*100)/100)]
-            }
-          ]
-  }
-
-       layer.on('popupopen', function(e) {
-
-         $('#container14').highcharts({
-           chart: {type:'bar', height: 300, width: 370},
-           colors: ['#c9db72', '#5b8059'],
-           title: {text: null},
-           subtitle: {
-               text: 'Region Protection & Connectivity'
-           },
-           credits: {
-               enabled: false,
-               text: null,
-             //  href: 'http://ehabitat-wps.jrc.ec.europa.eu/dopa_explorer/?pa='+$paid
-           },
-    xAxis: {
-           categories: ['%'],
-           title: {
-               text: null
-           }
-       },
-    yAxis: {
-           min: 0,
-           title: {
-               text: 'Aichi Target 11 Indexes',
-               align: 'high'
-           },
-           labels: {
-               overflow: 'justify'
-           },
-           plotLines: [{
-              color: '#22A6F5',
-              value: '17',
-              width: '2',
-              zIndex: 2
-          }]
-       },
-
-           series: t1(feature)
-
-         });
-          $('#container15').html('<center><a href="/region/'+feature.properties.continent+'">'+feature.properties.continent+'</a></center><hr>');
-          $('#container16').html('<hr><p>continet <b>'+feature.properties.continent+'</b></p><hr>');
-          $('#container17').html('<p>continent <b>'+feature.properties.continent+'</b></p><hr>');
-          // $('#visit_region').html('<p><span><a href="/region/'+feature.properties.continent+'" class="wdpalink" > Explore </a></span></p>');
-          // $('#visit_region').show();
-       });
-
-
-   layer.on('popupclose', function(e){
-     $('#container14').html("");
-   });
-       layer.on({
-            mouseover: highlightFeatureecor,
-            mouseout: resetHighlightecor,
-           'click': function (e) {
-                 select(e.target);
-                  }
-                  });
-
-layer.bindPopup(popupContent1);
-
-}
-//------------------------------------------------------------------------------
-// LEGEND of REGION LAYER - CARTODB  --> remeber to activate it "legendreg.addTo(lMap);" below
-//------------------------------------------------------------------------------
-function getColorecor(dreg) {
-  return dreg > 100      ? '#10732f' :
-         dreg > 75       ? '#1a9641' :
-         dreg > 50       ? '#a6d96a' :
-         dreg > 30       ? '#ffffbf' :
-         dreg > 20       ? '#fdae61' :
-         dreg > 5        ? '#e77f80' :
-         dreg > 0        ? '#ec3a3c' :
-                           '#ec3a3c';
-}
-
-var legendreg = L.control({position: 'bottomleft'});
-legendreg.onAdd = function (lMap) {
-   var div = L.DomUtil.create('div', 'info legend'),
-    labels = ['<div id="regionlegend"><p>Region Protection</p></div>'],
-      gradregion = [0, 5, 20, 30, 50, 75, 100],
-      key_labelsreg = [' 0% ',' 5% ',' 20% ',' 30% ',' 50% ',' 75%',' 100% '];
-          for (var iecor = 0; iecor < gradregion.length; iecor++) {
-           div.innerHTML += labels.push('<i style="background:' + getColorecor(gradregion[iecor ] + 1) + '"></i> ' + key_labelsreg[iecor] + (key_labelsreg[iecor+ 1] ? '&ndash;' + key_labelsreg[iecor + 1] + '<br>' : '+'));
-          }
-      div.innerHTML = labels.join('');
-    return div;
- };
-//  legendreg.addTo(lMap);
-
-// styling the GeoJSON layer, uses getColor function above
-var styleecor = function(feature) {
-  return {
-    fillColor: getColorecor(feature.properties.protection),
-    weight: 1,
-    opacity: 1,
-    color: getColorecor(feature.properties.protection),
-    //dashArray: '3',
-    fillOpacity: 0.6,
-    zIndex: 1
-  }
-}
-
-//------------------------------------------------------------------------------
-// SETUP of REGION LAYER - CARTODB - highlight AND zoomToFeature
-//------------------------------------------------------------------------------
-
-// SQL filter applied on the layer - is gonna be added below to the GeoJSON layer
-var filterecor = function(feature) {
-  return feature.properties.protection > 0;
-}
-// Highlight Layer
-function highlightFeatureecor(e) {
-  var layer = e.target;
-  layer.setStyle({
-    weight: 2,
-    color: '#ffffff',
-    dashArray: '',
-    fillOpacity: 0.8
-  });
-}
-// Highlight Layer - Reset
-function resetHighlightecor(e) {
-  Region_layer.resetStyle(e.target);
-}
-// Zoom to feature
-function zoomToFeatureeco(e) {
-  lMap.fitBounds(e.target.getBounds());
-}
-
-//------------------------------------------------------------------------------
-// CARTO Region LAYER  -  SETUP
-//------------------------------------------------------------------------------
- var onEachFeatureecor = function(feature, layer) {
-      if (feature.properties) {
-
-        pop_region_layer(feature,layer);
-
-        layer.on({
-             mouseover: highlightFeatureecor,
-             mouseout: resetHighlightecor,
-             'click': function (e) {
-                   select(e.target);
-                   $( "#block-block-135" ).show();
-                  //  $('#print_btn_reg').show();
-                  //  $('#print_btn_ecoregion').hide();
-                  //  $('#print_btn_country').hide();
-                  //  $('#print_btn').hide();
-
-               //zoomToFeatureeco(e);
-             }
-        });
-     }
- }
-
-var Region_layer = L.geoJson(null, {
-  //  filter: filtereco,
-  onEachFeature: onEachFeatureecor, pop_region_layer,
-  style: styleecor
-});
-var queryecor = "SELECT * FROM regions";
-var sqlecor = new cartodb.SQL({ user: 'climateadapttst' });
-sqlecor.execute(queryecor, null, { format: 'geojson' }).done(function(dataecor) {
-Region_layer.addData(dataecor);
-      });
-
-//------------------------------------------------------------------------------
-// SEARCH region
-//------------------------------------------------------------------------------
-
-//  var searchregion = L.control.search({
-//  position:'topleft',
-//  layer: Region_layer,
-//  zoom:7,
-//  circleLocation: false,
-//  //eco_layer: eco_hi,
-//  textErr: 'Site not found',
-//  propertyName: 'continent',
-//  textPlaceholder: '   Region...               ',
-//  buildTip: function(text, val) {
-//  //var type = val.layer.feature.properties.ecoregion_id;
-//  return '<a href="#"><b>'+text+'</b></a>';
-//
-// }
-// }).addTo(lMap);
-
-//------------------------------------------------------------------------------
-// FUNCTION SELECT (TO SHOW THE GRAPH) OF THE region LAYER
+// FUNCTION SELECT
 //------------------------------------------------------------------------------
 function select (layer) {
   if (selected !== null) {
-      var previous = selected;
-      }
+  var previous = selected;
+  }
   else {}
   selected = layer;
 }
-
 var selected = null;
 
 //------------------------------------------------------------------------------
@@ -566,7 +152,6 @@ sql5.execute(query5, null, { format: 'geojson' }).done(function(data5) {
  buildTip: function(text, val) {
  var type = val.layer.feature.properties.ecoregion_id;
  return '<a href="#" class="'+type+'"><b>'+text+'</b></a>';
-
 }
 }).addTo(lMap);
 
@@ -579,7 +164,7 @@ var ecoregion=L.tileLayer.wms(url_ecoregion, {
    layers: 'lrm:eco_mar_ter_prot_con_2016',
    transparent: true,
    format: 'image/png',
-   opacity:'0.9',
+   opacity:'0.6',
    zIndex: 33
 });
 
@@ -677,15 +262,16 @@ function hi_highcharts_eco(info,latlng){
   var protection=info['protection'];
   var area=info['area'];
 
-
   // Ecoregion higlighted popup
   if (is_marine ==='No' ) {
-    var popupContenteco = '<center><i class="fa fa-tree fa-2x" aria-hidden="true"></i><hr><a href="/ecoregion/'+id+'">'+eco_name+'</a></center><hr>';
+
+    var popupContenteco = '<center><i class="fa fa-tree fa-2x" aria-hidden="true"></i><hr><p>'+eco_name+'</p><hr><a href="/ecoregion/'+id+'">SEE REPORT</a></center>';
+
     $('#container4').highcharts({
       chart: {type:'bar', height: 300, width: 370,
       backgroundColor:'rgba(255, 255, 255, 0)'
     },
-      colors: ['#388459', '#365f48'],
+      colors: ['#297177', '#128488'],
       title: {text: null},
       subtitle: {
           text: 'Ecoregion coverage by terrestrial protected areas and connectivity'
@@ -731,15 +317,14 @@ function hi_highcharts_eco(info,latlng){
     });
   }
   else {
-    var popupContenteco = '<center><i class="fa fa-tint fa-2x" aria-hidden="true"></i><hr><a href="/ecoregion/'+id+'">'+eco_name+'</a></center><hr>';
 
-
+    var popupContenteco = '<center><i class="fa fa-tint fa-2x" aria-hidden="true"></i><hr><p>'+eco_name+'</p><hr><a href="/ecoregion/'+id+'">SEE REPORT</a></center>';
 
     $('#container4').highcharts({
       chart: {type:'bar', height: 300, width: 370,
       backgroundColor:'rgba(255, 255, 255, 0)'
     },
-      colors: ['#388459', '#365f48'],
+      colors: ['#297177', '#128488'],
       title: {text: null},
       subtitle: {
           text: 'Ecoregion coverage by protected areas'
@@ -780,31 +365,24 @@ function hi_highcharts_eco(info,latlng){
               ]
 
     });
-
-
-
-
-
-  }
+}
   var popup_eco = L.popup()
        .setLatLng([latlng.lat, latlng.lng])
        .setContent(popupContenteco)
        .openOn(lMap);
        // Ecoregion NAME
        $('#container5').html('<center><a href="/ecoregion/'+id+'">'+eco_name+'</a></center>');
-       // Ecoregion BIOME
+       // Ecoregion AREA
        $('#container55').html('<p>Area (km2) <b>'+parseFloat(Math.round(area*100)/100)+'</b></p><hr>');
+      // Ecoregion BIOME
        $('#container6').html('<p>Biome <b>'+biome+'</b></p><hr>');
        // Ecoregion REALM
        $('#container7').html('<p>Realm <b>'+realm+'</b></p><hr>');
-       // Ecoregion REALM
+       // Ecoregion AICHI 17
        $('#container24').html('<p>Aichi Target 11 treshold (17%)</p><hr>');
        // Ecoregion Protection  Graph
 
-
-
-
-} // hi_highcharts_eco
+} // end of 'hi_highcharts_eco' fuction
 
 //------------------------------------------------------------------------------
 // Info for WMS layer -  BOTH WDPA AND  ECOREGION -  https://astuntechnology.github.io/osgis-ol3-leaflet/leaflet/05-WMS-INFO.html
@@ -852,8 +430,7 @@ lMap.on('click', function(e) {
                   hi_highcharts_eco(prop1,eco_latlng);
 
                   // show the div containing graphs and info
-                  $( "#block-block-128" ).show(); // RIGHT INFO BOX
-                  // $('#visit_ecoregion').show();
+                  $( "#block-block-128" ).show();
 
             }
             else {
@@ -863,7 +440,7 @@ lMap.on('click', function(e) {
   }
 
 // Check if the layer is WDPA
-  else {
+  else if (lMap.hasLayer(wdpa)) {
              var latlng= e.latlng;
              var url = getFeatureInfoUrl(
                              lMap,
@@ -872,7 +449,7 @@ lMap.on('click', function(e) {
                              {
                                  'info_format': 'text/javascript',  //it allows us to get a jsonp
                                  'propertyName': 'wdpaid,wdpa_name,desig_eng,desig_type,iucn_cat,jrc_gis_area_km2,rep_area,status,status_yr,mang_auth,country,iso3',
-                                 'query_layers': 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg',
+                                 'query_layers': 'dopa_explorer_2:dopa_geoserver_wdpa_master',
                                  'format_options':'callback:getJson'
                              }
                          );
@@ -899,22 +476,8 @@ lMap.on('click', function(e) {
                            wdpa_hi.setParams({CQL_FILTER:filter});
                            hi_highcharts_pa(prop,latlng);
                            // SHOW THE DIV CONTAINING GRAPHS AND INFO
-                           $( "#block-block-127" ).show(); // RIGHT INFO BOX
-                          // $( "#block-block-132" ).show(); // BUTTON FOR CLIMATE GRAPHS
-                          // $("#pa_disclaimer_arrow_climate").show();
-                           //$("#pa_disclaimer_arrow_elevation").show();
-                          // $("#pa_climate_plot_title").show();
-                          // $("#pa_elevation_plot_title").show();
-                           //$("#CLC2005title").show();
-                          // $("#disclaimer__arrow_2").show();
-                           //$("#glob2005-chart").show();
-                          // $("#containerclima2").show();
-                           //$("#container_elevation").show();
-                           //$("#CLC2000title").show();
-                          // $("#disclaimer__arrow_3").show();
-                          // $("#glc2000-chart").show();
+                           $( "#block-block-127" ).show();
                            $("#someinfo").show();
-                          //  $('#visit_wdpa').show();
                      }
                      else {
                       //  console.log(' no info')
@@ -922,9 +485,297 @@ lMap.on('click', function(e) {
 
                 } // Close handleJson_featureRequest
 
-  } // Close else
+  } else{
+
+   // Check if the layer is country
+    var cou_gs_latlng= e.latlng;
+    var url_cou_gs = getFeatureInfoUrl_c(
+                    lMap,
+                    country_gs,
+                    e.latlng,
+                    {
+                        'info_format': 'text/javascript',  //it allows us to get a jsonp
+                        'propertyName': 'name_c,iso_2digit,t_prot_per,t_pro_area,t_conn_per,mar_area,m_prot_per,m_pro_area,land_area',
+                        'query_layers': 'dopa_explorer:dopa_countries_new_better5',
+                        'format_options':'callback:getJson'
+                    }
+                );
+
+
+    // country - JSONP with the GetFeatureInfo-Request - http://gis.stackexchange.com/questions/211458/using-jsonp-with-leaflet-and-getfeatureinfo-request
+     $.ajax({
+             jsonp: false,
+             url: url_cou_gs,
+             dataType: 'jsonp',
+             jsonpCallback: 'getJson',
+             success: handleJson_featureRequest_cou_gs
+           });
+
+        function handleJson_featureRequest_cou_gs(data2)
+        {
+           // if layer cover the map
+           if (typeof data2.features[0]!=='undefined')
+               {
+                  // take the poerties of the layer
+                  var prop2=data2.features[0].properties;
+
+                 // and take the ecoregion id
+                  var filter2="iso_2digit='"+prop2['iso_2digit']+"'";
+
+                 // and set the filter of ecoregion higlighted
+                  country_gs_hi.setParams({CQL_FILTER:filter2});
+                  hi_highcharts_country(prop2,cou_gs_latlng);
+
+                  // show the div containing graphs and info
+                  $( "#block-block-136" ).show();
+
+            }
+            else {
+              // console.log(' no info')
+            }
+        }
+
+
+  }// Close else
 
 }); // Close onclick function
+
+//------------------------------------------------------------------------------
+// Country JSON point LAYER - cartodb
+//------------------------------------------------------------------------------
+
+var filter_ecoregion = function(feature) {
+ return feature.properties.ecoregion_id > 1;
+}
+var c_cen_group = new L.LayerGroup();
+var query_cou_cent = "SELECT * FROM dopa_exp_cou_cent";
+var sql_cou_cent = new cartodb.SQL({ user: 'climateadapttst' });
+sql_cou_cent.execute(query_cou_cent, null, { format: 'geojson' }).done(function(data_cou_cent) {
+
+      layer_cou_cent = L.geoJson(data_cou_cent, {
+
+                  onEachFeature: function (feature, layer_cou_cent) {
+                    //NOTHING BEACUSE THE POPUP IS MANAGED BY THE WMS
+                    },
+                  pointToLayer: function (feature, latlng) {
+                    var geojsonMarkerOptions = {
+                    radius:0.001,
+                    opacity: 0,
+                    fillOpacity: 0
+                    };
+                    return L.circleMarker(latlng, geojsonMarkerOptions );
+                  }
+       })//.addTo(lMap);
+
+      c_cen_group.addLayer(layer_cou_cent);
+      //   if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+      // layer_cou_cent.bringToFront();
+      // }
+
+})
+
+//------------------------------------------------------------------------------
+// SEARCH country
+//------------------------------------------------------------------------------
+ var searchcou = L.control.search({
+ position:'topleft',
+ layer: c_cen_group,
+ zoom:7,
+ circleLocation: false,
+ layer_cou_cent: country_gs_hi,
+ textErr: 'Site not found',
+ propertyName: 'name_c',
+ textPlaceholder: 'Location...                ',
+ buildTip: function(text, val) {
+ var type = val.layer.feature.properties.iso_2digit;
+ return '<a href="#" class="'+type+'"><b>'+text+'</b></a>';
+}
+}).addTo(lMap);
+
+//------------------------------------------------------------------------------
+// country LAYER -  WMS - Geoserver
+//------------------------------------------------------------------------------
+
+var url_gs_country = 'http://lrm-maps.jrc.ec.europa.eu/geoserver/dopa_explorer/wms';
+var country_gs=L.tileLayer.wms(url_gs_country, {
+   layers: 'dopa_explorer:dopa_countries_new_better5',
+   transparent: true,
+   format: 'image/png',
+   opacity:'0.8',
+   zIndex: 33
+});
+
+//------------------------------------------------------------------------------
+//  Country LAYER - Get Feature Info
+//------------------------------------------------------------------------------
+
+function getFeatureInfoUrl_c(map, layer, latlng, params) {
+ //console.log(layer.wmsParams.layers)
+if (layer.wmsParams.layers=="dopa_explorer:dopa_countries_new_better5")
+    {
+       var point2 = map.latLngToContainerPoint(latlng, map.getZoom()),
+           size2 = map.getSize(),
+           bounds2 = map.getBounds(),
+           sw2 = bounds2.getSouthWest(),
+           ne2 = bounds2.getNorthEast();
+
+       var defaultParams2 = {
+           request: 'GetFeatureInfo',
+           service: 'WMS',
+           srs: 'EPSG:4326',
+           styles: '',
+           version: layer._wmsVersion,
+           format: layer.options.format,
+           bbox: bounds2.toBBoxString(),
+           height: size2.y,
+           width: size2.x,
+           layers: layer.options.layers,
+           info_format: 'text/javascript'
+       };
+
+     params = L.Util.extend(defaultParams2, params || {});
+     params[params.version === '1.3.0' ? 'i' : 'x'] = point2.x;
+     params[params.version === '1.3.0' ? 'j' : 'y'] = point2.y;
+
+     return layer._url + L.Util.getParamString(params, layer._url, true);
+    }
+}
+
+//------------------------------------------------------------------------------
+// LEGEND of COUNTRY LAYER
+//------------------------------------------------------------------------------
+
+function getColor(d) {
+
+ return d > 50  ? '#074046' :
+        d > 30  ? '#0d585f' :
+        d > 20  ? '#287274' :
+        d > 15  ? '#63a6a0' :
+        d > 10   ? '#89c0b6' :
+        d > 5   ? '#b4d9cc' :
+        d > 1   ? '#e4f1e1' :
+                   '#e4f1e1';
+}
+
+var legend = L.control({position: 'bottomleft'});
+    legend.onAdd = function (lMap) {
+        var div = L.DomUtil.create('div', 'info legend'),
+         labels = ['<div id="countrylegend"><p>Country coverage by protected areas (%)</p></div>'],
+           grades = [1, 5, 10, 15, 20, 30, 50],
+           key_labels = [' 1 % ',' 5 % ',' 10 % ',' 15 % ',' 20 % ',' 30 % ',' 50 % '];
+               for (var i = 0; i < grades.length; i++) {
+                div.innerHTML += labels.push('<i style="background:' + getColor(grades[i] + 1) + '"></i> ' + key_labels[i] + (key_labels[i + 1] ? '&ndash;' + key_labels[i + 1] + '<br>' : '+'));
+               }
+           div.innerHTML = labels.join('');
+         return div;
+      };
+legend.addTo(lMap);
+
+//------------------------------------------------------------------------------
+//  Country LAYER - HIGHLIGHT WMS
+//------------------------------------------------------------------------------
+
+var url_gs_country_hi = 'http://lrm-maps.jrc.ec.europa.eu/geoserver/dopa_explorer/wms';
+var country_gs_hi=L.tileLayer.wms(url_gs_country_hi, {
+   layers: 'dopa_explorer:dopa_countries_new_better5_hi',
+   transparent: true,
+   format: 'image/png',
+   opacity:'1',
+   zIndex: 40
+}).addTo(lMap);
+
+country_gs_hi.setParams({CQL_FILTER:"name_c LIKE ''"});
+
+//------------------------------------------------------------------------------
+// Counry LAYER - ONCLICK RESPONSE ON HIGLIGHTED ECOREGION
+//------------------------------------------------------------------------------
+function hi_highcharts_country(info,latlng){
+
+  //create variables of each column you want to show from the attribute table of the country wms - each variable need to be set in under "getfeatureinfourl" function
+  var name_c=info['name_c'];
+  var iso_2digit=info['iso_2digit'];
+  var t_prot_per=info['t_prot_per'];
+  var t_pro_area=info['t_pro_area'];
+  var t_conn_per=info['t_conn_per'];
+  var mar_area=info['mar_area'];
+  var m_prot_per=info['m_prot_per'];
+  var m_pro_area=info['m_pro_area'];
+  var land_area=info['land_area'];
+
+  // country higlighted popup
+  var Popup_Content_Country = '<center><i class="fa fa-globe fa-2x" aria-hidden="true"></i><hr><p>'+name_c+'</p><hr><a href="/country/'+iso_2digit+'">SEE REPORT</a></center>';
+
+  $('#container_country_data').highcharts({
+    chart: {type:'bar', height: 300, width: 370,
+    backgroundColor:'rgba(255, 255, 255, 0)',
+  },
+    colors: ['#297177', '#128488'],
+    title: {text: null},
+    subtitle: {
+        text: 'Country coverage by protected areas and connectivity (ProtConn)'
+    },
+    credits: {
+        enabled: true,
+        text: '© DOPA Services',
+        href: 'http://dopa.jrc.ec.europa.eu/en/services'
+    },
+xAxis: {
+    categories: ['%'],
+    title: {
+        text: null
+    }
+},
+yAxis: {
+    max: 50,
+    title: {
+        text: 'WDPA version: Jan 2017',
+        align: 'high'
+    },
+    labels: {
+        overflow: 'justify'
+    },
+    plotLines: [{
+       color: '#5f5f5f',
+       value: '17',
+       width: '2',
+       zIndex: 12
+   }]
+},
+
+    series: [	{
+              name: '% of Protection',
+              data: [parseFloat(Math.round(t_prot_per*100)/100)]
+              },
+              {
+              name: '% of Connectivity',
+              data: [parseFloat(Math.round(t_conn_per*100)/100)/2]
+              }
+            ]
+
+  });
+
+
+
+  var popup_cou_gs = L.popup()
+       .setLatLng([latlng.lat, latlng.lng])
+       .setContent(Popup_Content_Country)
+       .openOn(lMap);
+       $('#container64').html('<p>Aichi Target 11 treshold (17%)</p><hr>');
+       $('#container_country_name').html('<center><a href="/country/'+iso_2digit+'">'+name_c+'</a></center><hr>');
+       $('#container_country_info5').html('<span><div class="sdg_terr_pa"><p>Terrestrial Area</p></div><a href="https://sustainabledevelopment.un.org/sdg15"><img border="0" alt="sdg" src="sites/default/files/sdg_terr.png" width="70" height="70"></a><div class="sdg_terr"><p><b>'+ parseFloat(Math.round(t_prot_per*100)/100)+'</b>%</p></div><div class="sdg_terr_pa_cov"><p>Coverage</p></div><div class="sdg_terrt"><p><b>'+ parseFloat(Math.round(t_pro_area*100)/100)+'</b> km2</p></div><div class="sdg_terr_pat_cov"><p>Protected Land Area</p></div><div class="sdg_terrtotal"><p><b>'+ parseFloat(Math.round(land_area*100)/100)+'</b> km2</p></div><div class="sdg_terr_patotal_cov"><p>Total Land Area</p></div></span>');
+       $('#container_country_info4').html('<span><div class="sdg_mar_pa"><p>Marine Area</p></div><a href="https://sustainabledevelopment.un.org/sdg14"><img border="0" alt="sdg" src="sites/default/files/sdg_mar.png" width="70" height="70"></a><div class="sdg_mar"><p><b>'+ parseFloat(Math.round(m_prot_per*100)/100)+'</b>%</p></div><div class="sdg_mar_pa_cov"><p>Coverage</p></div><div class="sdg_mart"><p><b>'+ parseFloat(Math.round(m_pro_area*100)/100)+'</b> km2</p></div><div class="sdg_marr_pat_cov"><p>Protected Marine Area</p></div><div class="sdg_terrtotal_mar"><p><b>'+ parseFloat(Math.round(mar_area*100)/100)+'</b> km2</p></div><div class="sdg_mar_patotal_cov"><p>Total Marine Area</p></div></span>');
+
+
+
+
+
+} // hi_highcharts_country
+
+
+
+
+
+
 
 //------------------------------------------------------------------------------
 // WDPA JSON point LAYER - cartodb
@@ -934,7 +785,7 @@ var filter_wdpa = function(feature) {
  return feature.properties.wdpaid > 1;
 }
 var wdpa_group = new L.LayerGroup();
-var query4 = "SELECT the_geom, wdpaid, names  FROM wdpa_gen_2017_controids";
+var query4 = "SELECT the_geom, wdpaid, name FROM dopa_carto_wdpa_centroids_master";
 var sql4 = new cartodb.SQL({ user: 'climateadapttst' });
 
 sql4.execute(query4, null, { format: 'geojson' }).done(function(data4) {
@@ -970,12 +821,12 @@ lMap.spin(false);
 //  WDPA WMS GEOSERVER LAYER
 //------------------------------------------------------------------------------
 
-var url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/dopa_explorer/wms';
+var url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/dopa_explorer_2/wms';
 var wdpa=L.tileLayer.wms(url, {
-    layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg',
+    layers: 'dopa_explorer_2:dopa_geoserver_wdpa_master',
     transparent: true,
     format: 'image/png',
-    opacity:'0.9',
+    opacity:'1',
     zIndex: 33
  }).addTo(lMap);
 
@@ -1019,8 +870,8 @@ function getFeatureInfoUrl(map, layer, latlng, params) {
 function getColor4(d4) {
   return d4 > 30  ?   '#c9d6ce' :
          d4 > 20  ?   '#c9d6ce':
-         d4 > 15  ?   '#266e83':
-         d4 > 10  ?   '#749381':
+         d4 > 15  ?   '#104f60':
+         d4 > 10  ?   '#1c707b':
                       '#80bfd9';
                   }
 var legend4 = L.control({position: 'bottomleft'});
@@ -1039,9 +890,9 @@ legend4.addTo(lMap);
 //  WDPA HIGHLIGHT WMS
 //------------------------------------------------------------------------------
 
-var url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/dopa_explorer/wms';
+var url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/dopa_explorer_2/wms';
 var wdpa_hi=L.tileLayer.wms(url, {
-    layers: 'dopa_explorer:mv_wdpa_pa_level_relevant_over50_polygons_country_name_agg_hi',
+    layers: 'dopa_explorer_2:dopa_geoserver_wdpa_master_hi',
     transparent: true,
     format: 'image/png',
     opacity:'1',
@@ -1053,7 +904,6 @@ var wdpa_hi=L.tileLayer.wms(url, {
 //---------------------------------------------------------------
 // SEARCH WDPA
 //--------------------------------------------------------------
-
 var searchwdpa = L.control.search({
   position:'topright',
   layer: wdpa_group,
@@ -1061,7 +911,7 @@ var searchwdpa = L.control.search({
   circleLocation: false,
   wdpa_layer: wdpa_hi,
   textErr: 'Site not found',
-  propertyName: 'names',
+  propertyName: 'name',
   textPlaceholder: 'Protected Area...          ',
   buildTip: function(text, val) {
   var type = val.layer.feature.properties.wdpaid;
@@ -1088,35 +938,20 @@ function hi_highcharts_pa(info,latlng){
  var iso3=info['iso3'];
  var iso3_first=iso3.slice(0,3);
 
-  //WDPA HIGLIGHTED POPUP
+ //WDPA HIGLIGHTED POPUP
 
   if (gis_area > 99){
-  var popupContentwdpa = '<center><i class="fa fa-envira fa-2x" aria-hidden="true"></i><p>'+name+'</p><i>('+country+')</i><hr><a href="/wdpa/'+wdpaid+'">See Report</a></center>';
+  var popupContentwdpa = '<center><i class="fa fa-envira fa-2x" aria-hidden="true"></i><p>'+name+'</p><i>'+country+'</i><hr><a href="/wdpa/'+wdpaid+'">See Report</a></center>';
   // when available add: <center><i class="fa fa-globe fa-2x" aria-hidden="true"></i><br></br><a href="/country/'+iso3_first+'">'+country+'</a></center><hr>
   }
   else{
-  var popupContentwdpa = '<center><i class="fa fa-envira fa-2x" aria-hidden="true"></i><br></br><p>'+name+'</p></center>';
+  var popupContentwdpa = '<center><i class="fa fa-envira fa-2x" aria-hidden="true"></i><hr><p>'+name+'</p></center>';
   // when available add: <center><i class="fa fa-globe fa-2x" aria-hidden="true"></i><br></br><a href="/country/'+iso3_first+'">'+country+'</a></center><hr>
   }
  var popup = L.popup()
       .setLatLng([latlng.lat, latlng.lng])
       .setContent(popupContentwdpa)
       .openOn(lMap);
-
-    // $('#pa_disclaimer_arrow_climate').show();
-    // $('#pa_disclaimer_arrow_elevation').show();
-    // $('#pa_climate_plot_title').show();
-    // $('#pa_elevation_plot_title').show();
-    // $('#disclaimer__arrow_2').show();
-    // $('#CLC2005title').show();
-    // $('#disclaimer__arrow_3').show();
-    // $('#CLC2000title').show();
-    // $('#print_btn').show();
-    // $('#print_btn_ecoregion').hide();
-    // $('#print_btn_reg').hide();
-    // $('#print_btn_country').hide();
-    // $('.hidden-print-header-content').show();
-
 
     //WDPA HIGLIGHTED HEADER RIGHT BOX
 
@@ -1138,12 +973,6 @@ function hi_highcharts_pa(info,latlng){
       $('#someinfo').html('<em><span><b>'+name+'</b></span> is in <span><b>'+country+'</b></span>, has been designated as '+desig_eng+' at '+desig_type+' level<em class="year_des"> in <span><b class ="years">'+status_yr+'</b></em></span>, it covers <span><b>'+parseFloat(Math.round(gis_area*100)/100)+' km² </b></span><em class="mang_auth">and is managed by '+mang_auth+'</em></span>.<br><em> ');
       // when is available add: <a href="/country/'+iso3_first+'" class="countrylink" >'+country+'</a>
 
-      // show explore button when is bigger than 99 km2 ----> to be changed to "50"
-      // if (gis_area > 99){
-      //   $('#visit_wdpa').html('<p><span><a href="/wdpa/'+wdpaid+'" class="wdpalink" > Explore </a></span></p>');
-      // }else{
-      //   $('#visit_wdpa').html('<p><span><a href="mailto:JRC-DOPA@ec.europa.eu" class="wdpalink" > Keep in touch for updates </a></span></p>');
-      // }
       // hide management auth. when not reported
       var auth = $('.mang_auth').html();
       if (auth.match(/Not Reported*/)){
@@ -1158,16 +987,14 @@ function hi_highcharts_pa(info,latlng){
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // WDPA GRAPHS
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-       var url = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_radarplot_pa?wdpaid=' + wdpaid; // get radar plot in pa
-       var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_climate_pa?wdpaid=' + wdpaid; // get climate data in pa
-       var urlecoregion = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabitat/get_ecoregion_in_wdpa?wdpaid=' + wdpaid; // get ecoregion in wdpa -  not used atm
-       var urlclc2000 = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_wdpa_lc_stats_glc2000?wdpaid='+ wdpaid; //get land cover 2000 in pa
-       var urlclc2005 = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_wdpa_lc_stats_glob2005?wdpaid=' + wdpaid; //get land cover 2005 in pa
-       var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_topo_pa?wdpaid=' + wdpaid; //get elevation
-
-
+var url = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_radarplot_pa?wdpaid=' + wdpaid; // get radar plot in pa
+var urlclima = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_climate_pa?wdpaid=' + wdpaid; // get climate data in pa
+var urlecoregion = 'http://dopa-services.jrc.ec.europa.eu/services/h05ibex/ehabitat/get_ecoregion_in_wdpa?wdpaid=' + wdpaid; // get ecoregion in wdpa -  not used atm
+var urlclc2000 = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_wdpa_lc_stats_glc2000?wdpaid='+ wdpaid; //get land cover 2000 in pa
+var urlclc2005 = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_wdpa_lc_stats_glob2005?wdpaid=' + wdpaid; //get land cover 2005 in pa
+var urlelevation = 'http://dopa-services.jrc.ec.europa.eu/services/ibex/ehabitat/get_topo_pa?wdpaid=' + wdpaid; //get elevation
 //-----------------------------------------------------------------------------
-//  WDPA Spyder graph - Overall condition
+//  WDPA Spyder graph and bottom InfoGraphics
 //-----------------------------------------------------------------------------
 
 $.ajax({
@@ -1530,7 +1357,7 @@ $.ajax({
                   },
                   name: 'Country Average',
                   data: country_avg,
-                  color: '#b2ccc5'
+                  color: '#79a6ab'
               },
               {
                   type: 'line',
@@ -1562,28 +1389,24 @@ lMap.on('click',function(e){
     })
 
 lMap.on('popupclose',function(e){
-    // $( "#block-block-128" ).hide();
-    // $( "#block-block-127" ).hide();
-    // $( "#containerclima" ).hide();
-    // $( "#block-block-135" ).hide();
-    $( "#block-block-136" ).hide();
+      $( "#block-block-136" ).hide();
     })
 
 //---------------------------------------------------------------
 // OPENSTREETMAP SEARCH
 //---------------------------------------------------------------
-   var searchlocation = L.control.search({
-   url: 'http://nominatim.openstreetmap.org/search?format=json&q={s}',
-   jsonpParam: 'json_callback',
-   propertyName: 'display_name',
-   propertyLoc: ['lat','lon'],
-   markerLocation: false,
-   autoType: true,
-   textPlaceholder: 'Location...                ',
-   zoom:5,
-   minLength: 2,
-   position:'topright'
- }).addTo(lMap);
+ //   var searchlocation = L.control.search({
+ //   url: 'http://nominatim.openstreetmap.org/search?format=json&q={s}',
+ //   jsonpParam: 'json_callback',
+ //   propertyName: 'display_name',
+ //   propertyLoc: ['lat','lon'],
+ //   markerLocation: false,
+ //   autoType: true,
+ //   textPlaceholder: 'Location...                ',
+ //   zoom:5,
+ //   minLength: 2,
+ //   position:'topright'
+ // }).addTo(lMap);
 //----------------------------------------------------------------
 // Layers
 //----------------------------------------------------------------
@@ -1593,9 +1416,9 @@ lMap.on('popupclose',function(e){
     };
    var overlayMaps = {
         'PROTECTED AREAS':wdpa,
-        'COUNTRIES':Country_layer,
-        'Ecoregion':ecoregion,
-        'REGION':Region_layer,
+        'COUNTRIES':country_gs,
+        'Ecoregion':ecoregion
+
     };
 //---------------------------------------------------------------------
 // add remove layers
@@ -1605,7 +1428,7 @@ $(".patopwdpa").click(function(event) {
  if (lMap.hasLayer(wdpa)) {
 
       lMap.removeLayer(wdpa_group);
-      $(".patopwdpa").css('background-color', '#efefef').css('color', '#2e424a');
+      $(".patopwdpa").css('background-color', '#f6f6f6').css('color', '#1a626b');
       $(".patopecoregion").css("background-color", '#fff').css('color', '#2e424a');
       $(".patopcountry").css('background-color', '#fff').css('color', '#2e424a');
 
@@ -1614,13 +1437,14 @@ $(".patopwdpa").click(function(event) {
       lMap.addLayer(wdpa);
       lMap.addLayer(wdpa_hi);
       lMap.addLayer(wdpa_group);
-      lMap.removeLayer(Country_layer);
-      lMap.removeLayer(Region_layer);
+      lMap.removeLayer(country_gs_hi);
+      lMap.removeLayer(country_gs);
+
       lMap.removeLayer(eco_hi);
       lMap.removeLayer(ecoregion);
       $('#block-block-128').hide();
       lMap.closePopup();
-      $(".patopwdpa").css('background-color', '#efefef').css('color', '#2e424a');
+      $(".patopwdpa").css('background-color', '#f6f6f6').css('color', '#1a626b');
       $(".patopecoregion").css("background-color", '#fff').css('color', '#2e424a');
       $(".patopcountry").css('background-color', '#fff').css('color', '#2e424a');
  }
@@ -1628,16 +1452,18 @@ $(".patopwdpa").click(function(event) {
 
 $(".patopcountry").click(function(event) {
  event.preventDefault();
- if (lMap.hasLayer(Country_layer)) {
+ if (lMap.hasLayer(country_gs)) {
 
    $(".patopecoregion").css('background-color', '#fff').css('color', '#2e424a');
-   $(".patopcountry").css('background-color', '#efefef').css('color', '#2e424a');
+   $(".patopcountry").css('background-color', '#f6f6f6').css('color', '#2e424a');
    $(".patopwdpa").css('background-color', '#fff').css('color', '#2e424a');
 
  } else {
-      lMap.addLayer(Country_layer);
+   lMap.removeLayer(eco_hi);
+      lMap.addLayer(country_gs);
+      lMap.addLayer(country_gs_hi);
       lMap.removeLayer(wdpa_group);
-      lMap.removeLayer(Region_layer);
+
       lMap.removeLayer(ecoregion);
       lMap.removeLayer(wdpa);
       lMap.removeLayer(wdpa_hi);
@@ -1648,7 +1474,7 @@ $(".patopcountry").click(function(event) {
       $( "#block-block-128" ).hide();
       $(".patopwdpa").css('background-color', '#fff').css('color', '#2e424a');
       $(".patopecoregion").css("background-color", '#fff').css('color', '#2e424a');
-      $(".patopcountry").css('background-color', '#efefef').css('color', '#2e424a');
+      $(".patopcountry").css('background-color', '#f6f6f6').css('color', '#1a626b');
       $('#pa_infographics').hide();
 
  }
@@ -1659,7 +1485,7 @@ $(".patopecoregion").click(function(event) {
  event.preventDefault();
  if (lMap.hasLayer(ecoregion)) {
 
-      $(".patopecoregion").css('background-color', '#efefef').css('color', '#2e424a');
+      $(".patopecoregion").css('background-color', '#f6f6f6').css('color', '#2e424a');
       $(".patopcountry").css('background-color', '#fff').css('color', '#2e424a');
       $(".patopwdpa").css('background-color', '#fff').css('color', '#2e424a');
 
@@ -1667,8 +1493,9 @@ $(".patopecoregion").click(function(event) {
       lMap.addLayer(ecoregion);
       lMap.addLayer(eco_hi);
       lMap.addLayer(eco_group);
-      lMap.removeLayer(Region_layer);
-      lMap.removeLayer(Country_layer);
+
+      lMap.removeLayer(country_gs);
+            lMap.removeLayer(country_gs_hi);
       lMap.removeLayer(wdpa);
       lMap.removeLayer(wdpa_group);
       lMap.removeLayer(wdpa_hi);
@@ -1677,41 +1504,12 @@ $(".patopecoregion").click(function(event) {
       $("#someinfo").hide();
       $( "#block-block-127" ).hide();
       $( "#block-block-136" ).hide();
-      $(".patopecoregion").css('background-color', '#efefef').css('color', '#2e424a');
+      $(".patopecoregion").css('background-color', '#f6f6f6').css('color', '#1a626b');
       $(".patopcountry").css('background-color', '#fff').css('color', '#2e424a');
       $(".patopwdpa").css('background-color', '#fff').css('color', '#2e424a');
         $('#pa_infographics').hide();
  }
 });
-
-// $(".middlereg").click(function(event) {
-//  event.preventDefault();
-//  if (lMap.hasLayer(Region_layer)) {
-//       lMap.removeLayer(Region_layer);
-//       lMap.addLayer(wdpa);
-//       // $('#visit_region').hide();
-//       //$("#someinfo").show();
-//       // $("#print_btn_reg").hide();
-//  } else {
-//      lMap.addLayer(Region_layer);
-//      lMap.removeLayer(ecoregion);
-//      lMap.removeLayer(Country_layer);
-//      lMap.removeLayer(wdpa);
-//      $(".active2").hide();
-//      $(".inactive2").show();
-//      $(".active1").hide();
-//      $(".inactive1").show();
-//      $(".active3").hide();
-//      $(".inactive3").show();
-//
-//      $("#someinfo").hide();
-//
-//      $( "#block-block-127" ).hide();
-//      $( "#block-block-136" ).hide();
-//  }
-// });
-
-
 
 
 //-----------------------------------------------------------------------------
@@ -1739,14 +1537,14 @@ var sliderVal;
     $(function () {
             $('#rangeSlider2').bootstrapSlider().on('slide', function (ev) {
                 sliderVal = ev.value;
-                Country_layer.setStyle({fillOpacity :sliderVal/100});
+                country_gs.setOpacity(sliderVal/100);
             });
             if (sliderVal) {
                 $('#rangeSlider2').bootstrapSlider('setValue', sliderVal);
             }
     });
         function rangeSlider(sliderVal) {
-         Country_layer.setStyle({fillOpacity :sliderVal});
+         country_gs.setOpacity(sliderVal)
         }
 // ECOREGION opacity slider----------------------------------------------
 var sliderVal;
@@ -1763,9 +1561,6 @@ var sliderVal;
          ecoregion.setOpacity(sliderVal)
         }
 //-----------------------------------------------------------------------------
-// END OF Opacity Slider
-//-----------------------------------------------------------------------------
-
 
 
 // end of the script
