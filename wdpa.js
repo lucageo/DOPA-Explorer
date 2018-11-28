@@ -192,6 +192,14 @@ maxZoom: 20,
 subdomains:['mt0','mt1','mt2','mt3']
 });
 
+	 
+var lcc_url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/dopa_explorer/wms';
+var lcc=L.tileLayer.betterWms(lcc_url, {layers: 'dopa_explorer:LCC_1995_2015',transparent: true,format: 'image/png',zIndex: 33});
+	 
+	 
+var GSOC_url = 'https://lrm-maps.jrc.ec.europa.eu/geoserver/dopa_explorer_2/wms';
+var GSOC_p=L.tileLayer.wms(GSOC_url, {layers: 'ddopa_explorer_2:GSOC',transparent: true,format: 'image/png',zIndex: 32});	 
+	 
 // WATER MAPS
 var occurrence = new L.tileLayer("https://storage.googleapis.com/global-surface-water/maptiles/occurrence/{z}/{x}/{y}.png",
 { format: "image/png",
